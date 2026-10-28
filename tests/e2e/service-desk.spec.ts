@@ -33,6 +33,18 @@ test("employee confirms a draft and can inspect the decision", async ({
   await expect(
     page.getByText("estimativa não calibrada", { exact: false }),
   ).toBeVisible();
+  await expect(
+    page.getByText("Preparar novo chamado", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Pessoas afetadas: Somente você", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Impede o trabalho: Sim", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".decision-panel")).not.toContainText(
+    "OWNER_SCOPE",
+  );
   await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(
     page.getByText(/operação confirmada e concluída/).last(),
@@ -95,7 +107,7 @@ test("analyst receives handoff and replies with the agent paused", async ({
     userPage.getByText("Analista atendendo", { exact: true }),
   ).toBeVisible();
   await analystPage
-    .getByRole("button", { name: "Devolver ao agent", exact: true })
+    .getByRole("button", { name: "Devolver ao assistente", exact: true })
     .click();
   await expect(
     userPage.getByText("Assistente online", { exact: true }),
