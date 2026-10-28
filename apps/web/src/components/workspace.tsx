@@ -57,6 +57,14 @@ export function Workspace({
   const [busy, setBusy] = useState(false);
   const [partial, setPartial] = useState("");
   const [activity, setActivity] = useState("");
+  const [runtimeMode, setRuntimeMode] = useState<
+    "live" | "stub" | "unavailable" | null
+  >(null);
+  useEffect(() => {
+    api<{ mode: "live" | "stub" | "unavailable" }>("/runtime")
+      .then((result) => setRuntimeMode(result.mode))
+      .catch(() => setRuntimeMode("unavailable"));
+  }, []);
   const [text, setText] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
   const loadList = useCallback(async () => {
@@ -233,7 +241,7 @@ export function Workspace({
   const lastDraft = conversation?.drafts
     ?.filter((d) => d.status === "PENDING")
     .at(-1);
-  const mode = lastAgent?.data.decision?.mode;
+  const mode = runtimeMode;
 
   function timeline() {
     return (
@@ -432,7 +440,11 @@ export function Workspace({
           <span>
             {mode === "live"
               ? "Gemini · decisões verificáveis"
-              : "Modo demonstração · sem custo de LLM"}
+              : mode === "stub"
+                ? "Modo demonstração · sem custo de LLM"
+                : mode === "unavailable"
+                  ? "Agente temporariamente indisponível"
+                  : "Verificando modo do agente…"}
           </span>
         </div>
         {!analyst && active && (conversation?.turns ?? 0) >= 30 && (

@@ -1,4 +1,5 @@
 from uuid import uuid4
+import httpx
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -11,6 +12,7 @@ from .conversation_routes import router as conversation_router
 from .chat_routes import router as chat_router
 from .ticket_routes import router as ticket_router
 from .analyst_routes import router as analyst_router
+from .security import Actor
 
 app = FastAPI(title="Nexo Assist", version="0.1.0")
 app.include_router(auth_router)
@@ -18,6 +20,22 @@ app.include_router(conversation_router)
 app.include_router(chat_router)
 app.include_router(ticket_router)
 app.include_router(analyst_router)
+
+
+async def probe_agent_mode() -> str:
+    try:
+        async with httpx.AsyncClient(timeout=3) as client:
+            response = await client.get(settings.agent_url + "/health")
+            response.raise_for_status()
+            mode = response.json().get("mode")
+            return mode if mode in {"live", "stub"} else "unavailable"
+    except (httpx.HTTPError, ValueError):
+        return "unavailable"
+
+
+@app.get("/runtime")
+async def runtime(user: Actor):
+    return {"mode": await probe_agent_mode()}
 
 
 @app.middleware("http")
