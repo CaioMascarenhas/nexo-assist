@@ -1,6 +1,6 @@
 # Decisões, ambiguidades e riscos
 
-> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+> Levantamento inicial: decisões de implementação foram atualizadas. Consulte o [README executável](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
 
 
 Este registro separa requisito do enunciado de escolha nossa. As premissas permitem começar; decisões de negócio podem ser revistas sem redesenhar o sistema.
