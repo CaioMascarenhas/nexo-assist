@@ -860,16 +860,16 @@ export function Workspace({
               : "do funcionário"}
           </h2>
           <p>
+            Abertos:{" "}
             {
               tickets.filter((t) => !["RESOLVED", "CLOSED"].includes(t.status))
                 .length
             }{" "}
-            abertos ·{" "}
+            · Resolvidos:{" "}
             {
               tickets.filter((t) => ["RESOLVED", "CLOSED"].includes(t.status))
                 .length
             }{" "}
-            resolvidos
           </p>
           {orderedTickets.map((t, index) => (
             <Fragment key={t.id}>

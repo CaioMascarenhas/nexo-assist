@@ -18,6 +18,7 @@ from .models import Article, Message, now
 from .schemas import MessageBody, Proposal
 from .security import Actor, DB
 from .serialization import draft_json, message_json
+from .summaries import describe_facts
 from .ticket_service import TicketService, ticket_json
 
 router = APIRouter()
@@ -132,7 +133,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             db,
             conv,
             reason,
-            f"{content}\nFatos: {json.dumps(facts, ensure_ascii=False)}\n{proposal.rationale}",
+            f"Relato: {content}\nContexto confirmado:\n{describe_facts(facts)}\nJustificativa: {proposal.rationale}",
         )
         if selected:
             service.transfer(selected.id, reason)
