@@ -224,6 +224,32 @@ strong {
   background: #fff2d9;
   color: #9a7128;
 }
+.person-avatar {
+  position: relative;
+}
+.presence-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+.presence-dot.online {
+  background: var(--green);
+}
+.presence-dot.offline {
+  background: #8892a0;
+}
+.message-author .avatar {
+  width: 25px;
+  height: 25px;
+  font-size: 10px;
+}
+.from-user .message-author {
+  justify-content: flex-end;
+}
 .amber-text {
   color: var(--amber);
 }
