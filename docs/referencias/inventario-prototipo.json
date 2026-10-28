@@ -1,0 +1,2482 @@
+{
+  "source": "nexo.pen",
+  "variables": {
+    "bg": {
+      "type": "color",
+      "value": "#FCFCFC"
+    },
+    "surface": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "card": {
+      "type": "color",
+      "value": "#F5F5F5"
+    },
+    "card-strong": {
+      "type": "color",
+      "value": "#EDEDED"
+    },
+    "fg": {
+      "type": "color",
+      "value": "#0B0B0B"
+    },
+    "muted": {
+      "type": "color",
+      "value": "#636363"
+    },
+    "subtle": {
+      "type": "color",
+      "value": "#8E8E8E"
+    },
+    "border": {
+      "type": "color",
+      "value": "#0B0B0B14"
+    },
+    "border-strong": {
+      "type": "color",
+      "value": "#0B0B0B24"
+    },
+    "primary": {
+      "type": "color",
+      "value": "#0285F7"
+    },
+    "primary-hover": {
+      "type": "color",
+      "value": "#0071D6"
+    },
+    "primary-soft": {
+      "type": "color",
+      "value": "#0285F712"
+    },
+    "primary-text": {
+      "type": "color",
+      "value": "#0069C7"
+    },
+    "success": {
+      "type": "color",
+      "value": "#00BD6C"
+    },
+    "success-soft": {
+      "type": "color",
+      "value": "#00BD6C14"
+    },
+    "success-text": {
+      "type": "color",
+      "value": "#00804A"
+    },
+    "warning": {
+      "type": "color",
+      "value": "#F5A500"
+    },
+    "warning-soft": {
+      "type": "color",
+      "value": "#F5A50018"
+    },
+    "warning-text": {
+      "type": "color",
+      "value": "#946300"
+    },
+    "danger": {
+      "type": "color",
+      "value": "#EE343B"
+    },
+    "danger-soft": {
+      "type": "color",
+      "value": "#EE343B12"
+    },
+    "danger-text": {
+      "type": "color",
+      "value": "#C4161D"
+    },
+    "violet": {
+      "type": "color",
+      "value": "#A37AFF"
+    },
+    "violet-soft": {
+      "type": "color",
+      "value": "#A37AFF16"
+    },
+    "violet-text": {
+      "type": "color",
+      "value": "#6B3FE0"
+    },
+    "font-sans": {
+      "type": "string",
+      "value": "Geist"
+    },
+    "font-mono": {
+      "type": "string",
+      "value": "Geist Mono"
+    },
+    "radius-sm": {
+      "type": "number",
+      "value": 6
+    },
+    "radius-md": {
+      "type": "number",
+      "value": 10
+    },
+    "radius-lg": {
+      "type": "number",
+      "value": 14
+    },
+    "font-display": {
+      "type": "string",
+      "value": "Newsreader"
+    },
+    "font-ui": {
+      "type": "string",
+      "value": "Schibsted Grotesk"
+    },
+    "font-data": {
+      "type": "string",
+      "value": "IBM Plex Mono"
+    },
+    "paper": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "desk": {
+      "type": "color",
+      "value": "#F6F7F9"
+    },
+    "ink": {
+      "type": "color",
+      "value": "#1B2431"
+    },
+    "ink-2": {
+      "type": "color",
+      "value": "#3D4656"
+    },
+    "ink-3": {
+      "type": "color",
+      "value": "#5B6472"
+    },
+    "rule": {
+      "type": "color",
+      "value": "#E6E8EC"
+    },
+    "cta": {
+      "type": "color",
+      "value": "#0062C4"
+    }
+  },
+  "frames": [
+    {
+      "id": "bi8Au",
+      "name": "Identificação (desktop)",
+      "width": 1440,
+      "height": 900,
+      "texts": [
+        {
+          "id": "j0rgy",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 17
+        },
+        {
+          "id": "bcuHJ",
+          "text": "Service desk de TI da Nexo",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "y7I6Y",
+          "text": "Seu problema de TI, resolvido em uma conversa.",
+          "fontFamily": "$font-display",
+          "fontSize": 54
+        },
+        {
+          "id": "dDChu",
+          "text": "Descreva o que está acontecendo. O assistente consulta seus chamados, busca na central de ajuda e chama um analista quando precisa.",
+          "fontFamily": "$font-ui",
+          "fontSize": 16
+        },
+        {
+          "id": "zp6gW",
+          "text": "Meu notebook não conecta na VPN. Erro 809.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "RAvN7",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "aK7Mg",
+          "text": "consultou seus chamados · criou um chamado",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "gQx80",
+          "text": "Pronto: abri o chamado com prioridade alta. Um analista fala com você em até 4 h úteis.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "PnHvx",
+          "text": "INC-20517",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "y0xqS",
+          "text": "Rede e VPN · Alta · em até 4 h",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "fnmmE",
+          "text": "8 s",
+          "fontFamily": "$font-display",
+          "fontSize": 34
+        },
+        {
+          "id": "G0pyl",
+          "text": "primeira resposta, em média",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "VwAQb",
+          "text": "72%",
+          "fontFamily": "$font-display",
+          "fontSize": 34
+        },
+        {
+          "id": "BBmZh",
+          "text": "resolvidos sem fila",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "N2UvOo",
+          "text": "6",
+          "fontFamily": "$font-display",
+          "fontSize": 34
+        },
+        {
+          "id": "JzyF3",
+          "text": "analistas online agora",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "BU3Rx",
+          "text": "Problema para entrar?",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "EAJOF",
+          "text": "Ligue no ramal 4000",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "LmJH2",
+          "text": "Entrar",
+          "fontFamily": "$font-display",
+          "fontSize": 40
+        },
+        {
+          "id": "hgcmP",
+          "text": "Use seu e-mail corporativo e a senha da rede Nexo.",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "iWKGH",
+          "text": "E-mail corporativo",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "B6cWdp",
+          "text": "ana.souza@nexo.com.br",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "CVXUH",
+          "text": "Senha",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "F4GUkQ",
+          "text": "Esqueci minha senha",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "j5dBvM",
+          "text": "••••••••••",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "o9SsRx",
+          "text": "Manter conectado neste computador",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "h14ABU",
+          "text": "Entrar",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "WcOMs",
+          "text": "© 2026 Nexo · Service desk de TI",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "uFm1t",
+          "text": "Privacidade e uso de dados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        }
+      ],
+      "topLevelLayout": [
+        {
+          "id": "qwYXO",
+          "name": "Showcase",
+          "type": "frame",
+          "width": 800,
+          "height": "fill_container",
+          "fill": "$ink",
+          "padding": [
+            40,
+            64,
+            48,
+            64
+          ],
+          "layout": "vertical"
+        },
+        {
+          "id": "ruatt",
+          "name": "Sign In",
+          "type": "frame",
+          "width": "fill_container",
+          "height": "fill_container",
+          "padding": [
+            40,
+            56
+          ],
+          "layout": "vertical"
+        }
+      ]
+    },
+    {
+      "id": "IcuoM",
+      "name": "Chat — Novo chamado (desktop)",
+      "width": 1440,
+      "height": 900,
+      "texts": [
+        {
+          "id": "u3efZ",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 16
+        },
+        {
+          "id": "QKhTg",
+          "text": "Atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "BdQaO",
+          "text": "Meu perfil",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "Z2ZXdT",
+          "text": "AS",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "f8DeEi",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "X6aXUm",
+          "text": "ana.souza@nexo.com.br",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "OSh4O",
+          "text": "Sair",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "qb2Q2",
+          "text": "Service desk de TI",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "ubPhp",
+          "text": "Atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "KJZb7",
+          "text": "Assistente online",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "HHV5y",
+          "text": "Meu notebook não conecta na VPN desde ontem. Aparece o erro 809.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "iqo04",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "n1i3e",
+          "text": "consultou seus chamados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "Wnh8j",
+          "text": "buscou na central de ajuda",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "N8acbs",
+          "text": "Não há chamado aberto sobre VPN, e o artigo do erro 809 vale só para Windows 10 — o seu é Windows 11. Vou abrir um chamado.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "dCtL4",
+          "text": "Quem está sendo afetado?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "qyVMD",
+          "text": "1",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "jbJaE",
+          "text": "Só eu",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "TzORp",
+          "text": "2",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "a72bR",
+          "text": "Minha equipe",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "Vcppl",
+          "text": "3",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "tyDUs",
+          "text": "Toda a empresa",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "It2ct",
+          "text": "4",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "UJlGE",
+          "text": "Não sei",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "FA0zs",
+          "text": "Só eu. Tenho reunião com um cliente às 14h e preciso da VPN funcionando.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "y9YkE6",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "ZrSU2",
+          "text": "classificou a prioridade",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "qyx7a",
+          "text": "consultou o SLA",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "qfhqn",
+          "text": "montou o rascunho",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "OBBUp",
+          "text": "Coloquei prioridade alta por causa da reunião — a resposta chega antes das 14h. Confira antes de eu criar:",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "FQQZy",
+          "text": "Novo chamado",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "wZgix",
+          "text": "Rascunho D-381",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "H2NM5s",
+          "text": "Aguardando confirmação",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "nfiEZ",
+          "text": "VPN não conecta no notebook — erro 809",
+          "fontFamily": "$font-ui",
+          "fontSize": 18
+        },
+        {
+          "id": "NZO3j",
+          "text": "Desde 20/10 o notebook (Windows 11) não conecta na VPN e mostra o erro 809. Precisa dela para a reunião das 14h.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "P3qxst",
+          "text": "Categoria",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "l6zjrv",
+          "text": "Rede e VPN",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "KJIpg",
+          "text": "Prioridade",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "rDbct",
+          "text": "Alta",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Z9lu3",
+          "text": "· resposta até 13:43",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "roRpL",
+          "text": "Afetados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "JM7Tl",
+          "text": "Somente você",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "gnroW",
+          "text": "Confirmar",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "EsdXW",
+          "text": "⌘↵",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "iktyf",
+          "text": "Editar",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "GtmTU",
+          "text": "Cancelar",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "EpSeJ",
+          "text": "Escreva para o Nexo…",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "JCoIP",
+          "text": "Enviar",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "rcXd0",
+          "text": "18/30 mensagens nesta sessão",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        }
+      ],
+      "topLevelLayout": [
+        {
+          "id": "BUfyu",
+          "name": "Sidebar",
+          "type": "frame",
+          "width": 232,
+          "height": "fill_container",
+          "padding": [
+            20,
+            14,
+            14,
+            14
+          ],
+          "layout": "vertical"
+        },
+        {
+          "id": "H1zU9",
+          "name": "Main",
+          "type": "frame",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical"
+        }
+      ]
+    },
+    {
+      "id": "vbsNW",
+      "name": "Chat — Consulta e transferência (desktop)",
+      "width": 1440,
+      "height": 900,
+      "texts": [
+        {
+          "id": "hlKMV",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 16
+        },
+        {
+          "id": "vtSF2",
+          "text": "Atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "J7oz31",
+          "text": "Meu perfil",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "KpRaS",
+          "text": "AS",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "CiPuc",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "LnQUd",
+          "text": "ana.souza@nexo.com.br",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "b7XUI",
+          "text": "Sair",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "TFBbv",
+          "text": "Service desk de TI",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "YKkot",
+          "text": "Atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "nBwFY",
+          "text": "Assistente online",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "QwG9C",
+          "text": "Qual o status do meu chamado?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Pvjlx",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "hHJAR",
+          "text": "consultou seus chamados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "R84nM",
+          "text": "Você tem 3 chamados abertos. Sobre qual deles quer saber?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "v08Ze1",
+          "text": "INC-20311",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "I67M4",
+          "text": "Notebook lento após atualização",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "uuYm7",
+          "text": "Aguardando analista",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "GwGZs",
+          "text": "16 out",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "rRvPm",
+          "text": "INC-20298",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "Eb4wN",
+          "text": "Acesso à pasta Financeiro no SharePoint",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "LfRFx",
+          "text": "Em andamento",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "t6UuR",
+          "text": "14 out",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "a8oBE",
+          "text": "REQ-10442",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "HLMIr",
+          "text": "Segundo monitor para home office",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "M1pPYZ",
+          "text": "Aprovado",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "rFRJm",
+          "text": "09 out",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "KNFt0",
+          "text": "INC-20311 · Notebook lento após atualização",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "c4T1CA",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "h5iEi4",
+          "text": "consultou o INC-20311",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "m44GZC",
+          "text": "calculou o prazo",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "hwbII",
+          "text": "Chamado",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "JWQjE",
+          "text": "INC-20311",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "egVmp",
+          "text": "Aguardando analista",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "xfI8s",
+          "text": "Notebook lento após atualização do Windows",
+          "fontFamily": "$font-ui",
+          "fontSize": 18
+        },
+        {
+          "id": "O6AJp",
+          "text": "Lentidão geral desde a atualização de 15/10. Reiniciar e rodar o diagnóstico da central não resolveu.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "P4VMx",
+          "text": "Categoria",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "ubLT7",
+          "text": "Hardware › Notebook",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "r6ek4F",
+          "text": "Prioridade",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "PkBTM",
+          "text": "Média",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "O61Ime",
+          "text": "Aberto em",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "qgFFR",
+          "text": "16 out, 14:20",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "I2hpL5",
+          "text": "Última atualização",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "ZCW1T",
+          "text": "há 5 dias",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Z1nq5g",
+          "text": "· prazo vencido",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "U0rd6m",
+          "text": "Está sem atualização há 5 dias, acima do prazo de 3 dias úteis para prioridade média. Quer que eu chame um analista?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "dGH2M",
+          "text": "Falar com um analista",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "c81Vap",
+          "text": "Adicionar informação",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "Qieh7",
+          "text": "Não, obrigado",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "m1wZt",
+          "text": "Escreva para o Nexo…",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "kKCEt",
+          "text": "Enviar",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "v7xL6",
+          "text": "16/30 mensagens nesta sessão",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        }
+      ],
+      "topLevelLayout": [
+        {
+          "id": "eiRp9",
+          "name": "Sidebar",
+          "type": "frame",
+          "width": 232,
+          "height": "fill_container",
+          "padding": [
+            20,
+            14,
+            14,
+            14
+          ],
+          "layout": "vertical"
+        },
+        {
+          "id": "mH2mJ",
+          "name": "Main",
+          "type": "frame",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical"
+        }
+      ]
+    },
+    {
+      "id": "x2HBOE",
+      "name": "Atendente — Conversas (desktop)",
+      "width": 1440,
+      "height": 900,
+      "texts": [
+        {
+          "id": "CHlzm",
+          "text": "5",
+          "fontFamily": "$font-ui",
+          "fontSize": 10
+        },
+        {
+          "id": "VMc6Y",
+          "text": "RL",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "d0GS9I",
+          "text": "Conversas",
+          "fontFamily": "$font-ui",
+          "fontSize": 20
+        },
+        {
+          "id": "yZrin",
+          "text": "Disponível",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "rXbQC",
+          "text": "Pesquisar conversa ou chamado",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "p91gsc",
+          "text": "Todas",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "eINOu",
+          "text": "Para você",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "t4PnMs",
+          "text": "3",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "TrqYi",
+          "text": "Com o agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "Ezfsn",
+          "text": "9",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "r3lPQ",
+          "text": "Minhas",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "u1lzND",
+          "text": "1",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "R3bQS1",
+          "text": "AS",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "Mv4IV",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "qFKIs",
+          "text": "10:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "K9qm70",
+          "text": "Está parado há 5 dias. Quero falar com…",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "VEY29",
+          "text": "2",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "FnvuG",
+          "text": "Transferida · INC-20311",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "V4Tkd",
+          "text": "CM",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "APCyN",
+          "text": "Carla Mendes",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "xH8Gc",
+          "text": "09:58",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "WhvQq",
+          "text": "Preciso de acesso ao SAP ainda hoje",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "z4rHsH",
+          "text": "1",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "Kq2Ot",
+          "text": "Transferida · contato em 25 min",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "Y8IZl",
+          "text": "BT",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "g26UC",
+          "text": "Bruno Tavares",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "OLg5K",
+          "text": "09:51",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "UFkfl",
+          "text": "Nexo: Vou chamar um analista para isso.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "Tpd20",
+          "text": "Agent pediu ajuda · confiança 41%",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "zd5iC",
+          "text": "DR",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "Ib3Uv",
+          "text": "Diego Ramos",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "G0Qr7T",
+          "text": "agora",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "Y61n86",
+          "text": "digitando…",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "yTbOi",
+          "text": "Agent atendendo",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "A5WU3",
+          "text": "EP",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "FkeGy",
+          "text": "Elisa Prado",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "YEcbf",
+          "text": "10:03",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "cqZGw",
+          "text": "Nexo: Chamado INC-20519 criado.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "FXg1E",
+          "text": "Agent atendendo",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "j59Ct",
+          "text": "FN",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "l7ldyx",
+          "text": "Fábio Nunes",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "oX1o5",
+          "text": "10:01",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "s8KiZQ",
+          "text": "Isso resolveu, obrigado!",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "qEv6o",
+          "text": "Resolvida pelo agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "EvRPk",
+          "text": "GR",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "yGybS",
+          "text": "Gabriela Rocha",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "rAq3M",
+          "text": "ontem",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "ULO1k",
+          "text": "Nexo: A senha do Wi-Fi foi enviada…",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "n1ZL7",
+          "text": "Resolvida pelo agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "SSetj",
+          "text": "AS",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "GHWRS",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "P5IZLN",
+          "text": "online · Financeiro · INC-20311",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "y2izu",
+          "text": "Aguardando atendente",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "u0Vc1",
+          "text": "Hoje",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "A6siSQ",
+          "text": "Qual o status do meu chamado?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Hyt6f",
+          "text": "10:01",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "o3LTTE",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "qrOjf",
+          "text": "IA",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "hE9vU",
+          "text": "Você tem 3 chamados abertos. Sobre qual deles quer saber?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "uj9Ei",
+          "text": "10:01",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "fDunB",
+          "text": "INC-20311 · Notebook lento após atualização",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "nwiib",
+          "text": "10:02",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "u83rxj",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "A8rC0U",
+          "text": "IA",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "mPTlC",
+          "text": "Está sem atualização há 5 dias, acima do prazo de 3 dias úteis. Quer que eu chame um analista?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "aa9o2",
+          "text": "10:02",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "cwEgo",
+          "text": "Está parado há 5 dias.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "g3Dbk",
+          "text": "10:04",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "LOQMq",
+          "text": "Quero falar com um analista.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Rjc9l",
+          "text": "10:04",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "BrAGa",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "OHEol",
+          "text": "IA",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "CNhDN",
+          "text": "Encaminhei para o Suporte N2. Um analista vai falar com você em até 2 h úteis.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "wyWgV",
+          "text": "10:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "hl7vq",
+          "text": "Transferida para Suporte N2 · 10:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "bpz81",
+          "text": "Ana espera um atendente",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "w0ADA",
+          "text": "Agent pausado · até 12:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "mcrIg",
+          "text": "Devolver ao agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "XcCRl",
+          "text": "Assumir atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "reQ4W",
+          "text": "Assuma o atendimento para responder",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "qw1w8",
+          "text": "Chamados da Ana",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "Q17LxV",
+          "text": "3 abertos · 2 encerrados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "hPUWe",
+          "text": "Desta conversa",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "MZiHr",
+          "text": "INC-20311",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "jfxNZ",
+          "text": "Aguardando analista",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "oZ8K0",
+          "text": "Notebook lento após atualização",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "eftyQ",
+          "text": "Hardware · prioridade média",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "ITp3i",
+          "text": "Transferido para um analista",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "xFiTa",
+          "text": "10:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "VSMy5",
+          "text": "Outros chamados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "VhrsF",
+          "text": "Acesso à pasta Financeiro",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Q3ww0i",
+          "text": "INC-20298 · Em andamento",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "O5e5ds",
+          "text": "Segundo monitor para home office",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "gJdZi",
+          "text": "REQ-10442 · Aprovado",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "wgCYL",
+          "text": "Outlook não sincroniza no celular",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "S2GUgY",
+          "text": "INC-19877 · Resolvido em 02 set",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "zpx28",
+          "text": "Troca de senha da rede",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "tQmtE",
+          "text": "INC-19410 · Resolvido em 11 jul",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "h7UFu",
+          "text": "Ver todos os chamados da Ana",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        }
+      ],
+      "topLevelLayout": [
+        {
+          "id": "I20l4G",
+          "name": "Rail",
+          "type": "frame",
+          "width": 64,
+          "height": "fill_container",
+          "fill": "$desk",
+          "gap": 6,
+          "padding": [
+            16,
+            0
+          ],
+          "layout": "vertical"
+        },
+        {
+          "id": "zqcY8",
+          "name": "Chat List",
+          "type": "frame",
+          "width": 380,
+          "height": "fill_container",
+          "layout": "vertical"
+        },
+        {
+          "id": "K8Fy6",
+          "name": "Conversation",
+          "type": "frame",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "#EEF1F5",
+          "layout": "vertical"
+        },
+        {
+          "id": "n9znN",
+          "name": "Ticket History",
+          "type": "frame",
+          "width": 340,
+          "height": "fill_container",
+          "fill": "$paper",
+          "layout": "vertical"
+        }
+      ]
+    },
+    {
+      "id": "CAqx8",
+      "name": "Atendente — Atendimento assumido (desktop)",
+      "width": 1567,
+      "height": 900,
+      "texts": [
+        {
+          "id": "scBv1",
+          "text": "5",
+          "fontFamily": "$font-ui",
+          "fontSize": 10
+        },
+        {
+          "id": "j9pl9",
+          "text": "RL",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "OmQG4",
+          "text": "Conversas",
+          "fontFamily": "$font-ui",
+          "fontSize": 20
+        },
+        {
+          "id": "IXiCZ",
+          "text": "Disponível",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "qDRp5",
+          "text": "Pesquisar conversa ou chamado",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "p7LyR",
+          "text": "Todas",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "vMpIF",
+          "text": "Para você",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "yRYbj",
+          "text": "3",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "Z6utpN",
+          "text": "Com o agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "OhEpl",
+          "text": "9",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "vN63f",
+          "text": "Minhas",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "B4nA80",
+          "text": "1",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "o71X4a",
+          "text": "AS",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "PkaZ5",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "T5Kct",
+          "text": "10:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "oVOBY",
+          "text": "Posso sim, está ligado.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "A4bMg",
+          "text": "Você está atendendo",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "bctey",
+          "text": "CM",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "Bbwn0",
+          "text": "Carla Mendes",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "dirz3",
+          "text": "09:58",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "VasNx",
+          "text": "Preciso de acesso ao SAP ainda hoje",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "xGBSc",
+          "text": "1",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "KjZE6",
+          "text": "Transferida · contato em 25 min",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "zlTVA",
+          "text": "BT",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "muK2R",
+          "text": "Bruno Tavares",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "pnMSJ",
+          "text": "09:51",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "gwjWk",
+          "text": "Nexo: Vou chamar um analista para isso.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "fHTIC",
+          "text": "Agent pediu ajuda · confiança 41%",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "f236o",
+          "text": "DR",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "CNAn7",
+          "text": "Diego Ramos",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "k9iKe3",
+          "text": "agora",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "GDxkr",
+          "text": "digitando…",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "NcnxY",
+          "text": "Agent atendendo",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "VRAz9",
+          "text": "EP",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "B2ixg",
+          "text": "Elisa Prado",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "g20Z15",
+          "text": "10:03",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "u4X43",
+          "text": "Nexo: Chamado INC-20519 criado.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "rMsV1",
+          "text": "Agent atendendo",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "AgCkv",
+          "text": "FN",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "s8aOlO",
+          "text": "Fábio Nunes",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "u01Zl",
+          "text": "10:01",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "Jq9oc",
+          "text": "Isso resolveu, obrigado!",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "CthmI",
+          "text": "Resolvida pelo agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "e9a7e",
+          "text": "GR",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "bvZ4e",
+          "text": "Gabriela Rocha",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "ioTPv",
+          "text": "ontem",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "z0AI7M",
+          "text": "Nexo: A senha do Wi-Fi foi enviada…",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "cfr1b",
+          "text": "Resolvida pelo agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "biO1c",
+          "text": "AS",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Ve2As",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "zxVXv",
+          "text": "online · Financeiro",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "GWGZz",
+          "text": "Devolver ao agent",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "RlvKD",
+          "text": "Encerrar atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "pfslb",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "cvIWd",
+          "text": "IA",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "PmBQu",
+          "text": "Você tem 3 chamados abertos. Sobre qual deles quer saber?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "YlGHI",
+          "text": "10:01",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "P7Za7",
+          "text": "INC-20311 · Notebook lento após atualização",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "F7GErm",
+          "text": "10:02",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "MBjFM",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "C8iz4",
+          "text": "IA",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "U3jz7c",
+          "text": "Está sem atualização há 5 dias, acima do prazo de 3 dias úteis. Quer que eu chame um analista?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "yDyBd",
+          "text": "10:02",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "PZP2a",
+          "text": "Está parado há 5 dias.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "XCU08",
+          "text": "10:04",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "LyDDK",
+          "text": "Quero falar com um analista.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "XN2UX",
+          "text": "10:04",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "Hhmyx",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "uryLu",
+          "text": "IA",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "kCFMl",
+          "text": "Encaminhei para o Suporte N2. Um analista vai falar com você em até 2 h úteis.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Ykx0a",
+          "text": "10:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "ytcS8",
+          "text": "Transferida para Suporte N2 · 10:05",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "b7PPR",
+          "text": "Rafael Lima assumiu · agent pausado · 10:12",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "Rn1NG",
+          "text": "Rafael Lima",
+          "fontFamily": "$font-ui",
+          "fontSize": 12
+        },
+        {
+          "id": "DgTPd",
+          "text": "Suporte N2",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "P3RSk",
+          "text": "Oi, Ana! Aqui é o Rafael. Já li o histórico e vou verificar o driver de vídeo remotamente. Pode deixar o notebook ligado agora?",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "mJtUY",
+          "text": "10:12",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "nn0K4",
+          "text": "Posso sim, está ligado.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "w5MX9d",
+          "text": "10:13",
+          "fontFamily": "$font-ui",
+          "fontSize": 11
+        },
+        {
+          "id": "yIfmf",
+          "text": "Ótimo! Vou iniciar o acesso remoto, é só aceitar o pedido que vai aparecer na tela|",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "LKxG5",
+          "text": "Chamados da Ana",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "rCKNB",
+          "text": "3 abertos · 2 encerrados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "S4lkAF",
+          "text": "Desta conversa",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "DB4XH",
+          "text": "INC-20311",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "zK3GU",
+          "text": "Em atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "uB1ov",
+          "text": "Notebook lento após atualização",
+          "fontFamily": "$font-ui",
+          "fontSize": 15.5
+        },
+        {
+          "id": "LiGOD",
+          "text": "Hardware · prioridade média",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "VmBr0",
+          "text": "Assumido por Rafael Lima",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "Lndk7",
+          "text": "10:12",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "mb6bw",
+          "text": "Outros chamados",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "cFcDx",
+          "text": "Acesso à pasta Financeiro",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "GihLX",
+          "text": "INC-20298 · Em andamento",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "N3vP86",
+          "text": "Segundo monitor para home office",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "DpPec",
+          "text": "REQ-10442 · Aprovado",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "E4ehp",
+          "text": "Outlook não sincroniza no celular",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "w21b4A",
+          "text": "INC-19877 · Resolvido em 02 set",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "HGPN1",
+          "text": "Troca de senha da rede",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "yi7m8",
+          "text": "INC-19410 · Resolvido em 11 jul",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "mWnfy",
+          "text": "Ver todos os chamados da Ana",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        }
+      ],
+      "topLevelLayout": [
+        {
+          "id": "wHWFL",
+          "name": "Rail",
+          "type": "frame",
+          "width": 64,
+          "height": "fill_container",
+          "fill": "$desk",
+          "gap": 6,
+          "padding": [
+            16,
+            0
+          ],
+          "layout": "vertical"
+        },
+        {
+          "id": "L0EO1",
+          "name": "Chat List",
+          "type": "frame",
+          "width": 380,
+          "height": "fill_container",
+          "layout": "vertical"
+        },
+        {
+          "id": "p9hzq3",
+          "name": "Conversation",
+          "type": "frame",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "#EEF1F5",
+          "layout": "vertical"
+        },
+        {
+          "id": "cpdvv",
+          "name": "Ticket History",
+          "type": "frame",
+          "width": 340,
+          "height": "fill_container",
+          "fill": "$paper",
+          "layout": "vertical"
+        }
+      ]
+    },
+    {
+      "id": "i4fCbC",
+      "name": "Cliente — Meu perfil (desktop)",
+      "width": 1440,
+      "height": 900,
+      "texts": [
+        {
+          "id": "H8udph",
+          "text": "Nexo Assist",
+          "fontFamily": "$font-ui",
+          "fontSize": 16
+        },
+        {
+          "id": "O2P1y",
+          "text": "Atendimento",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "ZsKqg",
+          "text": "Meu perfil",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "RQzXc",
+          "text": "AS",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "GacsE",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "XxV21",
+          "text": "ana.souza@nexo.com.br",
+          "fontFamily": "$font-ui",
+          "fontSize": 11.5
+        },
+        {
+          "id": "x0wNNE",
+          "text": "Sair",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "t82Svf",
+          "text": "Service desk de TI",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "r832L",
+          "text": "Meu perfil",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "d2c7VM",
+          "text": "Meu perfil",
+          "fontFamily": "$font-ui",
+          "fontSize": 24
+        },
+        {
+          "id": "v20lci",
+          "text": "Seus dados de acesso ao service desk de TI.",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "SkQQO",
+          "text": "Nome",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "Qv5DI",
+          "text": "Ana Souza",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "GoK3y",
+          "text": "E-mail corporativo",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "WBV2d",
+          "text": "ana.souza@nexo.com.br",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "AsYvW",
+          "text": "Gerenciado pela TI",
+          "fontFamily": "$font-ui",
+          "fontSize": 12.5
+        },
+        {
+          "id": "py3ri",
+          "text": "Senha",
+          "fontFamily": "$font-ui",
+          "fontSize": 14.5
+        },
+        {
+          "id": "Y52sYa",
+          "text": "Alterada há 42 dias",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "mOmtf",
+          "text": "Redefinir senha",
+          "fontFamily": "$font-ui",
+          "fontSize": 13.5
+        },
+        {
+          "id": "BDdI1",
+          "text": "Enviaremos um link de redefinição para ana.souza@nexo.com.br.",
+          "fontFamily": "$font-ui",
+          "fontSize": 13
+        }
+      ],
+      "topLevelLayout": [
+        {
+          "id": "T4MKag",
+          "name": "Sidebar",
+          "type": "frame",
+          "width": 232,
+          "height": "fill_container",
+          "padding": [
+            20,
+            14,
+            14,
+            14
+          ],
+          "layout": "vertical"
+        },
+        {
+          "id": "y8LZzD",
+          "name": "Main",
+          "type": "frame",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical"
+        }
+      ]
+    }
+  ]
+}
