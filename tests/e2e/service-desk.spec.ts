@@ -93,6 +93,9 @@ test("analista recebe transferência e responde com o assistente pausado", async
   await analystPage.screenshot({
     path: "tmp/screenshots/tela-4-console-fila.png",
   });
+  await expect(
+    analystPage.locator(".ticket-history > p").first(),
+  ).toContainText("Abertos: 1");
   await expect(analystPage.locator(".workspace-header")).toContainText(
     "Offline · Comercial · presença simulada",
   );
