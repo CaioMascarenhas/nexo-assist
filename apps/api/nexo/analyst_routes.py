@@ -69,7 +69,7 @@ def claim(conversation_id: str, body: TransitionBody, db: DB, user: Actor):
     conv.state, conv.analyst_id = "HUMAN_ACTIVE", user.id
     conv.epoch += 1
     conv.busy_until = None
-    add_message(db, conv, "SYSTEM", "Service desk", f"{user.name} assumiu o atendimento. Agent pausado.")
+    add_message(db, conv, "SYSTEM", "Service desk", f"{user.name} assumiu o atendimento. Assistente pausado.")
     if conv.selected_ticket_id:
         try:
             ticket = TicketService(db, user).get(conv.selected_ticket_id, lock=True)
