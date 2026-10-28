@@ -19,6 +19,12 @@ import {
   type Draft,
   type Ticket,
 } from "@/lib/api";
+import {
+  factLabels,
+  factValue,
+  intentLabels,
+  ruleLabels,
+} from "@/lib/decision-labels";
 
 export function DecisionDetail({ decision }: { decision: Decision }) {
   return (
@@ -44,7 +50,9 @@ export function DecisionDetail({ decision }: { decision: Decision }) {
           </div>
           <dl>
             <dt>Intenção</dt>
-            <dd>{decision.intent}</dd>
+            <dd>
+              {intentLabels[decision.intent] ?? "Intenção não identificada"}
+            </dd>
             <dt>Segurança estimada</dt>
             <dd>
               {Math.round(decision.confidence * 100)}% · estimativa não
@@ -55,11 +63,16 @@ export function DecisionDetail({ decision }: { decision: Decision }) {
           <div className="fact-list">
             {Object.entries(decision.facts).map(([k, v]) => (
               <span key={k}>
-                {k}: {String(v)}
+                {factLabels[k] ?? "Informação adicional"}: {factValue(v)}
               </span>
             ))}
           </div>
-          <p className="muted small">Regras: {decision.rules.join(" · ")}</p>
+          <p className="muted small">
+            Regras:{" "}
+            {decision.rules
+              .map((rule) => ruleLabels[rule] ?? "Regra do service desk")
+              .join(" · ")}
+          </p>
           {decision.sources.map((s) => (
             <div className="source" key={s.id}>
               <strong>{s.title}</strong>
@@ -225,7 +238,7 @@ export function DraftCard({
         <div>
           <span>Tipo / categoria</span>
           <strong>
-            {draft.payload.kind} · {draft.payload.category}
+            {labels[draft.payload.kind]} · {draft.payload.category}
           </strong>
         </div>
         <div>

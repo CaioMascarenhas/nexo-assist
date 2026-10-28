@@ -113,6 +113,8 @@ export async function api<T>(
 export const post = <T>(path: string, body: unknown = {}) =>
   api<T>(path, { method: "POST", body: JSON.stringify(body) });
 export const labels: Record<string, string> = {
+  INC: "Incidente",
+  REQ: "Requisição",
   CRITICAL: "Crítica",
   HIGH: "Alta",
   MEDIUM: "Média",

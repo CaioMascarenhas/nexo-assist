@@ -371,7 +371,7 @@ export function Workspace({
                   ? `${conversation?.user?.name.split(" ")[0]} espera um atendente`
                   : "Aguardando um analista"}
               </strong>
-              <span>Agent pausado · contexto preservado</span>
+              <span>Assistente pausado · contexto preservado</span>
             </div>
             {analyst && (
               <>
@@ -379,7 +379,7 @@ export function Workspace({
                   className="text-button"
                   onClick={() => transition("release")}
                 >
-                  Devolver ao agent
+                  Devolver ao assistente
                 </button>
                 <button className="primary" onClick={() => transition("claim")}>
                   Assumir atendimento
@@ -558,7 +558,7 @@ export function Workspace({
             {[
               ["all", "Todas"],
               ["waiting", "Para você"],
-              ["agent", "Com o agent"],
+              ["agent", "Com o assistente"],
               ["mine", "Minhas"],
             ].map(([key, label]) => (
               <button
@@ -632,7 +632,7 @@ export function Workspace({
                 {human && conversation?.analyst_id === user.id ? (
                   <>
                     <button onClick={() => transition("release")}>
-                      Devolver ao agent
+                      Devolver ao assistente
                     </button>
                     <button
                       className="danger-button"

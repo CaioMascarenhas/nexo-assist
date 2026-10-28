@@ -40,7 +40,11 @@ def pause(db: Session, conv: Conversation, reason: str, summary: str) -> None:
     conv.handoff_reason = reason
     conv.summary = summary
     add_message(
-        db, conv, "SYSTEM", "Service desk", "Conversa transferida. Agent pausado até devolução pelo suporte."
+        db,
+        conv,
+        "SYSTEM",
+        "Service desk",
+        "Conversa transferida. Assistente pausado até devolução pelo suporte.",
     )
 
 

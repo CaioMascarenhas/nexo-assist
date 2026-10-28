@@ -1,6 +1,6 @@
 # Arquitetura e tecnologias
 
-> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+> Levantamento inicial: decisões de implementação foram atualizadas. Consulte o [README executável](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
 
 
 ## Decisão de arquitetura
