@@ -180,7 +180,7 @@ export function DraftCard({
   const [working, setWorking] = useState(false);
   const [title, setTitle] = useState(draft.payload.title);
   const [description, setDescription] = useState(draft.payload.description);
-  const pending = draft.status === "PENDING";
+  const pending = draft.status === "PENDING" && !draft.expired;
   async function action(kind: "confirm" | "cancel" | "edit") {
     setWorking(true);
     try {
@@ -211,13 +211,15 @@ export function DraftCard({
           {labels[draft.operation]}
         </span>
         <span className={`pill ${pending ? "warning" : ""}`}>
-          {pending
-            ? "Aguardando confirmação"
-            : draft.status === "COMMITTED"
-              ? "Concluído"
-              : draft.status === "CANCELLED"
-                ? "Cancelado"
-                : "Substituído"}
+          {draft.expired
+            ? "Expirado"
+            : pending
+              ? "Aguardando confirmação"
+              : draft.status === "COMMITTED"
+                ? "Concluído"
+                : draft.status === "CANCELLED"
+                  ? "Cancelado"
+                  : "Substituído"}
         </span>
       </div>
       {editing ? (
@@ -228,8 +230,15 @@ export function DraftCard({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
+              readOnly={draft.operation !== "CREATE"}
             />
           </label>
+          {draft.operation !== "CREATE" && (
+            <p className="muted small">
+              O título identifica o chamado existente. Edite a descrição do
+              complemento.
+            </p>
+          )}
           <label>
             Descrição
             <textarea
@@ -262,7 +271,9 @@ export function DraftCard({
         </div>
         <div>
           <span>Operação</span>
-          <strong>{draft.target_id ?? "Novo protocolo após confirmar"}</strong>
+          <strong>
+            {draft.target_code ?? "Novo protocolo após confirmar"}
+          </strong>
         </div>
       </div>
       {draft.payload.due_at && (
@@ -298,6 +309,12 @@ export function DraftCard({
             Cancelar
           </button>
         </div>
+      )}
+      {draft.expired && (
+        <p className="notice">
+          Este rascunho expirou. Peça um novo rascunho na conversa antes de
+          confirmar.
+        </p>
       )}
     </article>
   );

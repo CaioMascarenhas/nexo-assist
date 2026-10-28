@@ -1,6 +1,8 @@
 from typing import Any
+from sqlalchemy.orm import object_session
 
-from .models import Conversation, Draft, Message, User
+from .domain import aware
+from .models import Conversation, Draft, Message, Ticket, User, now
 
 
 def user_json(user: User) -> dict[str, str]:
@@ -40,13 +42,17 @@ def conversation_json(conv: Conversation) -> dict[str, Any]:
 
 
 def draft_json(draft: Draft) -> dict[str, Any]:
+    session = object_session(draft)
+    target = session.get(Ticket, draft.target_id) if session and draft.target_id else None
     return {
         "id": draft.id,
         "operation": draft.operation,
         "target_id": draft.target_id,
+        "target_code": target.code if target and target.user_id == draft.user_id else None,
         "payload": draft.payload,
         "revision": draft.revision,
         "status": draft.status,
         "expires_at": draft.expires_at.isoformat(),
+        "expired": draft.status == "PENDING" and aware(draft.expires_at) <= now(),
         "result_ticket_id": draft.result_ticket_id,
     }

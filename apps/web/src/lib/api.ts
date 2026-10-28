@@ -45,6 +45,9 @@ export interface Draft {
   revision: number;
   status: string;
   target_id: string | null;
+  target_code: string | null;
+  expired: boolean;
+  expires_at: string;
   payload: {
     title: string;
     description: string;

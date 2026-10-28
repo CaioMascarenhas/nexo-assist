@@ -3,7 +3,8 @@ from sqlalchemy import select
 
 from .config import settings
 from .conversation_routes import add_message, get_conversation
-from .models import Draft
+from .domain import aware
+from .models import Draft, now
 from .schemas import EditDraftBody, RevisionBody
 from .security import Actor, DB
 from .serialization import draft_json
@@ -72,8 +73,10 @@ def confirm(draft_id: str, body: RevisionBody, db: DB, user: Actor):
 @router.patch("/drafts/{draft_id}")
 def edit(draft_id: str, body: EditDraftBody, db: DB, user: Actor):
     draft = owned_draft(db, user, draft_id)
-    if draft.status != "PENDING" or draft.revision != body.revision:
+    if draft.status != "PENDING" or draft.revision != body.revision or aware(draft.expires_at) <= now():
         raise HTTPException(409, "Rascunho não está mais disponível nesta versão.")
+    if draft.operation != "CREATE" and body.title != draft.payload["title"]:
+        raise HTTPException(422, "O título identifica o chamado existente. Edite somente o complemento.")
     draft.payload = {**draft.payload, "title": body.title.strip(), "description": body.description.strip()}
     draft.revision += 1
     db.commit()
