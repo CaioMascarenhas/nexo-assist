@@ -212,3 +212,64 @@ def test_existing_ticket_draft_exposes_protocol_and_rejects_ignored_title(client
         ).status_code
         == 200
     )
+
+
+def test_duplicate_matches_shortened_title_but_not_category_alone(database):
+    service = TicketService(database, database.get(User, "alice"))
+    ticket = Ticket(
+        code="REQ-VETOR",
+        user_id="alice",
+        title="Software Vetor 123456",
+        description="Desenho",
+        kind="REQ",
+        category="Software",
+        priority="LOW",
+        due_at=now() + timedelta(days=5),
+    )
+    database.add(ticket)
+    database.flush()
+    assert service.related("Quero um software Vetor 123456. Só eu, sem urgência.", "Software").id == ticket.id
+    assert service.related("Instalar programa de contabilidade SAP", "Software") is None
+    other = Ticket(
+        code="REQ-BOB",
+        user_id="bob",
+        title="Instalar programa de contabilidade SAP",
+        description="Privado",
+        kind="REQ",
+        category="Software",
+        priority="LOW",
+        due_at=now(),
+    )
+    database.add(other)
+    database.flush()
+    assert service.related(other.title, "Software") is None
+
+
+def test_duplicate_prefers_open_ticket_over_recently_resolved_match(database):
+    service = TicketService(database, database.get(User, "alice"))
+    opened = Ticket(
+        code="INC-OPEN",
+        user_id="alice",
+        title="Notebook lento após atualização",
+        description="Aberto",
+        kind="INC",
+        category="Hardware",
+        priority="MEDIUM",
+        due_at=now() + timedelta(days=3),
+        created_at=now() - timedelta(days=3),
+    )
+    resolved = Ticket(
+        code="INC-RESOLVED",
+        user_id="alice",
+        title=opened.title,
+        description="Resolvido",
+        kind="INC",
+        category="Hardware",
+        priority="MEDIUM",
+        status="RESOLVED",
+        resolved_at=now() - timedelta(days=1),
+        due_at=now(),
+    )
+    database.add_all([opened, resolved])
+    database.flush()
+    assert service.related(opened.title, "Hardware").id == opened.id
