@@ -1,5 +1,7 @@
 from datetime import timedelta
 from difflib import SequenceMatcher
+import re
+import unicodedata
 from typing import Any
 from uuid import uuid4
 from threading import Lock
@@ -52,13 +54,48 @@ class TicketService:
         return ticket
 
     def related(self, title: str, category: str) -> Ticket | None:
-        # Category alone is insufficient; require a strong title match.
+        def normalized(value: str) -> str:
+            return "".join(
+                c for c in unicodedata.normalize("NFD", value.casefold()) if not unicodedata.combining(c)
+            )
+
+        def words(value: str) -> set[str]:
+            stopwords = {
+                "quero",
+                "preciso",
+                "solicitar",
+                "solicito",
+                "uma",
+                "para",
+                "com",
+                "sem",
+                "urgencia",
+                "somente",
+                "software",
+                "programa",
+            }
+            return {
+                word
+                for word in re.findall(r"[a-z0-9]+", normalized(value))
+                if len(word) >= 3 and word not in stopwords
+            }
+
+        # Categoria sozinha e uma palavra genérica nunca identificam o mesmo problema.
+        candidates = []
+        requested_words = words(title)
         for ticket in self.list():
-            score = SequenceMatcher(None, title.lower(), ticket.title.lower()).ratio()
-            if ticket.category == category and score >= 0.65:
-                if ticket.status not in {"RESOLVED", "CLOSED"} or can_reopen(ticket.resolved_at, now()):
-                    return ticket
-        return None
+            if ticket.category != category:
+                continue
+            opened = ticket.status not in {"RESOLVED", "CLOSED"}
+            if not opened and not can_reopen(ticket.resolved_at, now()):
+                continue
+            score = SequenceMatcher(None, normalized(title), normalized(ticket.title)).ratio()
+            existing_words = words(ticket.title)
+            overlap = len(requested_words & existing_words)
+            containment = overlap / max(1, min(len(requested_words), len(existing_words)))
+            if score >= 0.65 or (overlap >= 2 and containment >= 0.8):
+                candidates.append((opened, max(score, containment if overlap >= 2 else 0), ticket))
+        return max(candidates, key=lambda candidate: candidate[:2])[2] if candidates else None
 
     def prepare(self, conv: Conversation, payload: dict[str, Any], target: Ticket | None = None) -> Draft:
         self.available()
