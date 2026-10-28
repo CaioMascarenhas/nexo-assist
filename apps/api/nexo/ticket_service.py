@@ -140,6 +140,7 @@ class TicketService:
                 ticket.priority = p["priority"]
                 ticket.due_at = due_at(ticket.support_updated_at, ticket.priority)
             ticket.description += "\n\nComplemento confirmado: " + p["description"]
+            ticket.affected_scope = p["affected_scope"]
             ticket.updates = [
                 *ticket.updates,
                 {"author": self.actor.name, "content": p["description"], "at": now().isoformat()},
