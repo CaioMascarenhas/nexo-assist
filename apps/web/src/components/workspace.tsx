@@ -360,8 +360,11 @@ export function Workspace({
                           key={t.id}
                           ticket={t}
                           compact
-                          onSelect={(t) =>
-                            send(`Qual o status do chamado ${t.code}?`, t)
+                          onSelect={
+                            analyst
+                              ? undefined
+                              : (t) =>
+                                  send(`Qual o status do chamado ${t.code}?`, t)
                           }
                         />
                       ))

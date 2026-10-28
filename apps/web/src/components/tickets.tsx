@@ -104,9 +104,13 @@ export function TicketCard({
   onSelect?: (ticket: Ticket) => void;
   compact?: boolean;
 }) {
-  if (compact)
+  if (compact) {
+    const Container = onSelect ? "button" : "div";
     return (
-      <button className="ticket-list-item" onClick={() => onSelect?.(ticket)}>
+      <Container
+        className="ticket-list-item"
+        onClick={onSelect ? () => onSelect(ticket) : undefined}
+      >
         <div>
           <span className="mono">{ticket.code}</span>
           <strong>{ticket.title}</strong>
@@ -114,9 +118,10 @@ export function TicketCard({
             {labels[ticket.status] ?? ticket.status}
           </span>
         </div>
-        <ChevronRight size={15} />
-      </button>
+        {onSelect && <ChevronRight size={15} />}
+      </Container>
     );
+  }
   return (
     <article className="ticket-card">
       <div className="card-top">
