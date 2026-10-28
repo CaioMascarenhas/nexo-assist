@@ -82,6 +82,12 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     text = "".join(
         c for c in unicodedata.normalize("NFD", content.casefold()) if not unicodedata.combining(c)
     )
+    if facts.get("_vpn_guidance_offered") and (
+        intent == "update"
+        or any(term in text for term in ("nao resolveu", "nao funcionou", "continua sem funcionar"))
+    ):
+        facts["_vpn_guidance_failed"] = True
+        conv.facts = {**facts}
     protocols = re.findall(r"\b(?:inc|req)-[a-z0-9]+(?:-[a-z0-9]+)*\b", text)
     if protocols:
         matching = [t for t in own_tickets if t.code.casefold() in protocols]
@@ -192,7 +198,8 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     decision["sources"] = [
         {"id": a.id, "title": a.title, "content": a.content, "applicable": a in applicable} for a in articles
     ]
-    if intent == "help" and applicable:
+    vpn_failed = facts.get("_vpn_guidance_failed", False)
+    if intent == "help" and applicable and not (vpn_failed and all(a.id == "vpn-809" for a in applicable)):
         return "\n\n".join(a.content for a in applicable), data
     if facts.get("category") == "Rede e VPN" and not facts.get("os"):
         data["quickReplies"] = ["Windows 10", "Windows 11", "Outro sistema"]
@@ -200,9 +207,15 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "Qual é o sistema operacional do seu computador? O artigo de VPN erro 809 se aplica somente ao Windows 10.",
             data,
         )
-    if facts.get("os") == "Windows 10" and facts.get("category") == "Rede e VPN" and intent != "update":
+    if (
+        facts.get("os") == "Windows 10"
+        and facts.get("category") == "Rede e VPN"
+        and intent != "update"
+        and not vpn_failed
+    ):
         article = db.get(Article, "vpn-809")
         if article:
+            conv.facts = {**facts, "_vpn_guidance_offered": True}
             decision["sources"] = [
                 {"id": article.id, "title": article.title, "content": article.content, "applicable": True}
             ]
