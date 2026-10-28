@@ -14,9 +14,11 @@ test("employee confirms a draft and can inspect the decision", async ({
     page.getByRole("button", { name: "Novo atendimento" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Novo atendimento" }).click();
-  await expect(page.getByLabel("Mensagem")).toBeEnabled();
+  await expect(
+    page.getByRole("textbox", { name: "Mensagem", exact: true }),
+  ).toBeEnabled();
   await page
-    .getByLabel("Mensagem")
+    .getByRole("textbox", { name: "Mensagem", exact: true })
     .fill(
       "Minha VPN tem erro 809 no Windows 11. Só eu sou afetado e não consigo trabalhar.",
     );
@@ -35,7 +37,10 @@ test("employee confirms a draft and can inspect the decision", async ({
   await expect(
     page.getByText(/operação confirmada e concluída/).last(),
   ).toBeVisible();
-  await page.screenshot({path:"tmp/screenshots/employee-chat.png",fullPage:true});
+  await page.screenshot({
+    path: "tmp/screenshots/employee-chat.png",
+    fullPage: true,
+  });
   await page.reload();
   await expect(
     page.getByText(/operação confirmada e concluída/).last(),
@@ -51,7 +56,9 @@ test("analyst receives handoff and replies with the agent paused", async ({
   const analystPage = await support.newPage();
   await login(userPage, "carla.mendes@nexo.com.br");
   await userPage.getByRole("button", { name: "Novo atendimento" }).click();
-  await expect(userPage.getByLabel("Mensagem")).toBeEnabled();
+  await expect(
+    userPage.getByRole("textbox", { name: "Mensagem", exact: true }),
+  ).toBeEnabled();
   await userPage
     .getByRole("button", { name: "Falar com um analista", exact: true })
     .last()
@@ -74,9 +81,11 @@ test("analyst receives handoff and replies with the agent paused", async ({
   await analystPage
     .getByRole("button", { name: "Assumir atendimento" })
     .click();
-  await expect(analystPage.getByLabel("Mensagem")).toBeEnabled();
+  await expect(
+    analystPage.getByRole("textbox", { name: "Mensagem", exact: true }),
+  ).toBeEnabled();
   await analystPage
-    .getByLabel("Mensagem")
+    .getByRole("textbox", { name: "Mensagem", exact: true })
     .fill("Olá, Carla. Já li o contexto e vou ajudar você.");
   await analystPage.getByRole("button", { name: "Enviar mensagem" }).click();
   await expect(
