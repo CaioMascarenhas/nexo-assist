@@ -26,13 +26,17 @@ test("login inválido, perfil e saída preservam a autorização", async ({
   page,
 }) => {
   await page.goto("/");
+  await page.screenshot({ path: "tmp/screenshots/tela-1-login.png" });
   await page.getByLabel("E-mail corporativo").fill("desconhecido@nexo.com.br");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("E-mail não cadastrado");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "E-mail não cadastrado" }),
+  ).toBeVisible();
   await page.getByLabel("E-mail corporativo").fill("ana.souza@nexo.com.br");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await page.getByRole("button", { name: "Meu perfil", exact: true }).click();
   await expect(page.locator(".profile")).toContainText("ana.souza@nexo.com.br");
+  await page.screenshot({ path: "tmp/screenshots/tela-6-perfil.png" });
   await page.getByRole("button", { name: "Sair", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Entrar", exact: true }),
@@ -89,13 +93,14 @@ test("edição e confirmação criam uma requisição e a repetição vira compl
   await page.getByRole("button", { name: "Editar", exact: true }).click();
   await page.getByLabel("Título", { exact: true }).fill(title);
   await page
-    .getByLabel("Descrição", { exact: true })
+    .getByRole("textbox", { name: "Descrição", exact: true })
     .fill("Preciso do software de desenho para preparar propostas.");
   await page
     .getByRole("button", { name: "Salvar revisão", exact: true })
     .click();
   await expect(page.locator(".draft-card")).toContainText(title);
   await expect(page.locator(".draft-card")).toContainText("Requisição");
+  await page.screenshot({ path: "tmp/screenshots/tela-2-rascunho.png" });
   await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(page.locator(".timeline")).toContainText(
     "operação confirmada e concluída",
@@ -175,6 +180,8 @@ for (const [name, email, content] of [
     await expect(
       page.getByText("Aguardando um analista", { exact: true }),
     ).toBeVisible();
+    if (name === "vencimento")
+      await page.screenshot({ path: "tmp/screenshots/tela-3-consulta.png" });
     const before = await (
       await page.request.get(`/api/conversations/${id}`)
     ).json();
@@ -230,7 +237,7 @@ test("analista filtra, assume e encerra sem resolver o chamado automaticamente",
     .getByRole("button", { name: "Encerrar atendimento", exact: true })
     .click();
   await expect(
-    page.getByText("Encerrado", { exact: true }).first(),
+    page.locator(".workspace-header").getByText("Encerrado", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Mensagem", exact: true }),
@@ -264,9 +271,9 @@ test("erro de envio libera o campo e não expõe chamados de outro funcionário"
     }),
   );
   await send(page, "Preciso de ajuda");
-  await expect(page.getByRole("alert")).toContainText(
-    "temporariamente indisponível",
-  );
+  await expect(
+    page.getByRole("alert").filter({ hasText: "temporariamente indisponível" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Mensagem", exact: true }),
   ).toBeEnabled();
