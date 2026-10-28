@@ -1,0 +1,13 @@
+services:
+  db:
+    ports: !override ["127.0.0.1:55432:5432"]
+  api:
+    ports: !override ["127.0.0.1:8100:8000"]
+    environment:
+      ALLOWED_ORIGINS: http://localhost:3100,http://127.0.0.1:3100
+  agent:
+    environment:
+      LLM_MODE: stub
+      GOOGLE_API_KEY: ""
+  web:
+    ports: !override ["127.0.0.1:3100:3000"]

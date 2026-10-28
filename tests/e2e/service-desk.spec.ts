@@ -6,7 +6,7 @@ async function login(page: Page, email: string) {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
 }
 
-test("employee confirms a draft and can inspect the decision", async ({
+test("funcionário confirma rascunho e consulta os detalhes da decisão", async ({
   page,
 }) => {
   await login(page, "bruno.tavares@nexo.com.br");
@@ -59,7 +59,7 @@ test("employee confirms a draft and can inspect the decision", async ({
   ).toBeVisible();
 });
 
-test("analyst receives handoff and replies with the agent paused", async ({
+test("analista recebe transferência e responde com o assistente pausado", async ({
   browser,
 }) => {
   const employee = await browser.newContext();
@@ -90,6 +90,9 @@ test("analyst receives handoff and replies with the agent paused", async ({
   await expect(
     analystPage.getByRole("button", { name: "Assumir atendimento" }),
   ).toBeVisible();
+  await analystPage.screenshot({
+    path: "tmp/screenshots/tela-4-console-fila.png",
+  });
   await expect(
     analystPage.locator(".ticket-history > p").first(),
   ).toContainText("Abertos: 1");
@@ -122,6 +125,9 @@ test("analyst receives handoff and replies with the agent paused", async ({
   await expect(
     analystPage.locator(".from-user .message-author").last(),
   ).toContainText("Carla Mendes");
+  await analystPage.screenshot({
+    path: "tmp/screenshots/tela-5-console-humano.png",
+  });
   await expect(
     userPage.getByText("Analista atendendo", { exact: true }),
   ).toBeVisible();

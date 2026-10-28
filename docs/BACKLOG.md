@@ -11,6 +11,8 @@ O desenvolvimento foi feito em branches, commits incrementais e PRs. Consulte as
 | Chamados e confirmação | [#5](https://github.com/CaioMascarenhas/nexo-assist/issues/5) | [#13](https://github.com/CaioMascarenhas/nexo-assist/pull/13) | Integrada |
 | Interface do protótipo | [#6](https://github.com/CaioMascarenhas/nexo-assist/issues/6) | [#15](https://github.com/CaioMascarenhas/nexo-assist/pull/15) | Integrada |
 | Console/concorrência | [#7](https://github.com/CaioMascarenhas/nexo-assist/issues/7) | [#14](https://github.com/CaioMascarenhas/nexo-assist/pull/14), [#15](https://github.com/CaioMascarenhas/nexo-assist/pull/15) | Integrada |
-| CI/validação/documentação | [#8](https://github.com/CaioMascarenhas/nexo-assist/issues/8) | PR de validação final | Implementada; aguardando checks finais |
+| CI/validação/documentação | [#8](https://github.com/CaioMascarenhas/nexo-assist/issues/8) | [#16](https://github.com/CaioMascarenhas/nexo-assist/pull/16) | Integrada |
+
+A revisão de 28/10/2026 está registrada na [auditoria do desafio](11-auditoria-do-desafio.md), com mapeamento individual das issues 19–40 para as respectivas PRs. A [issue 22](https://github.com/CaioMascarenhas/nexo-assist/issues/22) reúne a bateria ampliada e a matriz de aderência ao PDF/protótipo.
 
 Materiais originais do processo seletivo são locais. O repositório contém o inventário visual sanitizado e as licenças das fontes utilizadas.
