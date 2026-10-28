@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 import re
 import unicodedata
@@ -16,6 +16,17 @@ from .models import Conversation, Draft, Ticket, User, now
 
 _fault_lock = Lock()
 _transient_faults = 2
+
+
+def sla_anchor(ticket: Ticket) -> datetime:
+    # Reabertura inicia outra primeira resposta sem fingir mensagem do suporte.
+    starts = [aware(ticket.support_updated_at)]
+    starts.extend(
+        aware(datetime.fromisoformat(update["at"]))
+        for update in ticket.updates
+        if update.get("type") == "reopen"
+    )
+    return max(starts)
 
 
 class TicketService:
@@ -117,9 +128,7 @@ class TicketService:
             priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
             effective = min([target.priority, payload["priority"]], key=priorities.index)
             preview_due = (
-                target.due_at
-                if effective == target.priority
-                else due_at(target.support_updated_at, effective)
+                target.due_at if effective == target.priority else due_at(sla_anchor(target), effective)
             )
             payload = {**payload, "priority": effective}
         payload = {**payload, "due_at": preview_due.isoformat()}
@@ -167,7 +176,12 @@ class TicketService:
                     raise HTTPException(409, "A janela de reabertura terminou.")
                 ticket.status, ticket.resolved_at = "OPEN", None
                 ticket.priority = p["priority"]
-                ticket.due_at = due_at(now(), p["priority"])
+                cycle_start = now()
+                ticket.due_at = due_at(cycle_start, p["priority"])
+                ticket.updates = [
+                    *ticket.updates,
+                    {"type": "reopen", "at": cycle_start.isoformat(), "author": self.actor.name},
+                ]
             elif ["CRITICAL", "HIGH", "MEDIUM", "LOW"].index(p["priority"]) < [
                 "CRITICAL",
                 "HIGH",
@@ -175,7 +189,7 @@ class TicketService:
                 "LOW",
             ].index(ticket.priority):
                 ticket.priority = p["priority"]
-                ticket.due_at = due_at(ticket.support_updated_at, ticket.priority)
+                ticket.due_at = due_at(sla_anchor(ticket), ticket.priority)
             ticket.description += "\n\nComplemento confirmado: " + p["description"]
             ticket.affected_scope = p["affected_scope"]
             ticket.updates = [
