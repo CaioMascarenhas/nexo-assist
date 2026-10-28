@@ -6,7 +6,7 @@ Execução local em 27/10/2026, com PostgreSQL 18 em Docker. CI e PRs fornecem o
 | --- | --- |
 | TypeScript estrito | `npm run typecheck` em frontend e agente |
 | Build de produção | `npm run build` e build Linux dos containers |
-| API/domínio | 30 testes PostgreSQL, incluindo schemas isolados e migration upgrade/downgrade |
+| API/domínio | 31 testes PostgreSQL, incluindo schemas isolados e migration upgrade/downgrade |
 | Agente offline | 2 testes de contrato/intenção e preservação de desconhecidos |
 | Navegador | 2 jornadas completas: confirmar chamado e atendimento funcionário/analista |
 | Gemini real | Uma consulta de horário no modo live retornou intenção help, fonte hours e decisão válida |
