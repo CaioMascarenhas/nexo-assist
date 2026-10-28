@@ -148,9 +148,20 @@ export function TicketCard({
         </div>
       </div>
       <div className={`deadline ${ticket.overdue ? "late" : ""}`}>
-        {ticket.overdue ? <CircleAlert size={14} /> : <Clock3 size={14} />}{" "}
-        {ticket.overdue ? "Prazo vencido" : "Prazo de resposta"} ·{" "}
-        {date(ticket.due_at)}
+        {ticket.status === "RESOLVED" || ticket.status === "CLOSED" ? (
+          <>
+            Resolvido{" "}
+            {ticket.resolved_at
+              ? `em ${date(ticket.resolved_at)}`
+              : "pelo suporte"}
+          </>
+        ) : (
+          <>
+            {ticket.overdue ? <CircleAlert size={14} /> : <Clock3 size={14} />}{" "}
+            {ticket.overdue ? "Prazo vencido" : "Prazo de resposta"} ·{" "}
+            {date(ticket.due_at)}
+          </>
+        )}
       </div>
     </article>
   );

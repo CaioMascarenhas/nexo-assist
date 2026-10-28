@@ -66,7 +66,11 @@ export function stubDecision(input: Input): Proposal {
   if (/analista|atendente|uma pessoa|humano/.test(text)) intent = "handoff";
   else if (/ferias|salario|rh\b|reembolso|facilities/.test(text))
     intent = "out_of_scope";
-  else if (/status|consultar|meus chamados|como esta/.test(text))
+  else if (
+    /status|consultar|meus chamados|como esta|chamados resolvidos|todos os chamados|outro chamado/.test(
+      text,
+    )
+  )
     intent = "consult";
   else if (/adicionar|complement|continua|voltou/.test(text)) intent = "update";
   else if (/horario|funcionamento|como instalar|desbloquear/.test(text))
