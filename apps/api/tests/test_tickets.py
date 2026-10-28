@@ -158,3 +158,57 @@ def test_simultaneous_confirmations_return_one_ticket(database):
         ids = list(executor.map(attempt, range(2)))
     assert ids[0] == ids[1]
     assert database.scalar(select(func.count()).select_from(Ticket)) == 1
+
+
+def test_draft_edits_reject_whitespace_and_expired_revision(client, database):
+    login(client)
+    draft = pending(database)
+    for title, description in [("   ", "Texto válido"), ("Título", "     ")]:
+        response = client.patch(
+            f"/drafts/{draft.id}", json={"revision": 1, "title": title, "description": description}
+        )
+        assert response.status_code == 422
+    draft.expires_at = now() - timedelta(seconds=1)
+    database.commit()
+    assert (
+        client.patch(
+            f"/drafts/{draft.id}",
+            json={"revision": 1, "title": "Título válido", "description": "Descrição válida"},
+        ).status_code
+        == 409
+    )
+    history = client.get(f"/conversations/{draft.conversation_id}").json()
+    assert history["drafts"][0]["expired"] is True
+
+
+def test_existing_ticket_draft_exposes_protocol_and_rejects_ignored_title(client, database):
+    login(client)
+    ticket = Ticket(
+        code="INC-REVISAO",
+        user_id="alice",
+        title="VPN erro 809 no notebook",
+        description="Inicial",
+        kind="INC",
+        category="Rede e VPN",
+        priority="HIGH",
+        due_at=now() + timedelta(days=1),
+    )
+    database.add(ticket)
+    database.commit()
+    draft = pending(database, target=ticket)
+    response = client.get(f"/conversations/{draft.conversation_id}")
+    assert response.json()["drafts"][0]["target_code"] == "INC-REVISAO"
+    assert (
+        client.patch(
+            f"/drafts/{draft.id}",
+            json={"revision": 1, "title": "Um título diferente", "description": "Complemento válido"},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.patch(
+            f"/drafts/{draft.id}",
+            json={"revision": 1, "title": draft.payload["title"], "description": "Complemento válido"},
+        ).status_code
+        == 200
+    )
