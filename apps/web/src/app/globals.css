@@ -83,11 +83,11 @@ strong {
   color: var(--muted);
 }
 .small {
-  font-size: 12px;
+  font-size: 14px;
 }
 .mono {
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.02em;
 }
 .spin {
@@ -145,7 +145,7 @@ strong {
   width: 19px;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   font-weight: 500;
 }
@@ -159,7 +159,7 @@ strong {
   justify-content: center;
   gap: 7px;
   padding: 9px 15px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 550;
   transition: background 0.15s;
 }
@@ -171,7 +171,7 @@ strong {
   align-items: center;
   gap: 5px;
   padding: 7px 9px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .pill {
   display: inline-flex;
@@ -179,7 +179,7 @@ strong {
   gap: 5px;
   padding: 4px 7px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.2;
   background: var(--desk);
   white-space: nowrap;
@@ -217,7 +217,7 @@ strong {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   flex-shrink: 0;
 }
 .avatar.amber {
@@ -245,7 +245,7 @@ strong {
 .message-author .avatar {
   width: 25px;
   height: 25px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .from-user .message-author {
   justify-content: flex-end;
@@ -300,7 +300,7 @@ strong {
 .sample-user {
   background: #fff;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 13px;
   border-radius: 5px;
   padding: 10px 13px;
   margin-left: 44px;
@@ -310,20 +310,20 @@ strong {
 .sample-reply {
   padding-top: 51px;
   clear: both;
-  font-size: 12px;
+  font-size: 14px;
 }
 .sample-reply > span {
   display: flex;
   align-items: center;
   gap: 6px;
   color: #d8e0e7;
-  font-size: 11px;
+  font-size: 13px;
 }
 .sample-reply small {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 9px;
+  font-size: 12px;
   color: #a5b3bf;
   margin: 9px 0;
 }
@@ -340,7 +340,7 @@ strong {
   gap: 7px;
   align-items: center;
   width: fit-content;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8e0e7;
 }
 .showcase-bottom {
@@ -360,7 +360,7 @@ strong {
 }
 .showcase-bottom span {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: #aeb8c3;
 }
 .login-panel {
@@ -371,13 +371,13 @@ strong {
   min-height: 100dvh;
 }
 .login-help {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   text-align: right;
   white-space: nowrap;
 }
 .login-help button {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--blue);
   padding: 0 0 0 4px;
 }
@@ -388,7 +388,7 @@ strong {
 }
 .login-panel form > .eyebrow {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .login-panel h2 {
   font:
@@ -400,12 +400,12 @@ strong {
 }
 .login-panel form > p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 28px;
 }
 .login-panel label {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 18px;
 }
 .login-panel label > span {
@@ -419,7 +419,7 @@ strong {
   background: #fff;
   padding: 11px 12px;
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--ink);
 }
 .login-panel input:focus {
@@ -430,7 +430,7 @@ strong {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 13px;
   margin: 16px 0;
 }
 .checkbox input {
@@ -440,7 +440,7 @@ strong {
 .login-submit {
   width: 100%;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 14px;
   padding: 11px 14px;
 }
 .demo-accounts {
@@ -449,7 +449,7 @@ strong {
   padding-top: 16px;
 }
 .demo-accounts > span {
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.09em;
   color: var(--muted);
 }
@@ -458,7 +458,7 @@ strong {
   align-items: center;
   gap: 8px;
   width: 100%;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--ink2);
   padding: 10px 0;
 }
@@ -469,7 +469,7 @@ strong {
 .login-panel footer {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   padding-top: 25px;
   gap: 12px;
@@ -484,7 +484,7 @@ strong {
   border-radius: 5px;
   background: #fff0ef;
   color: #b62d32;
-  font-size: 12px;
+  font-size: 14px;
   margin: 12px 0;
 }
 /* Shared application shell. */
@@ -518,7 +518,7 @@ strong {
   padding: 10px 11px;
   border-radius: 4px;
   text-align: left;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--ink2);
 }
 .employee-sidebar nav button.selected {
@@ -530,41 +530,55 @@ strong {
   border: 1px solid var(--rule);
   padding: 9px;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   gap: 7px;
 }
+/* Seletor recolhido por padrão; todas as conversas continuam acessíveis. */
 .conversation-history {
-  padding: 4px 6px;
+  position: relative;
+  margin: 0 5px;
 }
-.conversation-history > span {
-  font-size: 8px;
-  letter-spacing: 0.1em;
-  color: #959ca7;
-}
-.conversation-history > button {
+.conversation-history summary {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  width: 100%;
-  font-size: 10px;
-  padding: 9px 5px;
-  text-align: left;
+  gap: 7px;
+  cursor: pointer;
+  padding: 10px 4px;
+  list-style: none;
+  font-size: 13px;
   color: var(--muted);
-  margin-top: 3px;
+}
+.conversation-history summary svg:last-child {
+  margin-left: auto;
+}
+.history-options {
+  max-height: 40dvh;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: white;
+}
+.history-options button {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 5px;
+  width: 100%;
+  padding: 10px 6px;
+  text-align: left;
+  font-size: 13px;
   border-radius: 4px;
 }
-.conversation-history > button.current {
-  color: var(--ink);
-  background: #f7f8fa;
+.history-options button.current {
+  background: var(--blue-soft);
+  color: var(--blue);
 }
-.conversation-history small {
-  font-size: 8px;
-  width: 100%;
-  padding-left: 18px;
-  color: #959ba6;
+.history-options small {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 12px;
 }
 .sidebar-user {
   margin-top: auto;
@@ -580,10 +594,10 @@ strong {
 .sidebar-user strong,
 .sidebar-user small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
 }
 .sidebar-user small {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 3px;
   overflow: hidden;
@@ -609,7 +623,7 @@ strong {
   align-items: center;
   gap: 9px;
   padding: 0 25px;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
 }
 .workspace-header strong {
@@ -626,9 +640,9 @@ strong {
   scrollbar-width: thin;
 }
 .timeline-inner {
-  max-width: 820px;
+  width: 100%;
   margin: 0 auto;
-  padding: 25px 32px 28px;
+  padding: 28px clamp(24px, 4vw, 72px) 32px;
   display: flex;
   flex-direction: column;
   gap: 26px;
@@ -638,11 +652,11 @@ strong {
   justify-content: center;
   margin: 0 0 4px;
   color: #939ba5;
-  font-size: 10px;
+  font-size: 12px;
 }
 .message {
   max-width: 100%;
-  font-size: 13px;
+  font-size: 16px;
 }
 .message.from-user {
   align-self: flex-end;
@@ -653,7 +667,7 @@ strong {
   background: var(--ink);
   color: white;
   border-radius: 7px 7px 2px 7px;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.65;
 }
 .message-text {
@@ -665,12 +679,12 @@ strong {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 10px;
 }
 .mini-brand {
-  font-size: 10px;
+  font-size: 12px;
   background: var(--blue);
   color: white;
   border-radius: 2px;
@@ -681,13 +695,13 @@ strong {
   background: #eef1f5;
   border: 1px solid #e4e8ee;
   padding: 1px 3px;
-  font-size: 8px;
+  font-size: 12px;
   border-radius: 3px;
   color: #758394;
 }
 .message time {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: #a2a8b2;
   margin-top: 5px;
 }
@@ -708,10 +722,10 @@ strong {
   border-radius: 3px;
   background: #f1f5f8;
   color: #586a7a;
-  font-size: 9px;
+  font-size: 12px;
 }
 .decision > details > summary {
-  font-size: 9px;
+  font-size: 12px;
   color: #7b8794;
   cursor: pointer;
   display: flex;
@@ -726,7 +740,7 @@ strong {
   padding: 15px;
   border-radius: 6px;
   margin: 8px 0 12px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .decision-heading {
@@ -758,7 +772,7 @@ strong {
 .fact-list span {
   background: #eaf0f7;
   padding: 2px 5px;
-  font-size: 10px;
+  font-size: 12px;
   border-radius: 3px;
 }
 .source {
@@ -768,7 +782,7 @@ strong {
 .source > span {
   margin-left: 10px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .source p {
   margin: 5px 0;
@@ -794,10 +808,10 @@ strong {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .card-top .mono {
-  font-size: 10px;
+  font-size: 12px;
 }
 .ticket-card h3 {
   font-weight: 550;
@@ -806,7 +820,7 @@ strong {
   margin-bottom: 7px;
 }
 .ticket-card > p {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   white-space: pre-wrap;
   margin-bottom: 16px;
@@ -822,12 +836,12 @@ strong {
   display: block;
 }
 .ticket-grid span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 4px;
 }
 .ticket-grid strong {
-  font-size: 11px;
+  font-size: 13px;
 }
 .deadline {
   display: flex;
@@ -836,7 +850,7 @@ strong {
   border-top: 1px solid var(--rule);
   padding-top: 11px;
   margin-top: 14px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .deadline.late {
@@ -864,16 +878,16 @@ strong {
   background: #f5f9fd;
 }
 .ticket-list-item .mono {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .ticket-list-item strong {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   margin: 3px 0 5px;
 }
 .ticket-list-item .small {
-  font-size: 10px;
+  font-size: 12px;
 }
 .draft-actions {
   display: flex;
@@ -885,7 +899,7 @@ strong {
 }
 .draft-card > label {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   margin: 10px 0;
 }
@@ -911,14 +925,14 @@ strong {
   border: 1px solid #dfe5ec;
   border-radius: 4px;
   padding: 8px 11px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .quick-replies > button:hover {
   background: var(--blue-soft);
   border-color: #bbd7f2;
 }
 .quick-replies kbd {
-  font-size: 9px;
+  font-size: 12px;
   min-width: 15px;
   border: 1px solid #e7eaf0;
   padding: 1px 3px;
@@ -931,12 +945,12 @@ strong {
   align-items: center;
   gap: 8px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .system-message {
   align-self: center;
   color: #87909d;
-  font-size: 10px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -957,15 +971,15 @@ strong {
   background: #f7fafc;
   padding: 12px;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
   color: var(--muted);
 }
 .composer-area {
-  padding: 10px 28px 14px;
+  padding: 14px clamp(24px, 4vw, 72px) 18px;
   border-top: 1px solid #f3f4f6;
   width: 100%;
-  max-width: 880px;
+  max-width: none;
   margin: 0 auto;
   background: #fff;
 }
@@ -989,7 +1003,7 @@ strong {
   border: 0;
   padding: 0;
   background: transparent;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--ink);
 }
@@ -1001,18 +1015,18 @@ strong {
 }
 .composer .primary {
   padding: 7px 10px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .composer-footer {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  font-size: 9px;
+  font-size: 12px;
   color: #9099a5;
   margin-top: 8px;
 }
 .composer-footer button {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -1031,19 +1045,19 @@ strong {
   display: block;
 }
 .handoff-banner strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 .handoff-banner span {
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 4px;
   color: var(--muted);
 }
 .handoff-banner .text-button {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 12px;
 }
 .handoff-banner .primary {
-  font-size: 10px;
+  font-size: 12px;
   padding: 8px;
 }
 .toast {
@@ -1060,7 +1074,7 @@ strong {
   max-width: 490px;
   display: flex;
   gap: 15px;
-  font-size: 12px;
+  font-size: 14px;
   align-items: center;
 }
 .toast button {
@@ -1082,7 +1096,7 @@ strong {
   color: var(--ink2);
 }
 .empty-conversation p {
-  font-size: 12px;
+  font-size: 14px;
   max-width: 290px;
 }
 .profile {
@@ -1097,7 +1111,7 @@ strong {
   margin-bottom: 8px;
 }
 .profile > p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 .profile-card {
@@ -1109,7 +1123,7 @@ strong {
 .profile-card label {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 14px;
   padding: 9px 0;
   color: var(--muted);
 }
@@ -1152,7 +1166,7 @@ strong {
   margin-top: auto;
 }
 .conversation-list {
-  width: 340px;
+  width: clamp(280px, 22vw, 340px);
   flex-shrink: 0;
   border-right: 1px solid var(--rule);
   display: flex;
@@ -1171,7 +1185,7 @@ strong {
   margin: 0;
 }
 .list-heading .pill {
-  font-size: 9px;
+  font-size: 12px;
 }
 .search {
   display: flex;
@@ -1187,7 +1201,7 @@ strong {
   border: 0;
   min-width: 0;
   width: 100%;
-  font-size: 11px;
+  font-size: 13px;
 }
 .conversation-filters {
   display: flex;
@@ -1197,7 +1211,7 @@ strong {
   border-bottom: 1px solid var(--rule);
 }
 .conversation-filters button {
-  font-size: 10px;
+  font-size: 12px;
   padding: 6px 9px;
   border-radius: 4px;
   white-space: nowrap;
@@ -1239,14 +1253,14 @@ strong {
   gap: 6px;
 }
 .row-title strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 .row-title time {
-  font-size: 9px;
+  font-size: 12px;
   color: #8d97a4;
 }
 .conversation-row p {
-  font-size: 11px;
+  font-size: 13px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -1255,7 +1269,7 @@ strong {
   line-height: 1.5;
 }
 .row-state {
-  font-size: 9px;
+  font-size: 12px;
   color: #929ca8;
 }
 .row-state.amber-text {
@@ -1267,12 +1281,12 @@ strong {
   gap: 8px;
   border-top: 1px solid var(--rule);
   padding: 13px 17px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .empty-list {
   padding: 25px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 .analyst-workspace .workspace-header {
@@ -1288,10 +1302,10 @@ strong {
   min-width: 0;
 }
 .header-person strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 .header-person span {
-  font-size: 9px;
+  font-size: 12px;
 }
 .header-actions {
   display: flex;
@@ -1300,7 +1314,7 @@ strong {
   gap: 8px;
 }
 .header-actions > button {
-  font-size: 10px;
+  font-size: 12px;
   padding: 6px 8px;
   border: 1px solid var(--rule);
   border-radius: 4px;
@@ -1327,24 +1341,24 @@ strong {
   box-shadow: 0 1px 2px #182c4005;
 }
 .analyst-timeline .from-agent .message-text {
-  font-size: 11px;
+  font-size: 15px;
   line-height: 1.75;
 }
 .analyst-timeline .from-user .message-text {
   background: #dceaf6;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 15px;
   border-radius: 5px;
 }
 .analyst-timeline .decision > details > summary {
-  font-size: 8px;
+  font-size: 12px;
 }
 .analyst-timeline .action-chips > span {
-  font-size: 8px;
+  font-size: 12px;
   padding: 2px 3px;
 }
 .analyst-timeline .system-message {
-  font-size: 9px;
+  font-size: 12px;
   color: #8c97a5;
 }
 .analyst-workspace .composer-area {
@@ -1357,7 +1371,7 @@ strong {
   min-height: 65px;
 }
 .analyst-workspace .composer-footer {
-  font-size: 8px;
+  font-size: 12px;
 }
 .analyst-workspace .composer .primary span {
   display: none;
@@ -1377,16 +1391,16 @@ strong {
   background: #fff;
 }
 .ticket-history > h2 {
-  font-size: 13px;
+  font-size: 15px;
   margin-bottom: 5px;
 }
 .ticket-history > p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 24px;
 }
 .section-label {
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   color: #959daa;
   display: block;
@@ -1405,24 +1419,24 @@ strong {
   cursor: pointer;
 }
 .side-ticket summary .mono {
-  font-size: 9px;
+  font-size: 12px;
   color: #8c96a3;
 }
 .side-ticket summary strong {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.55;
 }
 .side-ticket summary .pill {
-  font-size: 8px;
+  font-size: 12px;
 }
 .side-ticket p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin: 12px 0;
 }
 .side-ticket small,
 .side-ticket > div {
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.8;
 }
 .handoff-summary {
@@ -1433,14 +1447,14 @@ strong {
   color: #657486;
 }
 .handoff-summary summary {
-  font-size: 10px;
+  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 .handoff-summary p {
-  font-size: 10px;
+  font-size: 12px;
   white-space: pre-wrap;
   max-height: 180px;
   overflow: auto;
@@ -1475,7 +1489,7 @@ strong {
     padding: 12px 7px;
   }
   .conversation-filters button {
-    font-size: 9px;
+    font-size: 12px;
     padding: 6px 7px;
   }
   .analyst-rail {
@@ -1502,7 +1516,7 @@ strong {
     gap: 10px;
   }
   .showcase-bottom span {
-    font-size: 9px;
+    font-size: 12px;
   }
 }
 @media (max-width: 900px) {
@@ -1522,7 +1536,7 @@ strong {
     padding: 14px;
   }
   .showcase-content > p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .showcase-bottom strong {
     font-size: 26px;
@@ -1553,7 +1567,7 @@ strong {
     max-width: 400px;
   }
   .showcase-content > p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .sample-chat,
   .showcase-bottom {
@@ -1565,7 +1579,7 @@ strong {
   }
   .login-help {
     margin-bottom: 25px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .login-panel form {
     max-width: 100%;
@@ -1600,9 +1614,6 @@ strong {
     margin: 25px 0 10px;
     padding: 9px;
   }
-  .conversation-history {
-    display: none;
-  }
   .sidebar-user {
     padding: 10px 0;
     justify-content: center;
@@ -1617,17 +1628,17 @@ strong {
   .sidebar-user .avatar {
     width: 28px;
     height: 28px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .workspace-header {
     padding: 0 13px;
     gap: 6px;
-    font-size: 9px;
+    font-size: 12px;
     height: 52px;
     min-height: 52px;
   }
   .header-status {
-    font-size: 8px;
+    font-size: 12px;
     padding: 4px;
   }
   .timeline-inner {
@@ -1638,7 +1649,7 @@ strong {
     max-width: 91%;
   }
   .message {
-    font-size: 12px;
+    font-size: 14px;
   }
   .composer-area {
     padding: 10px 12px;
@@ -1647,10 +1658,10 @@ strong {
     padding: 10px;
   }
   .composer-footer {
-    font-size: 8px;
+    font-size: 12px;
   }
   .composer-footer button {
-    font-size: 8px;
+    font-size: 12px;
   }
   .ticket-card {
     padding: 13px;
@@ -1665,7 +1676,7 @@ strong {
     flex-wrap: wrap;
   }
   .quick-replies > button {
-    font-size: 10px;
+    font-size: 12px;
     padding: 7px;
   }
   .draft-actions {
@@ -1676,13 +1687,13 @@ strong {
     padding: 8px 10px;
   }
   .draft-actions .text-button {
-    font-size: 10px;
+    font-size: 12px;
   }
   .toast {
     left: 12px;
     right: 12px;
     top: 10px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .analyst-rail {
     width: 42px;
@@ -1709,7 +1720,7 @@ strong {
     padding: 7px 6px;
   }
   .search input {
-    font-size: 9px;
+    font-size: 12px;
   }
   .conversation-filters {
     flex-wrap: wrap;
@@ -1717,7 +1728,7 @@ strong {
     gap: 2px;
   }
   .conversation-filters button {
-    font-size: 8px;
+    font-size: 12px;
     padding: 5px 6px;
   }
   .conversation-row {
@@ -1731,16 +1742,16 @@ strong {
     padding-left: 7px;
   }
   .row-title strong {
-    font-size: 10px;
+    font-size: 12px;
   }
   .row-title time {
-    font-size: 8px;
+    font-size: 12px;
   }
   .conversation-row p {
-    font-size: 9px;
+    font-size: 12px;
   }
   .row-state {
-    font-size: 8px;
+    font-size: 12px;
   }
   .analyst-workspace .workspace-header {
     height: auto;
@@ -1756,7 +1767,7 @@ strong {
     flex-wrap: wrap;
   }
   .header-actions > button {
-    font-size: 8px;
+    font-size: 12px;
     padding: 5px;
   }
   .analyst-timeline .timeline-inner {
@@ -1781,13 +1792,13 @@ strong {
     gap: 7px;
   }
   .handoff-banner strong {
-    font-size: 10px;
+    font-size: 12px;
   }
   .handoff-banner .text-button {
     margin-left: 0;
   }
   .handoff-banner .primary {
-    font-size: 9px;
+    font-size: 12px;
   }
   .profile {
     padding: 0 18px;
@@ -1807,7 +1818,146 @@ strong {
     margin-bottom: 6px;
   }
   .console-logout {
-    font-size: 8px;
+    font-size: 12px;
     padding: 12px 8px;
+  }
+}
+
+/* Painéis acessíveis em telas menores, sem comprimir o chat. */
+.drawer-toggle,
+.drawer-close {
+  display: none;
+}
+.workspace-header {
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 64px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.message-tickets,
+.ticket-card,
+.handoff-summary {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.header-person {
+  overflow-wrap: anywhere;
+}
+.composer-footer {
+  flex-wrap: wrap;
+  line-height: 1.5;
+}
+.ticket-history > .drawer-close {
+  float: right;
+}
+@media (max-width: 1180px) {
+  .analyst-workspace .ticket-history {
+    display: none;
+  }
+  .tickets-toggle {
+    display: inline-flex;
+    margin-left: auto;
+    padding: 5px;
+  }
+  .ticket-history.is-open {
+    display: block;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(340px, calc(100vw - 48px));
+    z-index: 40;
+    box-shadow: -8px 0 35px #1b243120;
+  }
+  .ticket-history .drawer-close {
+    display: inline-flex;
+  }
+}
+@media (max-width: 760px) {
+  .analyst-rail {
+    width: 48px;
+  }
+  .analyst-workspace .conversation-list {
+    display: none;
+  }
+  .list-toggle {
+    display: inline-flex;
+    padding: 5px;
+  }
+  .conversation-list.is-open {
+    display: flex;
+    position: fixed;
+    left: 48px;
+    top: 0;
+    bottom: 0;
+    width: min(340px, calc(100vw - 48px));
+    z-index: 35;
+    box-shadow: 8px 0 35px #1b243120;
+  }
+  .conversation-list .drawer-close {
+    display: inline-flex;
+  }
+  .list-heading {
+    gap: 8px;
+  }
+  .list-heading .pill {
+    display: none;
+  }
+  .conversation-row .avatar {
+    display: inline-flex;
+  }
+  .row-title strong {
+    font-size: 15px;
+  }
+  .conversation-row p {
+    font-size: 14px;
+  }
+  .conversation-filters button {
+    font-size: 12px;
+  }
+  .search input {
+    font-size: 14px;
+  }
+  .header-actions {
+    order: 4;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+  .header-actions > button {
+    font-size: 12px;
+  }
+  .timeline-inner,
+  .analyst-timeline .timeline-inner {
+    padding: 20px 16px;
+  }
+  .message,
+  .analyst-timeline .from-agent .message-text,
+  .analyst-timeline .from-user .message-text {
+    font-size: 15px;
+  }
+  .analyst-workspace .composer-footer {
+    display: flex;
+  }
+  .analyst-workspace .workspace-header > .avatar {
+    display: inline-flex;
+  }
+  .employee-sidebar .conversation-history summary {
+    justify-content: center;
+  }
+  .employee-sidebar .conversation-history summary span,
+  .employee-sidebar .conversation-history summary svg:last-child {
+    display: none;
+  }
+  .employee-sidebar .history-options {
+    position: absolute;
+    left: 48px;
+    top: 0;
+    width: min(260px, calc(100vw - 80px));
+    z-index: 30;
+    box-shadow: 0 8px 30px #1b243120;
+  }
+  .workspace-header {
+    min-height: 64px;
   }
 }

@@ -7,6 +7,8 @@ import {
   LoaderCircle,
   LogOut,
   MessageSquare,
+  PanelLeft,
+  PanelRight,
   Plus,
   Search,
   Send,
@@ -55,6 +57,8 @@ export function Workspace({
   const [view, setView] = useState("chat");
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [listOpen, setListOpen] = useState(false);
+  const [ticketsOpen, setTicketsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [partial, setPartial] = useState("");
   const [activity, setActivity] = useState("");
@@ -508,23 +512,32 @@ export function Workspace({
             <Plus size={14} />
             Novo atendimento
           </button>
-          <div className="conversation-history">
-            <span>SEUS ATENDIMENTOS</span>
-            {conversations.slice(0, 6).map((c, i) => (
-              <button
-                key={c.id}
-                className={c.id === selected ? "current" : ""}
-                onClick={() => {
-                  setSelected(c.id);
-                  setView("chat");
-                }}
-              >
-                <MessageSquare size={12} />
-                <span>Atendimento {conversations.length - i}</span>
-                <small>{labels[c.state]}</small>
-              </button>
-            ))}
-          </div>
+          <details className="conversation-history">
+            <summary aria-label="Retomar atendimento">
+              <MessageSquare size={16} />
+              <span>Retomar atendimento</span>
+              <ChevronDown size={14} />
+            </summary>
+            <div className="history-options">
+              {conversations.map((c, i) => (
+                <button
+                  key={c.id}
+                  className={c.id === selected ? "current" : ""}
+                  onClick={(event) => {
+                    setSelected(c.id);
+                    setView("chat");
+                    event.currentTarget
+                      .closest("details")
+                      ?.removeAttribute("open");
+                  }}
+                >
+                  <MessageSquare size={12} />
+                  <span>Atendimento {conversations.length - i}</span>
+                  <small>{labels[c.state]}</small>
+                </button>
+              ))}
+            </div>
+          </details>
           <div className="sidebar-user">
             <span className="avatar">{initials(user.name)}</span>
             <div>
@@ -538,9 +551,19 @@ export function Workspace({
         </aside>
       )}
       {analyst && (
-        <aside className="conversation-list">
+        <aside
+          className={`conversation-list ${listOpen ? "is-open" : ""}`}
+          aria-label="Lista de conversas"
+        >
           <div className="list-heading">
             <h1>Conversas</h1>
+            <button
+              className="drawer-close"
+              aria-label="Fechar conversas"
+              onClick={() => setListOpen(false)}
+            >
+              <X size={18} />
+            </button>
             <span className="pill green">
               <span className="green-dot" />
               Disponível
@@ -576,7 +599,10 @@ export function Workspace({
               <button
                 key={c.id}
                 className={`conversation-row ${selected === c.id ? "selected" : ""}`}
-                onClick={() => setSelected(c.id)}
+                onClick={() => {
+                  setSelected(c.id);
+                  setListOpen(false);
+                }}
               >
                 <PersonAvatar
                   name={c.user?.name ?? "Usuário"}
@@ -617,6 +643,14 @@ export function Workspace({
         <header className="workspace-header">
           {analyst ? (
             <>
+              <button
+                className="drawer-toggle list-toggle"
+                aria-label="Mostrar conversas"
+                aria-expanded={listOpen}
+                onClick={() => setListOpen(!listOpen)}
+              >
+                <PanelLeft size={20} />
+              </button>
               <PersonAvatar
                 name={conversation?.user?.name ?? "Usuário"}
                 presence={
@@ -654,6 +688,14 @@ export function Workspace({
                   </span>
                 )}
               </div>
+              <button
+                className="drawer-toggle tickets-toggle"
+                aria-label="Mostrar chamados"
+                aria-expanded={ticketsOpen}
+                onClick={() => setTicketsOpen(!ticketsOpen)}
+              >
+                <PanelRight size={20} />
+              </button>
             </>
           ) : (
             <>
@@ -733,7 +775,17 @@ export function Workspace({
         )}
       </main>
       {analyst && (
-        <aside className="ticket-history">
+        <aside
+          className={`ticket-history ${ticketsOpen ? "is-open" : ""}`}
+          aria-label="Chamados do funcionário"
+        >
+          <button
+            className="drawer-close"
+            aria-label="Fechar chamados"
+            onClick={() => setTicketsOpen(false)}
+          >
+            <X size={18} />
+          </button>
           <h2>
             Chamados{" "}
             {conversation?.user
