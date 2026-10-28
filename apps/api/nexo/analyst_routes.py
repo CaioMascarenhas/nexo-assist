@@ -34,6 +34,13 @@ def conversations(db: DB, user: Actor, filter: str = "all", q: str = ""):
         searchable = " ".join(
             [owner.name, owner.email, conv.selected_ticket_id or "", last.content if last else ""]
         )
+        if q and conv.selected_ticket_id:
+            try:
+                related = TicketService(db, user).get(conv.selected_ticket_id)
+                searchable += " " + related.code + " " + related.title
+            except HTTPException as error:
+                if error.status_code != 503:
+                    raise
         if q.lower() not in searchable.lower():
             continue
         result.append(

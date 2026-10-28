@@ -1,6 +1,31 @@
 from conftest import login
 
 
+def test_console_search_matches_protocol_independent_of_internal_uuid(client, database):
+    from nexo.models import Conversation, Ticket, now
+
+    login(client)
+    conv_id = client.post("/conversations").json()["id"]
+    ticket = Ticket(
+        code="INC-SEARCH-123",
+        user_id="alice",
+        title="Acesso ao portal",
+        description="Falha",
+        kind="INC",
+        category="Acesso",
+        priority="HIGH",
+        due_at=now(),
+    )
+    database.add(ticket)
+    database.flush()
+    database.get(Conversation, conv_id).selected_ticket_id = ticket.id
+    database.commit()
+    login(client, "support")
+    result = client.get("/analyst/conversations", params={"q": "INC-SEARCH-123"})
+    assert result.status_code == 200
+    assert [c["id"] for c in result.json()] == [conv_id]
+
+
 def test_simultaneous_claim_has_exactly_one_winner(client, database):
     from concurrent.futures import ThreadPoolExecutor
     from threading import Barrier
