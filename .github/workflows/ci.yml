@@ -27,3 +27,4 @@ jobs:
           cache: pip
       - run: pip install -r apps/api/requirements.txt
       - run: python -m compileall -q apps/api/nexo apps/api/migrations
+      - run: python -m pytest apps/api/tests -q
