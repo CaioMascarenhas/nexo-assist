@@ -36,7 +36,12 @@ export function Workspace({
 }) {
   const analyst = user.role === "ANALYST";
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selected, setSelected] = useState("");
+  const [selected, storeSelected] = useState("");
+  const selectedRef = useRef("");
+  const setSelected = useCallback((id: string) => {
+    selectedRef.current = id;
+    storeSelected(id);
+  }, []);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [error, setError] = useState("");
@@ -59,9 +64,14 @@ export function Workspace({
   const loadConversation = useCallback(
     async (id: string) => {
       const data = await api<Conversation>(`/conversations/${id}`);
+      if (selectedRef.current !== id) return data;
       setConversation(data);
-      if (analyst)
-        setTickets(await api<Ticket[]>(`/analyst/conversations/${id}/tickets`));
+      if (analyst) {
+        const results = await api<Ticket[]>(
+          `/analyst/conversations/${id}/tickets`,
+        );
+        if (selectedRef.current === id) setTickets(results);
+      }
       return data;
     },
     [analyst],
