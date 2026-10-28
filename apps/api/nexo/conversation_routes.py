@@ -83,5 +83,13 @@ def handoff(conversation_id: str, db: DB, user: Actor):
         history = db.scalars(select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at.desc()).limit(8))
         summary = "\n".join(f"{m.author}: {m.content[:600]}" for m in reversed(list(history)))
         pause(db, conv, "USER_REQUEST", summary)
+        if conv.selected_ticket_id:
+            from .ticket_service import TicketService
+            try:
+                TicketService(db, user).transfer(conv.selected_ticket_id, "USER_REQUEST")
+            except HTTPException as error:
+                if error.status_code != 503:
+                    raise
+                add_message(db, conv, "SYSTEM", "Service desk", "Conversa na fila humana; atualização do chamado indisponível no momento.")
         db.commit()
     return conversation_json(conv)
