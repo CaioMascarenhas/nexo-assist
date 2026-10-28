@@ -134,3 +134,57 @@ test("busca antiga não sobrescreve o filtro mais recente", async ({ page }) => 
   await expect(page.locator(".workspace-header")).toContainText("Nova");
   await expect(page.locator(".conversation-row")).toContainText("Nova");
 });
+
+test("consultar cartão histórico no console não envia mensagem pelo analista", async ({
+  page,
+}) => {
+  const context = conversation("historico");
+  context.state = "HUMAN_ACTIVE";
+  // A sessão abaixo representa o analista proprietário.
+  Object.assign(context, { analyst_id: user.id });
+  const ticket = {
+    id: "INC-HISTORICO",
+    code: "INC-HISTORICO",
+    title: "Chamado do histórico",
+    status: "OPEN",
+    priority: "LOW",
+    category: "Software",
+    description: "Descrição",
+    due_at: "2026-11-01T12:00:00Z",
+    created_at: "2026-10-28T12:00:00Z",
+    support_updated_at: "2026-10-28T12:00:00Z",
+  };
+  Object.assign(context.messages[0].data, {
+    ticket_selection: true,
+    tickets: [ticket],
+  });
+  let sends = 0;
+  await page.route("**/api/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (route.request().method() === "POST") {
+      sends++;
+      return route.fulfill({ json: {} });
+    }
+    const result =
+      path === "/api/me"
+        ? { ...user, role: "ANALYST" }
+        : path === "/api/runtime"
+          ? { mode: "stub" }
+          : path.endsWith("/tickets")
+            ? [ticket]
+            : path === "/api/analyst/conversations" ||
+                path.startsWith("/api/analyst/conversations?")
+              ? [context]
+              : path === "/api/conversations/historico"
+                ? context
+                : [context];
+    await route.fulfill({ json: result });
+  });
+  await page.goto("/");
+  await expect(
+    page.getByRole("textbox", { name: "Mensagem", exact: true }),
+  ).toBeEnabled();
+  await page.locator(".timeline .ticket-list-item").click();
+  await expect(page.locator(".streaming")).toHaveCount(0);
+  expect(sends).toBe(0);
+});
