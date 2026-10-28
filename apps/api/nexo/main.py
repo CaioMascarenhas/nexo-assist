@@ -8,10 +8,14 @@ from .database import SessionLocal
 from .config import settings
 from .auth_routes import router as auth_router
 from .conversation_routes import router as conversation_router
+from .chat_routes import router as chat_router
+from .ticket_routes import router as ticket_router
 
 app = FastAPI(title="Nexo Assist", version="0.1.0")
 app.include_router(auth_router)
 app.include_router(conversation_router)
+app.include_router(chat_router)
+app.include_router(ticket_router)
 
 
 @app.middleware("http")
