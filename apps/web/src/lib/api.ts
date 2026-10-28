@@ -69,6 +69,7 @@ export interface Message {
   };
 }
 export interface Conversation {
+  selected_ticket_id?: string | null;
   id: string;
   user_id: string;
   state: string;

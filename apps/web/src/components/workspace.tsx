@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -45,6 +45,11 @@ export function Workspace({
   }, []);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const orderedTickets = [...tickets].sort(
+    (a, b) =>
+      Number(b.id === conversation?.selected_ticket_id) -
+      Number(a.id === conversation?.selected_ticket_id),
+  );
   const [error, setError] = useState("");
   const [view, setView] = useState("chat");
   const [filter, setFilter] = useState("all");
@@ -728,24 +733,34 @@ export function Workspace({
             }{" "}
             resolvidos
           </p>
-          <span className="section-label">CHAMADOS DO FUNCIONÁRIO</span>
-          {tickets.map((t) => (
-            <details className="side-ticket" key={t.id}>
-              <summary>
-                <span className="mono">{t.code}</span>
-                <strong>{t.title}</strong>
-                <span className={`pill ${t.overdue ? "warning" : ""}`}>
-                  {labels[t.status]}
+          {orderedTickets.map((t, index) => (
+            <Fragment key={t.id}>
+              {(index === 0 ||
+                orderedTickets[index - 1]?.id ===
+                  conversation?.selected_ticket_id) && (
+                <span className="section-label">
+                  {t.id === conversation?.selected_ticket_id
+                    ? "DESTA CONVERSA"
+                    : "OUTROS CHAMADOS"}
                 </span>
-              </summary>
-              <p>{t.description}</p>
-              <small>
-                {t.category} · prioridade {labels[t.priority]}
-              </small>
-              <div className={t.overdue ? "amber-text" : "muted"}>
-                Resposta: {date(t.due_at)}
-              </div>
-            </details>
+              )}
+              <details className="side-ticket">
+                <summary>
+                  <span className="mono">{t.code}</span>
+                  <strong>{t.title}</strong>
+                  <span className={`pill ${t.overdue ? "warning" : ""}`}>
+                    {labels[t.status]}
+                  </span>
+                </summary>
+                <p>{t.description}</p>
+                <small>
+                  {t.category} · prioridade {labels[t.priority]}
+                </small>
+                <div className={t.overdue ? "amber-text" : "muted"}>
+                  Resposta: {date(t.due_at)}
+                </div>
+              </details>
+            </Fragment>
           ))}
           {!tickets.length && (
             <p className="muted">Nenhum chamado para exibir.</p>
