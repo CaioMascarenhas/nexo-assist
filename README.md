@@ -61,6 +61,8 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 
 O visual segue o protótipo: identificação com painel escuro, fontes locais Newsreader/Schibsted Grotesk, chat com sidebar e console em colunas. As fontes incluem licenças OFL. Perfil é somente leitura.
 
+O chat aproveita a largura disponível e usa mensagens maiores. O seletor de atendimentos anteriores fica recolhido; o console mantém acesso às conversas e aos chamados também no celular. Avatares identificam os participantes e a presença online/offline é explicitamente simulada.
+
 ## Arquitetura
 
 ```mermaid
@@ -117,10 +119,20 @@ npm run build
 
 Python usa PostgreSQL real em schemas temporários isolados, sem truncar dados da aplicação. Configure `TEST_DATABASE_URL` se necessário. A migration inicial é congelada e tem teste de upgrade/downgrade em schema vazio.
 
-Com containers saudáveis e agente em stub: `npm run test:e2e`. As jornadas cobrem rascunho, decisão, confirmação/recarregamento e duas sessões com transferência, resposta humana e devolução. Localmente usam Chrome; CI instala Chromium.
+Para repetir as 19 jornadas sem alterar os atendimentos locais:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/test-e2e.py --reset
+.\.venv\Scripts\python.exe scripts/verify-persistence.py --isolated
+```
+
+O script usa o projeto Docker `nexo-revisao`, portas 3100/8100/55432, banco separado, modo stub e chave vazia. `--reset` recria somente o volume descartável de testes. Requer Compose com suporte a `!override` (2.24.4 ou posterior). Não troque de branch durante a execução. Com outro ambiente limpo em stub, também é possível executar `npm run test:e2e` e configurar `E2E_URL`.
+
+As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, edição/cancelamento/confirmação, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. A API tem 56 testes PostgreSQL e o agente tem 2 testes de contrato.
 
 - `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, rascunho e atendimento humano. Tokens ficam apenas em memória.
 - `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.
+- `scripts/evaluate-live.py`: três cenários reais limitados, de horário, assunto fora de TI e criticidade. Consome créditos do Gemini local e não imprime credenciais.
 - `scripts/verify-no-secrets.py`: verifica os segredos locais contra arquivos rastreados e bundle do browser, sem exibir valores.
 
 GitHub Actions executa build/typecheck, testes de agente, lint/formatação Python, integração PostgreSQL e E2E Docker sem chave paga. `main` é protegida; entregas entram por PR após checks.
@@ -137,6 +149,6 @@ GitHub Actions executa build/typecheck, testes de agente, lint/formatação Pyth
 
 ## Documentação
 
-[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md).
+[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md).
 
 Documentos 02-07 preservam hipóteses do levantamento inicial; este README e o ADR descrevem a arquitetura implementada. Materiais originais e `.env` ficam locais. O inventário visual sanitizado está em `docs/referencias/inventario-prototipo.json`.
