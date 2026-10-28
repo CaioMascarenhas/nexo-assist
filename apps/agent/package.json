@@ -1,0 +1,6 @@
+{
+  "name":"@nexo/agent", "private":true, "type":"module",
+  "scripts":{"dev":"tsx watch src/server.ts","build":"tsc --noEmit","typecheck":"tsc --noEmit","start":"tsx src/server.ts","test":"tsx --test src/*.test.ts"},
+  "dependencies":{"@mastra/core":"1.79.0","zod":"4.6.7","tsx":"^4.20.0"},
+  "devDependencies":{"typescript":"^5.9.3","@types/node":"^24.0.0"}
+}

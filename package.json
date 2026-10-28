@@ -1,0 +1,13 @@
+{
+  "name": "nexo-assist",
+  "private": true,
+  "workspaces": ["apps/web", "apps/agent"],
+  "scripts": {
+    "dev:web": "npm run dev --workspace apps/web",
+    "dev:agent": "npm run dev --workspace apps/agent",
+    "typecheck": "npm run typecheck --workspaces",
+    "build": "npm run build --workspaces",
+    "test:agent": "npm run test --workspace apps/agent"
+  },
+  "engines": { "node": ">=24" }
+}
