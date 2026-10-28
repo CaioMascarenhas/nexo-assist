@@ -90,6 +90,12 @@ test("analyst receives handoff and replies with the agent paused", async ({
   await expect(
     analystPage.getByRole("button", { name: "Assumir atendimento" }),
   ).toBeVisible();
+  await expect(analystPage.locator(".workspace-header")).toContainText(
+    "Offline · Comercial · presença simulada",
+  );
+  await expect(
+    analystPage.locator(".workspace-header .presence-dot.offline"),
+  ).toHaveAccessibleName("Carla Mendes: Offline (presença simulada)");
   await analystPage
     .getByRole("button", { name: "Assumir atendimento" })
     .click();
@@ -103,6 +109,16 @@ test("analyst receives handoff and replies with the agent paused", async ({
   await expect(
     userPage.getByText("Olá, Carla. Já li o contexto e vou ajudar você."),
   ).toBeVisible();
+  await expect(
+    analystPage.locator(".message-author").filter({ hasText: "Rafael Lima" }),
+  ).toBeVisible();
+  await userPage
+    .getByRole("textbox", { name: "Mensagem", exact: true })
+    .fill("Obrigada, Rafael.");
+  await userPage.getByRole("button", { name: "Enviar mensagem" }).click();
+  await expect(
+    analystPage.locator(".from-user .message-author").last(),
+  ).toContainText("Carla Mendes");
   await expect(
     userPage.getByText("Analista atendendo", { exact: true }),
   ).toBeVisible();
