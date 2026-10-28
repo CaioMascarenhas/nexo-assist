@@ -8,10 +8,12 @@ async function proxy(
 ) {
   const { path } = await context.params;
   const origin = request.headers.get("origin");
+  // In Docker Next binds 0.0.0.0; the browser-facing host is the Host header.
+  const expectedOrigin = `${new URL(request.url).protocol}//${request.headers.get("host")}`;
   if (
     !["GET", "HEAD"].includes(request.method) &&
     origin &&
-    origin !== new URL(request.url).origin
+    origin !== expectedOrigin
   ) {
     return Response.json({ detail: "Origem não autorizada." }, { status: 403 });
   }
