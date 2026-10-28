@@ -27,6 +27,7 @@ import {
 } from "@/lib/api";
 import { DecisionDetail, DraftCard, TicketCard } from "./tickets";
 import { Logo } from "./brand";
+import { demoPresence, PersonAvatar } from "./person-avatar";
 
 export function Workspace({
   user,
@@ -270,10 +271,10 @@ export function Workspace({
               className={`message ${m.role === "USER" ? "from-user" : "from-agent"}`}
               key={m.id}
             >
-              {m.role !== "USER" && (
+              {(analyst || m.role !== "USER") && (
                 <div className="message-author">
-                  {m.role === "ANALYST" ? (
-                    <Headphones size={14} />
+                  {m.role === "USER" || m.role === "ANALYST" ? (
+                    <PersonAvatar name={m.author} />
                   ) : (
                     <span className="mini-brand">N</span>
                   )}
@@ -577,11 +578,10 @@ export function Workspace({
                 className={`conversation-row ${selected === c.id ? "selected" : ""}`}
                 onClick={() => setSelected(c.id)}
               >
-                <span
-                  className={`avatar ${c.state === "WAITING_ANALYST" ? "amber" : ""}`}
-                >
-                  {initials(c.user?.name ?? "Usuário")}
-                </span>
+                <PersonAvatar
+                  name={c.user?.name ?? "Usuário"}
+                  presence={demoPresence(c.user?.email ?? "")}
+                />
                 <div>
                   <div className="row-title">
                     <strong>{c.user?.name}</strong>
@@ -617,15 +617,22 @@ export function Workspace({
         <header className="workspace-header">
           {analyst ? (
             <>
-              <span className="avatar">
-                {initials(conversation?.user?.name ?? "Usuário")}
-              </span>
+              <PersonAvatar
+                name={conversation?.user?.name ?? "Usuário"}
+                presence={
+                  conversation?.user
+                    ? demoPresence(conversation.user.email)
+                    : undefined
+                }
+              />
               <div className="header-person">
                 <strong>
                   {conversation?.user?.name ?? "Selecione uma conversa"}
                 </strong>
                 <span>
-                  {conversation?.user?.department ?? "Service desk de TI"}
+                  {conversation?.user
+                    ? `${demoPresence(conversation.user.email) === "online" ? "Online" : "Offline"} · ${conversation.user.department} · presença simulada`
+                    : "Service desk de TI"}
                 </span>
               </div>
               <div className="header-actions">
