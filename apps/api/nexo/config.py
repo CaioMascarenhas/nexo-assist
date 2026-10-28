@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-    database_url: str = "postgresql+psycopg://nexo:nexo-local-only@localhost:5432/nexo"
+    database_url: str = "postgresql+psycopg://nexo:nexo-local-only@127.0.0.1:5432/nexo?connect_timeout=10"
     agent_url: str = "http://localhost:4111"
     internal_agent_secret: str = ""
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
