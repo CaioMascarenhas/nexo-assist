@@ -39,26 +39,41 @@ def pause(db: Session, conv: Conversation, reason: str, summary: str) -> None:
     conv.busy_until = None
     conv.handoff_reason = reason
     conv.summary = summary
-    add_message(db, conv, "SYSTEM", "Service desk", "Conversa transferida. Agent pausado até devolução pelo suporte.")
+    add_message(
+        db, conv, "SYSTEM", "Service desk", "Conversa transferida. Agent pausado até devolução pelo suporte."
+    )
 
 
 @router.get("/conversations")
 def list_conversations(db: DB, user: Actor):
-    query = select(Conversation).where(Conversation.user_id == user.id).order_by(Conversation.updated_at.desc())
+    query = (
+        select(Conversation).where(Conversation.user_id == user.id).order_by(Conversation.updated_at.desc())
+    )
     return [conversation_json(c) for c in db.scalars(query)]
 
 
 @router.post("/conversations")
 def create_conversation(db: DB, user: Actor):
-    recent = list(db.scalars(select(Conversation).where(Conversation.user_id == user.id,
-                                                       Conversation.created_at > now()-timedelta(days=1))))
+    recent = list(
+        db.scalars(
+            select(Conversation).where(
+                Conversation.user_id == user.id, Conversation.created_at > now() - timedelta(days=1)
+            )
+        )
+    )
     if len(recent) >= 10:
         raise HTTPException(429, "Limite diário de conversas atingido. Retome uma conversa existente.")
     conv = Conversation(user_id=user.id)
     db.add(conv)
     db.flush()
-    add_message(db, conv, "AGENT", "Nexo Assist", f"Olá, {user.name.split()[0]}. Como posso ajudar com TI hoje?",
-                {"quickReplies": ["Consultar meus chamados", "Preciso de ajuda com a VPN", "Falar com um analista"]})
+    add_message(
+        db,
+        conv,
+        "AGENT",
+        "Nexo Assist",
+        f"Olá, {user.name.split()[0]}. Como posso ajudar com TI hoje?",
+        {"quickReplies": ["Consultar meus chamados", "Preciso de ajuda com a VPN", "Falar com um analista"]},
+    )
     db.commit()
     return conversation_json(conv)
 
@@ -66,12 +81,18 @@ def create_conversation(db: DB, user: Actor):
 @router.get("/conversations/{conversation_id}")
 def get_history(conversation_id: str, db: DB, user: Actor):
     conv = get_conversation(db, user, conversation_id)
-    messages = db.scalars(select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at, Message.id))
+    messages = db.scalars(
+        select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at, Message.id)
+    )
     drafts = db.scalars(select(Draft).where(Draft.conversation_id == conv.id).order_by(Draft.expires_at))
     owner = db.get(User, conv.user_id)
-    return {**conversation_json(conv), "user": user_json(owner), "messages": [message_json(m) for m in messages],
-            "drafts": [draft_json(d) for d in drafts],
-            "interrupted": bool(conv.busy_until and aware(conv.busy_until) < now())}
+    return {
+        **conversation_json(conv),
+        "user": user_json(owner),
+        "messages": [message_json(m) for m in messages],
+        "drafts": [draft_json(d) for d in drafts],
+        "interrupted": bool(conv.busy_until and aware(conv.busy_until) < now()),
+    }
 
 
 @router.post("/conversations/{conversation_id}/handoff")
@@ -80,16 +101,28 @@ def handoff(conversation_id: str, db: DB, user: Actor):
     if conv.state == "CLOSED":
         raise HTTPException(409, "Atendimento encerrado.")
     if conv.state == "AGENT_ACTIVE":
-        history = db.scalars(select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at.desc()).limit(8))
+        history = db.scalars(
+            select(Message)
+            .where(Message.conversation_id == conv.id)
+            .order_by(Message.created_at.desc())
+            .limit(8)
+        )
         summary = "\n".join(f"{m.author}: {m.content[:600]}" for m in reversed(list(history)))
         pause(db, conv, "USER_REQUEST", summary)
         if conv.selected_ticket_id:
             from .ticket_service import TicketService
+
             try:
                 TicketService(db, user).transfer(conv.selected_ticket_id, "USER_REQUEST")
             except HTTPException as error:
                 if error.status_code != 503:
                     raise
-                add_message(db, conv, "SYSTEM", "Service desk", "Conversa na fila humana; atualização do chamado indisponível no momento.")
+                add_message(
+                    db,
+                    conv,
+                    "SYSTEM",
+                    "Service desk",
+                    "Conversa na fila humana; atualização do chamado indisponível no momento.",
+                )
         db.commit()
     return conversation_json(conv)

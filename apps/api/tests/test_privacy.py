@@ -13,7 +13,9 @@ def test_session_and_ownership(client):
 
 
 def test_unknown_email_logout_and_cookie_flags(client):
-    assert client.post("/auth/login", json={"email":"nobody@nexo.com.br", "password":"x"}).status_code == 401
+    assert (
+        client.post("/auth/login", json={"email": "nobody@nexo.com.br", "password": "x"}).status_code == 401
+    )
     login(client)
     assert client.get("/me").json()["role"] == "EMPLOYEE"
     assert client.post("/auth/logout").status_code == 200
@@ -21,6 +23,9 @@ def test_unknown_email_logout_and_cookie_flags(client):
 
 
 def test_foreign_origin_rejected(client):
-    response = client.post("/auth/login", json={"email":"alice@nexo.com.br", "password":"x"},
-                           headers={"origin":"https://attacker.invalid"})
+    response = client.post(
+        "/auth/login",
+        json={"email": "alice@nexo.com.br", "password": "x"},
+        headers={"origin": "https://attacker.invalid"},
+    )
     assert response.status_code == 403

@@ -1,5 +1,8 @@
 # Plano de execução e validação
 
+> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+
+
 ## Ordem de implementação
 
 Planejamento por entregas verificáveis. O usuário pediu entrega **o mais breve possível**, sem data limite fixa, e indicou Gemini como provedor provável por possuir créditos. A estratégia é reduzir trabalho opcional e validar cedo o caminho completo. Não fixamos data final nem estimativa de custo de API antes do smoke. O console e a transparência fazem parte do escopo obrigatório e não devem ser deixados para um eventual tempo restante.

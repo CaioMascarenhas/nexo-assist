@@ -5,6 +5,9 @@ on:
     branches: [main]
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   web:
     runs-on: ubuntu-latest
@@ -16,6 +19,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run format:check
       - run: npm run test:agent
       - run: npm run build
   api:
@@ -39,4 +43,29 @@ jobs:
           cache: pip
       - run: pip install -r apps/api/requirements.txt
       - run: python -m compileall -q apps/api/nexo apps/api/migrations
+      - run: ruff check apps/api/nexo apps/api/tests apps/api/migrations
+      - run: ruff format --check apps/api/nexo apps/api/tests apps/api/migrations
       - run: python -m pytest apps/api/tests -q
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: python3 scripts/setup.py
+      - run: docker compose up -d --build --wait web
+        timeout-minutes: 10
+      - run: npm run test:e2e
+      - if: failure()
+        run: docker compose logs --tail 50 api web agent
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failures
+          path: test-results/
+      - if: always()
+        run: docker compose down

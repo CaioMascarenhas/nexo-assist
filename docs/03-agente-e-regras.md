@@ -1,5 +1,8 @@
 # Estratégia do agente e regras de execução
 
+> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+
+
 ## Princípio de implementação
 
 O LLM interpreta linguagem e propõe ações; código de domínio controla autorização, SLA, confirmação, idempotência, limites e transições. Não concentrar todas as regras num prompt e assumir que o modelo irá respeitá-las.

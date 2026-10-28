@@ -17,8 +17,14 @@ def login(body: LoginBody, response: Response, db: DB):
     if user is None:
         raise HTTPException(401, "E-mail não cadastrado na demonstração.")
     token = create_session(db, user, body.remember)
-    response.set_cookie("nexo_session", token, httponly=True, secure=settings.secure_cookies,
-                        samesite="lax", max_age=604800 if body.remember else 86400)
+    response.set_cookie(
+        "nexo_session",
+        token,
+        httponly=True,
+        secure=settings.secure_cookies,
+        samesite="lax",
+        max_age=604800 if body.remember else 86400,
+    )
     return user_json(user)
 
 

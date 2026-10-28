@@ -1,5 +1,8 @@
 # Modelo de dados e contratos propostos
 
+> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+
+
 Este é um desenho para implementação, não um schema já migrado. PostgreSQL é a fonte de verdade. Guardar datas em `timestamptz` e apresentar no fuso configurado. IDs internos UUID; protocolo legível de chamado é separado.
 
 ## Propriedade dos dados
