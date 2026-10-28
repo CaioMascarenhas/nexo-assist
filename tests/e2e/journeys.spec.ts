@@ -26,6 +26,9 @@ test("login inválido, perfil e saída preservam a autorização", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(
+    page.getByRole("button", { name: "Entrar", exact: true }),
+  ).toBeVisible();
   await page.screenshot({ path: "tmp/screenshots/tela-1-login.png" });
   await page.getByLabel("E-mail corporativo").fill("desconhecido@nexo.com.br");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
