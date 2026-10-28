@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import "./globals.css";
 
 export const metadata: Metadata = {title: "Nexo Assist", description: "Service desk de TI da Nexo"};
 export default function Layout({children}: {children: ReactNode}) {
