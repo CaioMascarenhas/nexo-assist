@@ -59,9 +59,15 @@ export function Workspace({
   const [search, setSearch] = useState("");
   const [listOpen, setListOpen] = useState(false);
   const [ticketsOpen, setTicketsOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [partial, setPartial] = useState("");
-  const [activity, setActivity] = useState("");
+  const pendingRequests = useRef(new Set<string>());
+  const [pending, setPending] = useState<string[]>([]);
+  const [streams, setStreams] = useState<
+    Record<string, { partial: string; activity: string }>
+  >({});
+  const busy = pending.includes(selected);
+  const { partial = "", activity = "" } = streams[selected] ?? {};
+  const listRequest = useRef(0);
+  const historyRequest = useRef(0);
   const [runtimeMode, setRuntimeMode] = useState<
     "live" | "stub" | "unavailable" | null
   >(null);
@@ -72,24 +78,33 @@ export function Workspace({
   }, []);
   const [text, setText] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
+  const listPath = analyst
+    ? `/analyst/conversations?filter=${filter}&q=${encodeURIComponent(search)}`
+    : "/conversations";
+  const listScope = useRef(listPath);
+  listScope.current = listPath;
   const loadList = useCallback(async () => {
-    const path = analyst
-      ? `/analyst/conversations?filter=${filter}&q=${encodeURIComponent(search)}`
-      : "/conversations";
-    const list = await api<Conversation[]>(path);
+    if (listPath !== listScope.current) return null;
+    const request = ++listRequest.current;
+    const list = await api<Conversation[]>(listPath);
+    if (request !== listRequest.current || listPath !== listScope.current)
+      return null;
     setConversations(list);
     return list;
-  }, [analyst, filter, search]);
+  }, [listPath]);
   const loadConversation = useCallback(
     async (id: string) => {
+      const request = ++historyRequest.current;
       const data = await api<Conversation>(`/conversations/${id}`);
-      if (selectedRef.current !== id) return data;
+      if (selectedRef.current !== id || request !== historyRequest.current)
+        return data;
       setConversation(data);
       if (analyst) {
         const results = await api<Ticket[]>(
           `/analyst/conversations/${id}/tickets`,
         );
-        if (selectedRef.current === id) setTickets(results);
+        if (selectedRef.current === id && request === historyRequest.current)
+          setTickets(results);
       }
       return data;
     },
@@ -99,19 +114,30 @@ export function Workspace({
     let cancelled = false;
     loadList()
       .then(async (list) => {
-        if (cancelled) return;
-        if (!selected && list[0]) setSelected(list[0].id);
-        else if (!selected && !list.length && !analyst) {
+        if (cancelled || !list) return;
+        const current = selectedRef.current;
+        if (analyst && !list.some((item) => item.id === current))
+          setSelected(list[0]?.id ?? "");
+        else if (!current && list[0]) setSelected(list[0].id);
+        else if (!current && !list.length && !analyst) {
           const c = await post<Conversation>("/conversations");
           if (!cancelled) setSelected(c.id);
         }
       })
       .catch((e) => setError(e.message));
+    const interval = setInterval(() => {
+      void loadList().catch(() => {});
+    }, 2200);
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
-  }, [loadList, analyst, selected]);
+  }, [loadList, analyst, setSelected]);
   useEffect(() => {
+    setText("");
+    setError("");
+    setConversation(null);
+    setTickets([]);
     if (!selected) return;
     let cancelled = false;
     const refresh = async () => {
@@ -121,18 +147,15 @@ export function Workspace({
         if (!cancelled) setError((e as Error).message);
       }
     };
-    setConversation(null);
-    setTickets([]);
     void refresh();
     const interval = setInterval(() => {
       void refresh();
-      void loadList().catch(() => {});
     }, 2200);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [selected, loadConversation, loadList]);
+  }, [selected, loadConversation]);
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: busy ? "auto" : "smooth" });
   }, [conversation?.messages?.length, partial, busy]);
@@ -151,16 +174,35 @@ export function Workspace({
     }
   }
   async function send(content = text, ticket?: Ticket) {
-    if (!content.trim() || !selected || busy) return;
-    setBusy(true);
-    setPartial("");
-    setActivity("Recebendo sua mensagem…");
+    const requestConversation = selected;
+    if (
+      !content.trim() ||
+      !requestConversation ||
+      pendingRequests.current.has(requestConversation)
+    )
+      return;
+    pendingRequests.current.add(requestConversation);
+    setPending([...pendingRequests.current]);
+    function updateStream(
+      update: Partial<{ partial: string; activity: string }>,
+    ) {
+      setStreams((current) => ({
+        ...current,
+        [requestConversation]: {
+          partial: "",
+          activity: "",
+          ...current[requestConversation],
+          ...update,
+        },
+      }));
+    }
+    updateStream({ partial: "", activity: "Recebendo sua mensagem…" });
     setError("");
     setText("");
     try {
       const path = analyst
-        ? `/analyst/conversations/${selected}/messages`
-        : `/conversations/${selected}/messages`;
+        ? `/analyst/conversations/${requestConversation}/messages`
+        : `/conversations/${requestConversation}/messages`;
       const response = await fetch(`/api${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -198,21 +240,41 @@ export function Workspace({
               type: string;
               data: unknown;
             };
-            if (event.type === "action") setActivity(String(event.data));
+            if (event.type === "action")
+              updateStream({ activity: String(event.data) });
             if (event.type === "delta")
-              setPartial((p) => p + String(event.data));
-            if (event.type === "error")
+              setStreams((current) => ({
+                ...current,
+                [requestConversation]: {
+                  activity: "",
+                  ...current[requestConversation],
+                  partial:
+                    (current[requestConversation]?.partial ?? "") +
+                    String(event.data),
+                },
+              }));
+            if (
+              event.type === "error" &&
+              selectedRef.current === requestConversation
+            )
               setError((event.data as Message).content);
           }
         }
       }
-      await refresh();
+      if (selectedRef.current === requestConversation)
+        await loadConversation(requestConversation);
+      await loadList();
     } catch (e) {
-      setError((e as Error).message);
+      if (selectedRef.current === requestConversation)
+        setError((e as Error).message);
     } finally {
-      setBusy(false);
-      setPartial("");
-      setActivity("");
+      pendingRequests.current.delete(requestConversation);
+      setPending([...pendingRequests.current]);
+      setStreams((current) => {
+        const next = { ...current };
+        delete next[requestConversation];
+        return next;
+      });
     }
   }
   async function handoff() {
