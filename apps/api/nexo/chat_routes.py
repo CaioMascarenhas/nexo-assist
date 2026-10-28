@@ -1,6 +1,8 @@
 import asyncio
 import json
+import re
 import time
+import unicodedata
 from datetime import timedelta
 from typing import Any
 
@@ -77,6 +79,32 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     }
     data: dict[str, Any] = {"decision": decision}
     intent = proposal.intent
+    text = "".join(
+        c for c in unicodedata.normalize("NFD", content.casefold()) if not unicodedata.combining(c)
+    )
+    protocols = re.findall(r"\b(?:inc|req)-[a-z0-9]+(?:-[a-z0-9]+)*\b", text)
+    if protocols:
+        matching = [t for t in own_tickets if t.code.casefold() in protocols]
+        if len(matching) != 1 or len(set(protocols)) != 1:
+            return (
+                "Não identifiquei um único protocolo entre os seus chamados. Consulte a lista e selecione um chamado.",
+                data,
+            )
+        conv.selected_ticket_id = matching[0].id
+        if intent not in {"update", "handoff", "out_of_scope"}:
+            intent = "consult"
+            decision["intent"] = intent
+    elif intent == "consult" and any(
+        word in text
+        for word in (
+            "meus chamados",
+            "outro chamado",
+            "todos os chamados",
+            "chamados resolvidos",
+            "chamados abertos",
+        )
+    ):
+        conv.selected_ticket_id = None
     selected = service.get(conv.selected_ticket_id) if conv.selected_ticket_id else None
     if facts.get("_pending_update") and selected and intent not in {"handoff", "out_of_scope", "consult"}:
         intent = "update"
@@ -110,14 +138,32 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         )
     if intent == "consult":
         if not selected:
-            data["tickets"] = [ticket_json(t) for t in own_tickets if t.status not in {"RESOLVED", "CLOSED"}]
+            show_resolved = "resolvidos" in text
+            show_all = "todos" in text
+            data["tickets"] = [
+                ticket_json(t)
+                for t in own_tickets
+                if show_all or ((t.status in {"RESOLVED", "CLOSED"}) == show_resolved)
+            ]
+            data["ticket_selection"] = True
+            data["quickReplies"] = [
+                "Consultar meus chamados",
+                "Ver chamados resolvidos",
+                "Ver todos os chamados",
+            ]
             return (
                 "Sobre qual chamado você quer saber? Selecione um abaixo."
                 if data["tickets"]
-                else "Você não tem chamados abertos no momento."
+                else "Você não tem chamados nesse filtro. Pode consultar abertos ou resolvidos."
             ), data
         result = ticket_json(selected)
         data["tickets"] = [result]
+        if selected.status in {"RESOLVED", "CLOSED"}:
+            data["quickReplies"] = ["O problema voltou", "Consultar meus chamados"]
+            return (
+                "Este chamado já foi resolvido. Se o problema voltou, posso conferir a possibilidade de reabertura e preparar um rascunho.",
+                data,
+            )
         if result["overdue"]:
             pause(
                 db,

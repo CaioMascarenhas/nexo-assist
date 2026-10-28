@@ -18,6 +18,7 @@ export interface Ticket {
   due_at: string;
   support_updated_at: string;
   created_at: string;
+  resolved_at?: string | null;
   overdue: boolean;
 }
 export interface Decision {
@@ -63,6 +64,7 @@ export interface Message {
   data: {
     quickReplies?: string[];
     tickets?: Ticket[];
+    ticket_selection?: boolean;
     decision?: Decision;
     draft?: Draft;
     error?: boolean;

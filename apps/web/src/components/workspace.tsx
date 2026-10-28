@@ -290,7 +290,7 @@ export function Workspace({
               <div className="message-text">{m.content}</div>
               {m.data.tickets && (
                 <div className="message-tickets">
-                  {m.data.tickets.length > 1
+                  {m.data.ticket_selection || m.data.tickets.length > 1
                     ? m.data.tickets.map((t) => (
                         <TicketCard
                           key={t.id}
