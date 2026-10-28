@@ -90,6 +90,9 @@ test("analyst receives handoff and replies with the agent paused", async ({
   await expect(
     analystPage.getByRole("button", { name: "Assumir atendimento" }),
   ).toBeVisible();
+  await expect(
+    analystPage.locator(".ticket-history > p").first(),
+  ).toContainText("Abertos: 1");
   await expect(analystPage.locator(".workspace-header")).toContainText(
     "Offline · Comercial · presença simulada",
   );
