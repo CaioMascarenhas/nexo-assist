@@ -75,6 +75,17 @@ class TicketService:
         operation = "CREATE"
         if target:
             operation = "REOPEN" if target.status in {"RESOLVED", "CLOSED"} else "UPDATE"
+        preview_due = due_at(now(), payload["priority"])
+        if target and operation == "UPDATE":
+            priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+            effective = min([target.priority, payload["priority"]], key=priorities.index)
+            preview_due = (
+                target.due_at
+                if effective == target.priority
+                else due_at(target.support_updated_at, effective)
+            )
+            payload = {**payload, "priority": effective}
+        payload = {**payload, "due_at": preview_due.isoformat()}
         draft = Draft(
             conversation_id=conv.id,
             user_id=conv.user_id,

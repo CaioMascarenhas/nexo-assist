@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 
 from .config import settings
 from .conversation_routes import add_message, get_conversation, pause
-from .domain import CATEGORIES, aware, due_at, priority_for
+from .domain import CATEGORIES, aware, priority_for
 from .models import Article, Message, now
 from .schemas import MessageBody, Proposal
 from .security import Actor, DB
@@ -66,7 +66,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         "confidence_source": "fixture" if proposal.mode == "stub" else "model_self_report",
         "calibrated": False,
         "rationale": proposal.rationale,
-        "facts": facts,
+        "facts": {key: value for key, value in facts.items() if not key.startswith("_")},
         "actions": ["Consultou seus chamados", "Consultou a central de ajuda"],
         "tool_events": proposal.tool_events,
         "rules": ["OWNER_SCOPE", "CONFIRM_BEFORE_WRITE"],
@@ -78,6 +78,12 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     data: dict[str, Any] = {"decision": decision}
     intent = proposal.intent
     selected = service.get(conv.selected_ticket_id) if conv.selected_ticket_id else None
+    if facts.get("_pending_update") and selected and intent not in {"handoff", "out_of_scope", "consult"}:
+        intent = "update"
+        decision["intent"] = "update"
+        decision["rules"].append("PENDING_UPDATE_CONTEXT")
+    if intent in {"handoff", "out_of_scope", "consult"}:
+        conv.facts = {key: value for key, value in facts.items() if key != "_pending_update"}
     critical = facts.get("affected_scope") in {"team", "company"} and facts.get("blocked") is True
     if intent == "out_of_scope":
         return (
@@ -163,6 +169,17 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             data,
         )
     if intent == "update" and selected:
+        if content.casefold().strip() in {
+            "adicionar informação",
+            "adicionar informacao",
+            "complementar chamado",
+        }:
+            conv.facts = {**facts, "_pending_update": True}
+            return (
+                "Qual informação você quer acrescentar ao chamado? Vou mostrar o complemento para sua confirmação.",
+                data,
+            )
+        conv.facts = {key: value for key, value in facts.items() if key != "_pending_update"}
         payload = {
             "title": selected.title,
             "description": content,
@@ -207,7 +224,6 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         }
     draft = service.prepare(conv, payload, selected if intent == "update" else None)
     data["draft"] = draft_json(draft)
-    data["draft"]["payload"]["due_at"] = due_at(now(), payload["priority"]).isoformat()
     decision["actions"] += ["Classificou a prioridade", "Calculou o SLA", "Montou o rascunho"]
     decision["rules"] += ["IMPACT_URGENCY", "BUSINESS_CALENDAR", "CHECK_DUPLICATES"]
     return "Confira os dados abaixo. O chamado só será criado ou alterado depois da sua confirmação.", data
