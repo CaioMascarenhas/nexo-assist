@@ -142,6 +142,25 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "Encaminhei sua conversa ao suporte com o contexto disponível. O assistente ficará pausado enquanto você aguarda um analista.",
             data,
         )
+
+    def transfer_overdue(ticket):
+        data["tickets"] = [ticket_json(ticket)]
+        pause(
+            db,
+            conv,
+            "OVERDUE",
+            f"{ticket.code}: {ticket.title}. Prazo vencido em {ticket.due_at.isoformat()}.\nÚltima mensagem: {content}",
+        )
+        service.transfer(ticket.id, "OVERDUE")
+        decision["actions"].append("Transferiu por prazo vencido")
+        decision["rules"].append("OVERDUE_HANDOFF")
+        return (
+            "O prazo de atualização deste chamado venceu. Encaminhei a conversa para um analista e preservei o histórico.",
+            data,
+        )
+
+    if selected and intent in {"consult", "update"} and ticket_json(selected)["overdue"]:
+        return transfer_overdue(selected)
     if intent == "consult":
         if not selected:
             show_resolved = "resolvidos" in text
@@ -168,20 +187,6 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             data["quickReplies"] = ["O problema voltou", "Consultar meus chamados"]
             return (
                 "Este chamado já foi resolvido. Se o problema voltou, posso conferir a possibilidade de reabertura e preparar um rascunho.",
-                data,
-            )
-        if result["overdue"]:
-            pause(
-                db,
-                conv,
-                "OVERDUE",
-                f"{selected.code}: {selected.title}. Prazo vencido em {selected.due_at.isoformat()}.",
-            )
-            service.transfer(selected.id, "OVERDUE")
-            decision["actions"].append("Transferiu por prazo vencido")
-            decision["rules"].append("OVERDUE_HANDOFF")
-            return (
-                "O prazo de atualização deste chamado venceu. Encaminhei a conversa para um analista e preservei o histórico.",
                 data,
             )
         data["quickReplies"] = ["Adicionar informação", "Falar com um analista"]
@@ -244,8 +249,15 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "description": content,
             "kind": selected.kind,
             "category": selected.category,
-            "priority": selected.priority,
-            "affected_scope": selected.affected_scope,
+            "priority": priority_for(
+                facts.get("affected_scope", selected.affected_scope),
+                facts.get("blocked", False),
+                facts.get("same_day", False),
+                facts.get("workaround", False),
+            )
+            if any(key in facts for key in ("blocked", "same_day", "workaround"))
+            else selected.priority,
+            "affected_scope": facts.get("affected_scope", selected.affected_scope),
         }
     else:
         if not facts.get("title") or not facts.get("category"):
@@ -281,7 +293,11 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "priority": priority,
             "affected_scope": facts["affected_scope"],
         }
-    draft = service.prepare(conv, payload, selected if intent == "update" else None)
+    target = selected if intent == "update" else service.related(payload["title"], payload["category"])
+    if target and ticket_json(target)["overdue"]:
+        conv.selected_ticket_id = target.id
+        return transfer_overdue(target)
+    draft = service.prepare(conv, payload, target)
     data["draft"] = draft_json(draft)
     decision["actions"] += ["Classificou a prioridade", "Calculou o SLA", "Montou o rascunho"]
     decision["rules"] += ["IMPACT_URGENCY", "BUSINESS_CALENDAR", "CHECK_DUPLICATES"]
