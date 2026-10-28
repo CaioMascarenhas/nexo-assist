@@ -189,9 +189,7 @@ export function Workspace({
       setStreams((current) => ({
         ...current,
         [requestConversation]: {
-          partial: "",
-          activity: "",
-          ...current[requestConversation],
+          ...(current[requestConversation] ?? { partial: "", activity: "" }),
           ...update,
         },
       }));
@@ -246,8 +244,10 @@ export function Workspace({
               setStreams((current) => ({
                 ...current,
                 [requestConversation]: {
-                  activity: "",
-                  ...current[requestConversation],
+                  ...(current[requestConversation] ?? {
+                    partial: "",
+                    activity: "",
+                  }),
                   partial:
                     (current[requestConversation]?.partial ?? "") +
                     String(event.data),
@@ -299,9 +299,11 @@ export function Workspace({
   const state = conversation?.state;
   const active = state === "AGENT_ACTIVE";
   const human = state === "HUMAN_ACTIVE";
-  const canSend = analyst
-    ? human && conversation?.analyst_id === user.id
-    : state !== "CLOSED" && (!active || (conversation?.turns ?? 0) < 30);
+  const canSend =
+    !!conversation &&
+    (analyst
+      ? human && conversation?.analyst_id === user.id
+      : state !== "CLOSED" && (!active || (conversation?.turns ?? 0) < 30));
   const lastAgent = [...(conversation?.messages ?? [])]
     .reverse()
     .find((m) => m.role === "AGENT");
