@@ -1,5 +1,8 @@
 # Arquitetura e tecnologias
 
+> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+
+
 ## Decisão de arquitetura
 
 Usar uma aplicação TypeScript com **Next.js na interface e backend**, Mastra em módulo de servidor e **serviço de chamados simulado como módulo separado dentro do próprio Next.js**. A separação será de responsabilidades e contratos. Interpretamos que isso atende ao PRD, que não exige processos ou APIs HTTP independentes. Essa opção reduz o trabalho de infraestrutura e favorece a entrega rápida solicitada.

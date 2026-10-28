@@ -1,17 +1,20 @@
 # Fontes e evidências
 
+> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+
+
 Consultadas em 27/10/2026. Referências técnicas são oficiais. Esta documentação descreve um plano; consulta a docs e metadados não equivale a testes da aplicação.
 
 ## Materiais do desafio
 
 | Fonte | Uso |
 | --- | --- |
-| [PRD v5 original](../Desafio_Tecnico_Nexo_Assist_PRD_v5.pdf) | Cinco páginas lidas por extração e renderização; fonte normativa |
-| [telas.txt](../telas.txt) | URL fornecida pelo usuário |
+| PRD v5 original (arquivo local n?o publicado) | Cinco páginas lidas por extração e renderização; fonte normativa |
+| `telas.txt` (local) | URL fornecida pelo usuário |
 | [Protótipo Pen](https://app.pen.dev/s/swhm7Xfy1krKDIc-QyqE9J8ZI2xFB0qbNvHIncCXcLg) | Canvas examinado visualmente; arquivo original baixado pelo botão da página |
-| [nexo.pen](referencias/nexo.pen) | Referência original preservada; seis frames, textos, layout e tokens |
+| `nexo.pen` (local) | Referência original preservada; seis frames, textos, layout e tokens |
 | [inventario-prototipo.json](referencias/inventario-prototipo.json) | Extração estruturada de frames, textos/fontes, variáveis e regiões principais |
-| [prd-extraido.txt](referencias/prd-extraido.txt) | Texto auxiliar extraído; em divergência usar PDF renderizado |
+| `prd-extraido.txt` (local) | Texto auxiliar extraído; em divergência usar PDF renderizado |
 
 O PDF contém camadas de texto repetidas em algumas páginas quando lido por determinados extratores. A renderização das cinco páginas e a extração ordenada foram usadas para conferir a estrutura; a lista completa inclui o item 6, console do analista, e o item 7, visibilidade das decisões.
 

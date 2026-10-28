@@ -1,5 +1,8 @@
 # Levantamento de requisitos
 
+> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+
+
 ## Fontes e classificação
 
 Base: PRD v5, páginas 1 a 5; Anexo A na página 4; Anexo C na página 5; arquivo `referencias/nexo.pen`. O PRD define o comportamento obrigatório. O protótipo orienta layout e estilo; seus dados são ilustrativos. Conflitos e interpretações estão em [decisões e pendências](07-decisoes-e-pendencias.md).

@@ -1,5 +1,8 @@
 # Telas e experiência
 
+> Levantamento inicial: decis?es de implementa??o foram atualizadas. Consulte o [README execut?vel](../README.md) e o [ADR FastAPI](09-arquitetura-fastapi.md) para a arquitetura vigente.
+
+
 ## Referência examinada
 
 O [protótipo compartilhado](https://app.pen.dev/s/swhm7Xfy1krKDIc-QyqE9J8ZI2xFB0qbNvHIncCXcLg) foi aberto visualmente no navegador. Também foi baixado o arquivo original `nexo.pen`, cujo conteúdo foi lido para extrair textos, tokens e medidas. O download veio como `nexo.zip`; o `.pen` foi preservado em `referencias/`.
