@@ -19,6 +19,7 @@ Cada defeito foi registrado antes da correção, com branch, commits progressivo
 | Cartão histórico enviando mensagem involuntária pelo analista | [36](https://github.com/CaioMascarenhas/nexo-assist/issues/36) | [37](https://github.com/CaioMascarenhas/nexo-assist/pull/37) |
 | Duplicidade depois de resumir o título na revisão | [38](https://github.com/CaioMascarenhas/nexo-assist/issues/38) | [39](https://github.com/CaioMascarenhas/nexo-assist/pull/39) |
 | Resumo humano sem códigos internos e contagens legíveis | [40](https://github.com/CaioMascarenhas/nexo-assist/issues/40) | [41](https://github.com/CaioMascarenhas/nexo-assist/pull/41) |
+| Novo ciclo de SLA ao elevar prioridade após reabertura | [43](https://github.com/CaioMascarenhas/nexo-assist/issues/43) | [44](https://github.com/CaioMascarenhas/nexo-assist/pull/44) |
 
 A [issue 22](https://github.com/CaioMascarenhas/nexo-assist/issues/22) reúne a auditoria, os testes ampliados e este registro. A issue histórica 17 também teve o título traduzido; commits publicados anteriormente foram preservados.
 

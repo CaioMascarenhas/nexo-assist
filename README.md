@@ -100,7 +100,7 @@ O login de senha arbitrária é intencional para os dados fictícios do desafio.
 
 Seg-sex, 08h-18h, America/Fortaleza, sem feriados. Crítica: 1h corrida; alta: 4h úteis; média: 30h úteis; baixa: 50h úteis. Primeira resposta e atualizações substantivas do suporte ancoram o prazo. Bot, usuário e transferência não zeram atraso.
 
-Reabertura até 168h corridas inclusivas. Para vencimento, priorizamos a transferência prevista no Anexo A; o protótipo apresenta oferta opcional. [Premissas e divergências](docs/07-decisoes-e-pendencias.md).
+Reabertura até 168h corridas inclusivas, iniciando novo ciclo de primeira resposta. Elevações de prioridade usam a atualização do suporte ou a reabertura mais recente; complementos comuns não renovam esse ciclo. Para vencimento, priorizamos a transferência prevista no Anexo A; o protótipo apresenta oferta opcional. [Premissas e divergências](docs/07-decisoes-e-pendencias.md).
 
 ## Testar
 
@@ -128,7 +128,7 @@ Para repetir as 19 jornadas sem alterar os atendimentos locais:
 
 O script usa o projeto Docker `nexo-revisao`, portas 3100/8100/55432, banco separado, modo stub e chave vazia. `--reset` recria somente o volume descartável de testes. Requer Compose com suporte a `!override` (2.24.4 ou posterior). Não troque de branch durante a execução. Com outro ambiente limpo em stub, também é possível executar `npm run test:e2e` e configurar `E2E_URL`.
 
-As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, edição/cancelamento/confirmação, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. A API tem 56 testes PostgreSQL e o agente tem 2 testes de contrato.
+As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, edição/cancelamento/confirmação, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. A API tem 57 testes PostgreSQL e o agente tem 2 testes de contrato.
 
 - `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, rascunho e atendimento humano. Tokens ficam apenas em memória.
 - `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.

@@ -2,9 +2,9 @@
 
 ## Revisão de 28/10/2026
 
-A [auditoria](11-auditoria-do-desafio.md) registra a matriz de requisitos/telas e as correções encontradas. A bateria foi ampliada para **56 testes de API**, **2 do agente** e **19 jornadas de navegador**. Os resultados remotos ficam nos checks das PRs.
+A [auditoria](11-auditoria-do-desafio.md) registra a matriz de requisitos/telas e as correções encontradas. A bateria foi ampliada para **57 testes de API**, **2 do agente** e **19 jornadas de navegador**. Os resultados remotos ficam nos checks das PRs.
 
-O conjunto de 19 jornadas passou localmente em 41,7 segundos no ambiente isolado, antes do ajuste final de texto do resumo/contagens. A versão final também é verificada no CI. Inclui criação após edição, cancelamento, duplicidade após título resumido, complemento, reabertura, transferências obrigatórias, encerramento, erros, privacidade e respostas de rede fora de ordem. Capturas de desktop/celular foram inspecionadas.
+O conjunto de 19 jornadas passou localmente em 37,5 segundos no ambiente isolado, incluindo o ajuste de texto do resumo/contagens. A versão final também é verificada no CI. Inclui criação após edição, cancelamento, duplicidade após título resumido, complemento, reabertura, transferências obrigatórias, encerramento, erros, privacidade e respostas de rede fora de ordem. Capturas de desktop/celular foram inspecionadas. A regressão adicional do SLA comprova que elevar a prioridade após a reabertura usa o novo ciclo, preservando a data real da atualização do suporte.
 
 Reinício real isolado: sessão, cinco mensagens, um rascunho, dois chamados existentes, estado `HUMAN_ACTIVE` e responsável preservados. O teste reiniciou API, agente e web, sem remover o volume.
 
