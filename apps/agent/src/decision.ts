@@ -78,6 +78,7 @@ export function stubDecision(input: Input): Proposal {
 
   if (/windows\s*11/.test(text)) facts.os = "Windows 11";
   if (/windows\s*10/.test(text)) facts.os = "Windows 10";
+  if (/outro sistema/.test(text)) facts.os = "Outro";
   if (/toda a empresa/.test(text)) facts.affected_scope = "company";
   else if (/minha equipe|equipe inteira|todos da equipe/.test(text))
     facts.affected_scope = "team";
