@@ -42,7 +42,9 @@ def due_at(start: datetime, priority: str) -> datetime:
 
 
 def can_reopen(resolved_at: datetime | None, instant: datetime) -> bool:
-    return resolved_at is not None and timedelta(0) <= aware(instant)-aware(resolved_at) <= timedelta(days=7)
+    return resolved_at is not None and timedelta(0) <= aware(instant) - aware(resolved_at) <= timedelta(
+        days=7
+    )
 
 
 def overdue(status: str, due: datetime, instant: datetime) -> bool:

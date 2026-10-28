@@ -37,7 +37,12 @@ def require_analyst(user: User) -> None:
 
 def create_session(db: Session, user: User, remember: bool) -> str:
     raw = secrets.token_urlsafe(40)
-    db.add(LoginSession(token_hash=token_hash(raw), user_id=user.id,
-                        expires_at=now()+timedelta(days=7 if remember else 1)))
+    db.add(
+        LoginSession(
+            token_hash=token_hash(raw),
+            user_id=user.id,
+            expires_at=now() + timedelta(days=7 if remember else 1),
+        )
+    )
     db.commit()
     return raw
