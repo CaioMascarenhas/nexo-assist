@@ -1,4 +1,4 @@
-﻿# Backlog e entregas
+# Backlog e entregas
 
 O desenvolvimento foi feito em branches, commits incrementais e PRs. Consulte as issues para critérios de aceite e os checks das PRs para evidências.
 
