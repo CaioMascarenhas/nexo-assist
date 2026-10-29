@@ -39,7 +39,28 @@ test("login inválido, perfil e saída preservam a autorização", async ({
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await page.getByRole("button", { name: "Meu perfil", exact: true }).click();
   await expect(page.locator(".profile")).toContainText("ana.souza@nexo.com.br");
+  await expect(page.locator(".profile")).toContainText("Alterada há 42 dias");
+  await expect(page.locator(".profile-password-helper")).toHaveText(
+    "Enviaremos um link de redefinição para ana.souza@nexo.com.br.",
+  );
+  await expect(page.locator(".new-conversation")).toHaveCount(0);
+  await expect(page.locator(".header-status")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Redefinir senha", exact: true })
+    .click();
+  await expect(page.locator(".profile-password")).toBeVisible();
   await page.screenshot({ path: "tmp/screenshots/tela-6-perfil.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("button", { name: "Redefinir senha", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  await page.screenshot({ path: "tmp/screenshots/perfil-celular.png" });
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole("button", { name: "Sair", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Entrar", exact: true }),
