@@ -1,4 +1,4 @@
-import { KeyRound, LockKeyhole, Mail, RotateCcwKey } from "lucide-react";
+import { KeyRound, LockKeyhole, Mail, RotateCcw } from "lucide-react";
 import type { User } from "@/lib/api";
 
 export function ProfileLogo() {
@@ -51,7 +51,7 @@ export function Profile({ user }: { user: User }) {
             className="profile-reset"
             title="Exemplo visual de redefinição de senha"
           >
-            <RotateCcwKey size={15} />
+            <RotateCcw size={15} />
             Redefinir senha
           </button>
         </div>
