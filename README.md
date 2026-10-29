@@ -59,7 +59,7 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 - Decisões legíveis: intenção, fatos, fontes, regras, segurança estimada e uso/latência quando disponíveis.
 - Simulador de falhas e dados preservados após reinício real.
 
-O visual segue o protótipo: identificação com painel escuro, fontes locais Newsreader/Schibsted Grotesk, chat com sidebar e console em colunas. As fontes incluem licenças OFL. Perfil é somente leitura.
+O visual segue o protótipo: identificação com painel escuro, fontes locais Newsreader/Schibsted Grotesk, chat com sidebar e console em colunas. As fontes incluem licenças OFL. Meu perfil reproduz os cartões de dados e senha da referência; o tempo de alteração e a redefinição são apenas ilustrativos, sem envio de e-mail ou alteração de credenciais.
 
 O chat aproveita a largura disponível e usa mensagens maiores. O seletor de atendimentos anteriores fica recolhido; o console mantém acesso às conversas e aos chamados também no celular. Avatares identificam os participantes e a presença online/offline é explicitamente simulada.
 

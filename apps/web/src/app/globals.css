@@ -1099,44 +1099,197 @@ strong {
   font-size: 14px;
   max-width: 290px;
 }
-.profile {
-  max-width: 700px;
-  width: 100%;
-  margin: 65px auto;
-  padding: 0 35px;
+/* Meu perfil: medidas e composição do frame i4fCbC do protótipo. */
+.profile-workspace .conversation-main {
+  overflow-y: auto;
 }
-.profile h1 {
-  font-size: 25px;
-  font-weight: 550;
-  margin-bottom: 8px;
+.profile-workspace .workspace-header {
+  height: 64px;
+  min-height: 64px;
+  padding: 0 32px;
+  font-size: 13.5px;
 }
-.profile > p {
-  font-size: 14px;
-  color: var(--muted);
+.profile-workspace .employee-sidebar {
+  padding: 20px 14px 14px;
 }
-.profile-card {
-  border: 1px solid var(--rule);
-  border-radius: 7px;
-  padding: 20px;
-  margin: 25px 0;
+.profile-workspace .employee-sidebar > .brand {
+  height: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  gap: 10px;
+  padding: 0 8px;
+  letter-spacing: -0.2px;
 }
-.profile-card label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  padding: 9px 0;
-  color: var(--muted);
+.profile-workspace .employee-sidebar nav {
+  margin-top: 22px;
+  gap: 2px;
 }
-.profile-card strong {
-  color: var(--ink);
+.profile-workspace .employee-sidebar nav button {
+  min-height: 36px;
+  padding: 0 10px;
+  gap: 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
 }
-.profile .notice {
+.profile-workspace .employee-sidebar nav button.selected {
+  font-weight: 600;
+  background: #0285f712;
+  color: #0069c7;
+}
+.profile-workspace .sidebar-user {
+  padding: 14px 8px 4px;
+  gap: 10px;
+}
+.profile-workspace .sidebar-user .avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.profile-workspace .sidebar-user strong {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.profile-workspace .sidebar-user small {
+  font-size: 11.5px;
+  margin-top: 1px;
+}
+.profile-logout {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 13.5px;
+  color: var(--ink2);
+  border-radius: 8px;
 }
-.profile .notice p {
+.profile {
+  width: min(600px, calc(100% - 80px));
+  margin: 48px auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.profile-heading h1 {
   margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+.profile-heading p {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #5b6472;
+}
+.profile-card {
+  margin: 0;
+  border: 1px solid #1b243117;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  box-shadow:
+    0 1px 2px #1b24310d,
+    0 6px 18px #1b24310a;
+}
+.profile-data-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+}
+.profile-data-row + .profile-data-row {
+  border-top: 1px solid var(--rule);
+}
+.profile-data-row dt {
+  width: 160px;
+  flex-shrink: 0;
+  color: #5b6472;
+  font-size: 13.5px;
+}
+.profile-data-row dd {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.profile-data-row dd:not(.profile-managed) {
+  flex: 1;
+}
+.profile-data-row .profile-managed {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 400;
+  white-space: nowrap;
+  color: #5b6472;
+}
+.profile-password-row {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.profile-key {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--desk);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink2);
+  flex-shrink: 0;
+}
+.profile-password-copy {
+  flex: 1;
+}
+.profile-password-copy h2 {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.profile-password-copy p {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  color: #5b6472;
+  line-height: 1.4;
+}
+.profile-reset {
+  height: 36px;
+  padding: 0 14px 0 12px;
+  border: 1px solid #1b24311f;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink2);
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px #1b24310d;
+  white-space: nowrap;
+}
+.profile-reset:hover {
+  background: var(--desk);
+}
+.profile-password-helper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--desk);
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  color: #5b6472;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 /* Analyst console: rail, conversation list, timeline, ticket history. */
 .analyst-rail {
@@ -1800,14 +1953,6 @@ strong {
   .handoff-banner .primary {
     font-size: 12px;
   }
-  .profile {
-    padding: 0 18px;
-    margin-top: 35px;
-  }
-  .profile-card label {
-    flex-direction: column;
-    gap: 7px;
-  }
   .decision-panel {
     padding: 10px;
   }
@@ -1959,5 +2104,72 @@ strong {
   }
   .workspace-header {
     min-height: 64px;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile {
+    width: calc(100% - 32px);
+    margin: 32px auto;
+    gap: 24px;
+  }
+  .profile-data-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 18px;
+    gap: 8px;
+  }
+  .profile-data-row dt {
+    width: 100%;
+  }
+  .profile-data-row .profile-managed {
+    width: 100%;
+  }
+  .profile-password-row {
+    padding: 18px;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+  }
+  .profile-reset {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .profile-password-helper {
+    padding: 12px 18px;
+    align-items: flex-start;
+  }
+}
+@media (max-width: 640px) {
+  .profile-workspace .employee-sidebar {
+    width: 55px;
+    padding: 18px 6px 10px;
+  }
+  .profile-workspace .employee-sidebar > .profile-brand {
+    font-size: 0;
+    gap: 0;
+    padding: 0;
+  }
+  .profile-workspace .employee-sidebar nav button {
+    font-size: 0;
+    padding: 12px;
+    gap: 0;
+  }
+  .profile-workspace .sidebar-user {
+    padding: 14px 0 4px;
+  }
+  .profile-workspace .sidebar-user .avatar {
+    width: 28px;
+    height: 28px;
+  }
+  .profile-logout {
+    font-size: 0;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+  .profile-workspace .workspace-header {
+    padding: 0 16px;
+    font-size: 12px;
   }
 }
