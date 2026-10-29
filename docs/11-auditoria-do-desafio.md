@@ -20,6 +20,7 @@ Cada defeito foi registrado antes da correção, com branch, commits progressivo
 | Duplicidade depois de resumir o título na revisão | [38](https://github.com/CaioMascarenhas/nexo-assist/issues/38) | [39](https://github.com/CaioMascarenhas/nexo-assist/pull/39) |
 | Resumo humano sem códigos internos e contagens legíveis | [40](https://github.com/CaioMascarenhas/nexo-assist/issues/40) | [41](https://github.com/CaioMascarenhas/nexo-assist/pull/41) |
 | Novo ciclo de SLA ao elevar prioridade após reabertura | [43](https://github.com/CaioMascarenhas/nexo-assist/issues/43) | [44](https://github.com/CaioMascarenhas/nexo-assist/pull/44) |
+| Perfil com cartões e textos ilustrativos iguais ao exemplo, por solicitação de 29/10 | [45](https://github.com/CaioMascarenhas/nexo-assist/issues/45) | [46](https://github.com/CaioMascarenhas/nexo-assist/pull/46) |
 
 A [issue 22](https://github.com/CaioMascarenhas/nexo-assist/issues/22) reúne a auditoria, os testes ampliados e este registro. A issue histórica 17 também teve o título traduzido; commits publicados anteriormente foram preservados.
 
@@ -56,7 +57,7 @@ Foram confrontados os seis frames do `.pen` com as capturas da aplicação. O in
 | Consulta | Seleção, cartão, status, vencimento, complemento e transferência com contexto |
 | Console aguardando | Lista/filtros, avatar/nome, presença ilustrativa, resumo, campo bloqueado e assumir/devolver |
 | Console humano | Nome/avatar de ambos os autores, assistente pausado, resposta, devolução e encerramento |
-| Perfil complementar | Nome/e-mail somente leitura e aviso de autenticação demonstrativa |
+| Perfil complementar | Nome/e-mail, indicação de gerenciamento pela TI e cartão de senha com ícones, botão e textos ilustrativos do protótipo |
 
 A pedido do autor, o chat ocupa a largura disponível, os textos foram ampliados e a retomada de atendimentos fica recolhida em um seletor com rolagem. Em 1920, 1366 e 390 px foram verificados largura útil, ausência de rolagem horizontal e acesso ao campo de mensagem. No celular o console oferece painéis de conversas e chamados, em vez de escondê-los permanentemente.
 
@@ -67,7 +68,7 @@ As seis capturas são geradas em `tmp/screenshots/tela-*.png`. Os testes também
 ## Diferenças deliberadas e limites
 
 - O Anexo A exige transferência por vencimento; ele prevalece sobre a oferta opcional do desenho.
-- Redefinição de senha, contadores ilustrativos de desempenho/não lidas e promessa de acesso remoto do protótipo não viraram integrações fictícias. O perfil informa a autenticação de demonstração. Não há recuperação real por e-mail nem controle remoto.
+- O perfil reproduz a aparência da redefinição e o texto ilustrativo “Alterada há 42 dias”, conforme pedido do autor em 29/10; não envia e-mails nem altera senhas. Contadores ilustrativos de desempenho/não lidas e a promessa de acesso remoto do protótipo também não representam integrações reais.
 - Não há roteamento automático N1/N2 definido pelo enunciado: ambos os analistas podem ver a fila, com propriedade exclusiva após assumir.
 - O stream apresenta atividade durante a execução e blocos do texto após validar a decisão; não transmite cada token nativo do Gemini.
 - Duplicidade ainda é uma heurística, com casos positivos e negativos cobertos; não existe garantia de equivalência semântica universal.

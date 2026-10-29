@@ -84,7 +84,7 @@ Texto “vou iniciar acesso remoto” pertence ao exemplo de conversa. Não prec
 
 ## Perfil complementar
 
-Nome e e-mail gerenciados pela TI; senha e botão de redefinição aparecem no frame adicional. Proposta: entregar página somente leitura com aviso de autenticação demonstrativa. Não mostrar “alterada há 42 dias” como fato real nem enviar e-mail de redefinição. Isso completa a navegação sem construir um sistema de identidade fora do desafio.
+Atualização de 29/10/2026, por solicitação do autor: reproduzir visualmente o frame adicional, incluindo nome/e-mail, cadeado “Gerenciado pela TI”, cartão de senha, “Alterada há 42 dias”, botão “Redefinir senha” e a faixa com ícone de e-mail. Os textos de senha são dados ilustrativos do desenho, não informações reais da conta. O botão não envia e-mail nem altera credenciais. Manter coluna de 600 px, cartões com raio de 16 px e espaçamentos do arquivo original; o perfil não exibe histórico de atendimentos nem indicador do agente.
 
 ## Design tokens observados
 
