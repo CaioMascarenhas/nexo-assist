@@ -29,6 +29,7 @@ import {
 } from "@/lib/api";
 import { DecisionDetail, DraftCard, TicketCard } from "./tickets";
 import { Logo } from "./brand";
+import { Profile, ProfileLogo } from "./profile";
 import { demoPresence, PersonAvatar } from "./person-avatar";
 
 export function Workspace({
@@ -530,7 +531,7 @@ export function Workspace({
 
   return (
     <div
-      className={`workspace ${analyst ? "analyst-workspace" : "employee-workspace"}`}
+      className={`workspace ${analyst ? "analyst-workspace" : "employee-workspace"} ${!analyst && view === "profile" ? "profile-workspace" : ""}`}
     >
       {error && (
         <div className="toast" role="alert">
@@ -558,7 +559,7 @@ export function Workspace({
         </aside>
       ) : (
         <aside className="employee-sidebar">
-          <Logo />
+          {view === "profile" ? <ProfileLogo /> : <Logo />}
           <nav>
             <button
               className={view === "chat" ? "selected" : ""}
@@ -575,46 +576,58 @@ export function Workspace({
               Meu perfil
             </button>
           </nav>
-          <button className="new-conversation" onClick={create}>
-            <Plus size={14} />
-            Novo atendimento
-          </button>
-          <details className="conversation-history">
-            <summary aria-label="Retomar atendimento">
-              <MessageSquare size={16} />
-              <span>Retomar atendimento</span>
-              <ChevronDown size={14} />
-            </summary>
-            <div className="history-options">
-              {conversations.map((c, i) => (
-                <button
-                  key={c.id}
-                  className={c.id === selected ? "current" : ""}
-                  onClick={(event) => {
-                    setSelected(c.id);
-                    setView("chat");
-                    event.currentTarget
-                      .closest("details")
-                      ?.removeAttribute("open");
-                  }}
-                >
-                  <MessageSquare size={12} />
-                  <span>Atendimento {conversations.length - i}</span>
-                  <small>{labels[c.state]}</small>
-                </button>
-              ))}
-            </div>
-          </details>
+          {view !== "profile" && (
+            <>
+              <button className="new-conversation" onClick={create}>
+                <Plus size={14} />
+                Novo atendimento
+              </button>
+              <details className="conversation-history">
+                <summary aria-label="Retomar atendimento">
+                  <MessageSquare size={16} />
+                  <span>Retomar atendimento</span>
+                  <ChevronDown size={14} />
+                </summary>
+                <div className="history-options">
+                  {conversations.map((c, i) => (
+                    <button
+                      key={c.id}
+                      className={c.id === selected ? "current" : ""}
+                      onClick={(event) => {
+                        setSelected(c.id);
+                        setView("chat");
+                        event.currentTarget
+                          .closest("details")
+                          ?.removeAttribute("open");
+                      }}
+                    >
+                      <MessageSquare size={12} />
+                      <span>Atendimento {conversations.length - i}</span>
+                      <small>{labels[c.state]}</small>
+                    </button>
+                  ))}
+                </div>
+              </details>
+            </>
+          )}
           <div className="sidebar-user">
             <span className="avatar">{initials(user.name)}</span>
             <div>
               <strong>{user.name}</strong>
               <small>{user.email}</small>
             </div>
-            <button title="Sair" onClick={onLogout}>
-              <LogOut size={16} />
-            </button>
+            {view !== "profile" && (
+              <button title="Sair" onClick={onLogout}>
+                <LogOut size={16} />
+              </button>
+            )}
           </div>
+          {view === "profile" && (
+            <button className="profile-logout" onClick={onLogout}>
+              <LogOut size={16} />
+              Sair
+            </button>
+          )}
         </aside>
       )}
       {analyst && (
@@ -771,42 +784,25 @@ export function Workspace({
               <strong>
                 {view === "profile" ? "Meu perfil" : "Atendimento"}
               </strong>
-              <span
-                className={`pill header-status ${active ? "green" : "warning"}`}
-              >
-                <span className={active ? "green-dot" : "amber-dot"} />
-                {active
-                  ? "Assistente online"
-                  : human
-                    ? "Analista atendendo"
-                    : state === "CLOSED"
-                      ? "Encerrado"
-                      : "Aguardando atendente"}
-              </span>
+              {view !== "profile" && (
+                <span
+                  className={`pill header-status ${active ? "green" : "warning"}`}
+                >
+                  <span className={active ? "green-dot" : "amber-dot"} />
+                  {active
+                    ? "Assistente online"
+                    : human
+                      ? "Analista atendendo"
+                      : state === "CLOSED"
+                        ? "Encerrado"
+                        : "Aguardando atendente"}
+                </span>
+              )}
             </>
           )}
         </header>
         {view === "profile" && !analyst ? (
-          <section className="profile">
-            <h1>Meu perfil</h1>
-            <p>Seus dados de acesso ao service desk de TI.</p>
-            <div className="profile-card">
-              <label>
-                Nome<strong>{user.name}</strong>
-              </label>
-              <label>
-                E-mail corporativo<strong>{user.email}</strong>
-              </label>
-              <span className="pill">Gerenciado pela TI</span>
-            </div>
-            <div className="notice">
-              <ShieldCheck size={17} />
-              <p>
-                Esta é uma conta de demonstração. A senha informada no login não
-                é armazenada.
-              </p>
-            </div>
-          </section>
+          <Profile user={user} />
         ) : conversation ? (
           <>
             <div className={`timeline ${analyst ? "analyst-timeline" : ""}`}>
