@@ -137,6 +137,16 @@ class TicketService:
         preferred = preferred or [ticket for _, ticket in candidates]
         return preferred[0] if len(preferred) == 1 else None
 
+    def duplicate_candidates(self, category: str | None = None, kind: str | None = None) -> list[Ticket]:
+        return [
+            ticket
+            for ticket in self.list()
+            if ticket.user_id == self.actor.id
+            and (category is None or ticket.category == category)
+            and (kind is None or ticket.kind == kind)
+            and (ticket.status not in {"RESOLVED", "CLOSED"} or can_reopen(ticket.resolved_at, now()))
+        ]
+
     def prepare(self, conv: Conversation, payload: dict[str, Any], target: Ticket | None = None) -> Draft:
         self.available()
         if payload.get("category") not in CATEGORIES:
