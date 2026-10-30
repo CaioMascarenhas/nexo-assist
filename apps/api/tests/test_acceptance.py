@@ -124,6 +124,87 @@ def test_unknown_scope_is_asked_instead_of_assumed(database):
     assert "draft" not in data
 
 
+@pytest.mark.parametrize("same_day,priority", [(False, "MEDIUM"), (True, "HIGH")])
+def test_workaround_preserves_impact_and_asks_only_missing_urgency(database, same_day, priority):
+    user = database.get(User, "alice")
+    conv = Conversation(user_id=user.id)
+    database.add(conv)
+    database.flush()
+    service = TicketService(database, user)
+
+    def ask(facts, content):
+        return apply_proposal(
+            database,
+            user,
+            conv,
+            Proposal(
+                intent="create",
+                facts=facts,
+                confidence=0.95,
+                reply="",
+                rationale="Dados fornecidos pelo usuário",
+                mode="stub",
+            ),
+            service,
+            [],
+            content,
+        )
+
+    reply, data = ask(
+        {
+            "title": "Ajuda com a VPN",
+            "category": "Rede e VPN",
+            "os": "Windows 11",
+            "affected_scope": "team",
+            "blocked": False,
+            "workaround": True,
+        },
+        "Minha equipe toda está com erro de VPN, mas tenho alternativa",
+    )
+    assert reply == "Mesmo com a alternativa, existe algum compromisso em risco hoje?"
+    assert "draft" not in data
+    assert "same_day" not in conv.facts
+    assert database.scalar(select(Ticket)) is None
+    reply_again, data = ask({"workaround": True}, "Tenho alternativa")
+    assert reply_again == reply
+    assert data["decision"]["facts"]["affected_scope"] == "team"
+    assert data["decision"]["facts"]["blocked"] is False
+    _, data = ask({"same_day": same_day}, "Há compromisso hoje" if same_day else "Sem compromisso hoje")
+    assert data["draft"]["payload"]["priority"] == priority
+    assert data["draft"]["payload"]["affected_scope"] == "team"
+    assert database.scalar(select(Ticket)) is None
+
+
+def test_known_absence_of_urgency_asks_only_missing_work_blockage(database):
+    user = database.get(User, "alice")
+    conv = Conversation(user_id=user.id)
+    database.add(conv)
+    database.flush()
+    reply, data = apply_proposal(
+        database,
+        user,
+        conv,
+        Proposal(
+            intent="create",
+            facts={
+                "title": "Falha no programa",
+                "category": "Software",
+                "affected_scope": "individual",
+                "same_day": False,
+            },
+            confidence=0.9,
+            reply="",
+            rationale="Urgência conhecida",
+            mode="stub",
+        ),
+        TicketService(database, user),
+        [],
+        "Sem compromisso em risco hoje",
+    )
+    assert reply == "Esse problema impede você de continuar trabalhando?"
+    assert "draft" not in data
+
+
 def test_daily_conversation_limit_preserves_existing_human_channel(client):
     login(client)
     created = [client.post("/conversations") for _ in range(10)]

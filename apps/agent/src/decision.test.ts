@@ -28,6 +28,30 @@ test("unknown impact is not guessed and Windows restriction is retained", () => 
   assert.equal(result.facts.blocked, undefined);
 });
 
+test("workaround does not imply absence of urgency and negative reply overrides today keyword", () => {
+  const facts = stubDecision({
+    ...base,
+    content: "Minha equipe tem erro na VPN, mas tenho alternativa",
+  }).facts;
+  assert.equal(facts.affected_scope, "team");
+  assert.equal(facts.blocked, false);
+  assert.equal(facts.workaround, true);
+  assert.equal(facts.same_day, undefined);
+  assert.equal(
+    stubDecision({
+      ...base,
+      facts,
+      content: "Não tenho compromisso em risco hoje",
+    }).facts.same_day,
+    false,
+  );
+  assert.equal(
+    stubDecision({ ...base, facts, content: "Tenho compromisso em risco hoje" })
+      .facts.same_day,
+    true,
+  );
+});
+
 test("resolution is distinct from unsuccessful guidance and a new problem", () => {
   assert.equal(
     stubDecision({

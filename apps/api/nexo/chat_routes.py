@@ -380,6 +380,20 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             data["quickReplies"] = ["Só eu", "Minha equipe", "Toda a empresa", "Não sei"]
             return "Quem está sendo afetado por esse problema?", data
         high_known = facts.get("blocked") is True or facts.get("same_day") is True
+        if not high_known and "blocked" in facts and "same_day" not in facts:
+            data["quickReplies"] = [
+                "Tenho compromisso em risco hoje",
+                "Não tenho compromisso em risco hoje",
+            ]
+            return (
+                "Mesmo com a alternativa, existe algum compromisso em risco hoje?"
+                if facts.get("workaround") is True
+                else "Existe algum compromisso em risco hoje?",
+                data,
+            )
+        if not high_known and "same_day" in facts and "blocked" not in facts:
+            data["quickReplies"] = ["Não consigo trabalhar", "Consigo trabalhar"]
+            return "Esse problema impede você de continuar trabalhando?", data
         if not high_known and ("blocked" not in facts or "same_day" not in facts):
             data["quickReplies"] = [
                 "Não consigo trabalhar",

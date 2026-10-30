@@ -106,7 +106,9 @@ export function stubDecision(input: Input): Proposal {
     facts.workaround = true;
   }
   if (/reuniao|hoje|urgente/.test(text)) facts.same_day = true;
-  if (/sem urgencia|sem compromisso/.test(text)) {
+  if (
+    /sem urgencia|sem compromisso|nao tenho compromisso em risco/.test(text)
+  ) {
     facts.same_day = false;
     facts.blocked ??= false;
   }
