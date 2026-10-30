@@ -59,7 +59,7 @@ def test_required_transfers_preserve_context_without_unconfirmed_ticket(
         ("individual", False, False, False, "LOW"),
     ],
 )
-def test_priority_preview_requires_confirmation_and_all_required_fields(
+def test_automatic_registration_keeps_priority_and_all_required_fields(
     database, scope, blocked, same_day, workaround, expected
 ):
     user = database.get(User, "alice")
@@ -92,13 +92,17 @@ def test_priority_preview_requires_confirmation_and_all_required_fields(
         [],
         "Falha no programa",
     )
-    payload = data["draft"]["payload"]
+    payload = data["tickets"][0]
     assert payload["priority"] == expected
     assert all(
         payload[field]
         for field in ("title", "description", "kind", "category", "priority", "affected_scope", "due_at")
     )
-    assert database.scalar(select(Ticket)) is None
+    assert database.scalar(select(Ticket)) is not None
+    assert "draft" not in data
+    assert database.scalar(select(Draft)).status == "COMMITTED"
+    assert conv.state == "WAITING_ANALYST"
+    assert conv.selected_ticket_id == payload["id"]
 
 
 def test_unknown_scope_is_asked_instead_of_assumed(database):

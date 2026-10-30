@@ -6,7 +6,7 @@ async function login(page: Page, email: string) {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
 }
 
-test("funcionário confirma rascunho e consulta os detalhes da decisão", async ({
+test("funcionário abre chamado automaticamente e consulta os detalhes da decisão", async ({
   page,
 }) => {
   await login(page, "bruno.tavares@nexo.com.br");
@@ -24,18 +24,17 @@ test("funcionário confirma rascunho e consulta os detalhes da decisão", async 
     );
   await page.getByRole("button", { name: "Enviar mensagem" }).click();
   await expect(
-    page.getByRole("button", { name: "Confirmar", exact: true }),
+    page.getByText("Aguardando um analista", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Aguardando confirmação", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  await expect(page.locator(".timeline")).toContainText(
+    "fila de atendimento humano",
+  );
   await page.getByText("Entenda esta decisão").last().click();
   await expect(
     page.getByText("estimativa não calibrada", { exact: false }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Preparar novo chamado", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("Abrir chamado", { exact: true })).toBeVisible();
   await expect(
     page.getByText("Pessoas afetadas: Somente você", { exact: true }),
   ).toBeVisible();
@@ -45,18 +44,14 @@ test("funcionário confirma rascunho e consulta os detalhes da decisão", async 
   await expect(page.locator(".decision-panel")).not.toContainText(
     "OWNER_SCOPE",
   );
-  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
-  await expect(
-    page.getByText(/operação confirmada e concluída/).last(),
-  ).toBeVisible();
   await page.screenshot({
     path: "tmp/screenshots/employee-chat.png",
     fullPage: true,
   });
   await page.reload();
-  await expect(
-    page.getByText(/operação confirmada e concluída/).last(),
-  ).toBeVisible();
+  await expect(page.locator(".timeline")).toContainText(
+    "fila de atendimento humano",
+  );
 });
 
 test("analista recebe transferência e responde com o assistente pausado", async ({

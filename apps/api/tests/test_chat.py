@@ -36,7 +36,7 @@ def events(response):
     return [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")]
 
 
-def test_chat_requires_confirmation_deduplicates_and_limits(client, database, monkeypatch):
+def test_chat_registers_and_hands_off_without_confirmation_or_duplicate(client, database, monkeypatch):
     async def fake(_):
         return proposal()
 
@@ -51,11 +51,20 @@ def test_chat_requires_confirmation_deduplicates_and_limits(client, database, mo
     persisted = database.scalar(select(Draft).where(Draft.conversation_id == conv))
     assert persisted is not None
     assert persisted.payload["due_at"]
+    assert persisted.status == "COMMITTED"
+    assert len(list(database.scalars(select(Ticket)))) == 1
+    assert database.get(Conversation, conv).state == "WAITING_ANALYST"
     assert client.post(
         f"/conversations/{conv}/messages", json={"content": "VPN sem funcionar", "client_id": "once"}
     ).json()["replayed"]
     saved = database.get(Conversation, conv)
     assert saved.turns == 1
+    assert client.post(
+        f"/conversations/{conv}/messages", json={"content": "Aguardando", "client_id": "human"}
+    ).json()["agent_paused"]
+    assert len(list(database.scalars(select(Ticket)))) == 1
+    # The turn limit still applies to a conversation where the agent is active.
+    saved.state = "AGENT_ACTIVE"
     saved.turns = 30
     database.commit()
     assert (
@@ -64,7 +73,7 @@ def test_chat_requires_confirmation_deduplicates_and_limits(client, database, mo
     )
     assert client.post(f"/conversations/{conv}/handoff").status_code == 200
     assert client.post(
-        f"/conversations/{conv}/messages", json={"content": "Aguardando", "client_id": "human"}
+        f"/conversations/{conv}/messages", json={"content": "Aguardando", "client_id": "human-again"}
     ).json()["agent_paused"]
 
 
@@ -162,6 +171,8 @@ def test_add_information_collects_content_before_preparing_update(database):
     _, data = chat_routes.apply_proposal(
         database, user, conv, request, service, [ticket], "A lentidão começou depois da atualização."
     )
-    assert data["draft"]["operation"] == "UPDATE"
-    assert data["draft"]["target_id"] == ticket.id
-    assert data["draft"]["payload"]["description"] == "A lentidão começou depois da atualização."
+    assert "draft" not in data
+    assert data["operation"] == "UPDATE"
+    assert data["tickets"][0]["id"] == ticket.id
+    assert "A lentidão começou depois da atualização." in ticket.description
+    assert conv.state == "WAITING_ANALYST"
