@@ -36,6 +36,66 @@ def events(response):
     return [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")]
 
 
+def test_printer_draft_reconciles_scope_and_workaround_without_new_model_description(client, database):
+    user = database.get(User, "alice")
+    conv = Conversation(user_id=user.id)
+    database.add(conv)
+    database.flush()
+    service = TicketService(database, user)
+    first = Proposal(
+        intent="create",
+        reply="",
+        confidence=0.95,
+        rationale="Impressora sem funcionar",
+        facts={
+            "title": "Impressora térmica Zebra não imprime",
+            "category": "Hardware",
+            "kind": "INC",
+            "description": "Usuário não sabe se o problema afeta apenas ele.",
+        },
+    )
+    _, data = chat_routes.apply_proposal(
+        database, user, conv, first, service, [], "A Zebra não imprime; não sei quem é afetado."
+    )
+    assert "draft" not in data
+    clarification = (
+        "Só eu preciso dela agora. Posso usar a impressora da recepção, sem compromisso em risco hoje."
+    )
+    _, data = chat_routes.apply_proposal(
+        database,
+        user,
+        conv,
+        Proposal(
+            intent="create",
+            reply="",
+            confidence=0.95,
+            rationale="Alcance esclarecido",
+            facts={
+                "affected_scope": "individual",
+                "workaround": True,
+                "blocked": False,
+                "same_day": False,
+            },
+        ),
+        service,
+        [],
+        clarification,
+    )
+    description = data["draft"]["payload"]["description"]
+    assert "Pessoas afetadas: Somente o funcionário" in description
+    assert "Há alternativa para continuar: Sim" in description
+    assert "Compromisso em risco hoje: Não" in description
+    assert clarification in description
+    assert "Usuário não sabe" not in description
+    assert "Relato inicial:" in description
+    assert "Esclarecimento 1:" in description
+    database.commit()
+    login(client)
+    result = client.post(f"/drafts/{data['draft']['id']}/confirm", json={"revision": 1})
+    assert result.status_code == 200, result.text
+    assert result.json()["ticket"]["description"] == description
+
+
 def test_chat_requires_confirmation_then_hands_off_without_duplicate(client, database, monkeypatch):
     async def fake(_):
         return proposal()

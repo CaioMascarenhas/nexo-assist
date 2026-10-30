@@ -20,7 +20,7 @@ from .models import Article, Draft, Message, User, now
 from .schemas import MessageBody, Proposal
 from .security import Actor, DB
 from .serialization import draft_json, message_json
-from .summaries import describe_facts
+from .summaries import describe_facts, describe_request
 from .ticket_service import TicketService, ticket_json
 
 router = APIRouter()
@@ -249,10 +249,15 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "Posso ajudar com assuntos de TI. Para RH, financeiro ou facilities, procure o canal responsável da Nexo.",
             data,
         )
+    if intent in {"create", "clarify", "help"} or (intent == "update" and not selected):
+        reports = [*facts.get("_triage_reports", []), content][-30:]
+        facts = {**facts, "_triage_reports": reports, "description": describe_request(facts, reports)}
+        conv.facts = facts
+        decision["facts"] = {key: value for key, value in facts.items() if not key.startswith("_")}
     if critical and proposal.confidence >= 0.75 and facts.get("title") and facts.get("category"):
         payload = {
             "title": str(facts["title"])[:200],
-            "description": str(facts.get("description") or content)[:6000],
+            "description": describe_request(facts, facts.get("_triage_reports", [content])),
             "kind": facts.get("kind") if facts.get("kind") in {"INC", "REQ"} else "INC",
             "category": facts["category"],
             "priority": "CRITICAL",
@@ -521,7 +526,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     )
     payload = {
         "title": str(facts["title"])[:200],
-        "description": str(facts.get("description") or content)[:6000],
+        "description": describe_request(facts, facts.get("_triage_reports", [content])),
         "kind": facts.get("kind") if facts.get("kind") in {"INC", "REQ"} else "INC",
         "category": facts["category"],
         "priority": priority,

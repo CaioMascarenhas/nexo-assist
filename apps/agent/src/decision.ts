@@ -233,6 +233,7 @@ export async function decide(input: Input) {
       Se usuário pedir humano: handoff. RH/financeiro/facilities: out_of_scope. Segurança baixa: clarify.
       Se o usuário confirmar que o procedimento funcionou ou que o problema foi resolvido e não pedir nova ação: resolved, sem recomendar o procedimento de novo. Se disser que NÃO resolveu ou trouxer outra falha, continue a triagem.
       Pode inferir fatos pelo contexto quando houver evidência suficiente. Se o usuário explicitar dúvida sobre impacto ou urgência, peça esclarecimento; não registre a hipótese como fato confirmado. Preserve fatos já conhecidos salvo correção ou dúvida explícita.
+      Na triagem, facts.description deve resumir o contexto atual completo a cada esclarecimento. Substitua dúvidas antigas pelos fatos esclarecidos e incorpore alternativas mencionadas. Não copie uma descrição antiga que contradiga o alcance, bloqueio ou urgência atuais.
       Não repita consultas que já retornaram dados suficientes. Seja conciso: reply deve ser vazio (a API escreve a resposta final) e rationale uma frase curta com evidências.
       blocked significa impossibilidade de trabalhar, não apenas uma ferramenta com falha.
       Ao complementar um chamado selecionado, extraia a nova informação sem reiniciar orientação de VPN. "Não tenho mais alternativa" corrige workaround para false; não mantenha true do histórico. Sem evidência de bloqueio atual, blocked deve ficar null para esclarecimento, pois perder uma alternativa não comprova por si só impossibilidade de trabalhar.

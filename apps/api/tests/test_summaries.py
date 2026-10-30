@@ -1,4 +1,4 @@
-from nexo.summaries import describe_facts
+from nexo.summaries import describe_facts, describe_request
 
 
 def test_handoff_summary_uses_portuguese_and_excludes_internal_flags():
@@ -20,3 +20,14 @@ def test_handoff_summary_uses_portuguese_and_excludes_internal_flags():
     assert "affected_scope" not in summary
     assert "_pending_update" not in summary
     assert "interno" not in summary
+
+
+def test_request_description_keeps_current_facts_and_latest_clarification_within_limit():
+    description = describe_request(
+        {"title": "Impressora Zebra", "affected_scope": "individual", "workaround": True},
+        ["Relato longo " * 600, "Alternativa na recepção."],
+    )
+    assert len(description) <= 6000
+    assert description.startswith("Contexto atual confirmado:")
+    assert "Pessoas afetadas: Somente o funcionário" in description
+    assert description.endswith("Alternativa na recepção.")
