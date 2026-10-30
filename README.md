@@ -90,7 +90,7 @@ Limites: 4 passos de agente, 4.000 tokens de saída, timeout de 35s no modelo e 
 
 Leituras do legado têm até 3 tentativas no chat, com espera progressiva. Não repetimos automaticamente a chamada ao LLM. Tokens/duração são registrados quando fornecidos. Não calculamos custo monetário sem preço verificado/configurado.
 
-
+O agente usa saída concisa e esforço de raciocínio baixo nos modelos Gemini 3/4, mantendo o limite de 4.000 tokens. Após duas etapas de consulta, as ferramentas são desativadas para reservar os passos restantes à decisão estruturada. Os limites de tempo continuam valendo para a execução inteira. Timeout, quota, autenticação do provedor, saída truncada/inválida e indisponibilidade recebem códigos próprios e mensagens técnicas distintas de baixa confiança. Logs correlacionam API/agente por `request_id`, código, status e duração, sem imprimir prompts, respostas brutas ou credenciais. Saída inválida inclui somente nomes de campos conhecidos e códigos de validação. A interface permite nova mensagem ou transferência explícita; não existe fallback silencioso.
 
 O stream mostra atividade durante a execução e texto em blocos após validar a decisão estruturada. Não é streaming nativo de cada token do provedor.
 
@@ -134,7 +134,7 @@ Para repetir as 21 jornadas sem alterar os atendimentos locais:
 
 O script usa o projeto Docker `nexo-revisao`, portas 3100/8100/55432, banco separado, modo stub e chave vazia. `--reset` recria somente o volume descartável de testes. Requer Compose com suporte a `!override` (2.24.4 ou posterior). Não troque de branch durante a execução. Com outro ambiente limpo em stub, também é possível executar `npm run test:e2e` e configurar `E2E_URL`.
 
-As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, registro automático, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. Os testes PostgreSQL incluem regressões de registro automático e rollback. O agente tem 3 testes de contrato.
+As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, registro automático, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. Os testes PostgreSQL incluem regressões de registro automático, criticidade, resolução com autorização e versão, diagnósticos seguros, retentativa explícita e rollback. O agente tem 6 testes de contrato/diagnóstico.
 
 - `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, operação concluída, chamado e atendimento humano. Tokens ficam apenas em memória.
 - `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.
