@@ -1,10 +1,12 @@
 import asyncio
 import json
+import logging
 import re
 import time
 import unicodedata
 from datetime import timedelta
 from typing import Any
+from uuid import uuid4
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -22,6 +24,21 @@ from .summaries import describe_facts
 from .ticket_service import TicketService, ticket_json
 
 router = APIRouter()
+logger = logging.getLogger("nexo.agent")
+MODEL_FAILURES = {
+    "MODEL_TIMEOUT": "O modelo demorou mais que o limite para responder. Tente novamente ou chame um analista.",
+    "MODEL_RATE_LIMIT": "O provedor de IA atingiu o limite de uso. Aguarde um pouco e tente novamente ou chame um analista.",
+    "MODEL_AUTH": "A conexão com o provedor de IA precisa ser revisada pelo suporte. Você pode chamar um analista.",
+    "MODEL_TRUNCATED": "A resposta do modelo ficou incompleta. Tente novamente ou chame um analista.",
+    "MODEL_INVALID_OUTPUT": "O modelo retornou uma resposta inválida. Tente novamente ou chame um analista.",
+    "MODEL_UNAVAILABLE": "O serviço de IA está temporariamente indisponível. Tente novamente ou chame um analista.",
+}
+
+
+class AgentFailure(HTTPException):
+    def __init__(self, code: str, request_id: str):
+        self.code, self.request_id = code, request_id
+        super().__init__(503, MODEL_FAILURES[code])
 
 
 def event(kind: str, data: Any) -> str:
@@ -31,14 +48,50 @@ def event(kind: str, data: Any) -> str:
 async def request_proposal(payload: dict[str, Any]) -> Proposal:
     if len(settings.internal_agent_secret) < 32:
         raise HTTPException(503, "Configure o segredo interno do serviço de agente.")
-    async with httpx.AsyncClient(timeout=42) as client:
-        response = await client.post(
-            settings.agent_url + "/decide",
-            json=payload,
-            headers={"Authorization": "Bearer " + settings.internal_agent_secret},
+    request_id = payload.get("request_id") or str(uuid4())
+    started = time.monotonic()
+    provider_status = None
+    try:
+        async with httpx.AsyncClient(timeout=42) as client:
+            response = await client.post(
+                settings.agent_url + "/decide",
+                json=payload,
+                headers={
+                    "Authorization": "Bearer " + settings.internal_agent_secret,
+                    "X-Request-ID": request_id,
+                },
+            )
+            provider_status = response.status_code
+            if response.is_error:
+                try:
+                    code = response.json().get("code")
+                except (ValueError, AttributeError):
+                    code = None
+                raise AgentFailure(
+                    code if isinstance(code, str) and code in MODEL_FAILURES else "MODEL_UNAVAILABLE",
+                    request_id,
+                )
+            return Proposal.model_validate(response.json())
+    except httpx.TimeoutException:
+        failure = AgentFailure("MODEL_TIMEOUT", request_id)
+    except httpx.HTTPError:
+        failure = AgentFailure("MODEL_UNAVAILABLE", request_id)
+    except ValueError:
+        failure = AgentFailure("MODEL_INVALID_OUTPUT", request_id)
+    except AgentFailure as error:
+        failure = error
+    logger.warning(
+        json.dumps(
+            {
+                "event": "agent_request_failed",
+                "request_id": request_id,
+                "code": failure.code,
+                "http_status": provider_status,
+                "duration_ms": round((time.monotonic() - started) * 1000),
+            }
         )
-        response.raise_for_status()
-        return Proposal.model_validate(response.json())
+    )
+    raise failure
 
 
 def register_and_handoff(db, conv, service, payload, target, data, reason="AUTO_REGISTERED"):
@@ -423,6 +476,7 @@ async def send(conversation_id: str, body: MessageBody, db: DB, user: Actor):
                 )
             )
             payload = {
+                "request_id": str(uuid4()),
                 "content": content,
                 "facts": conv.facts,
                 "messages": [
@@ -477,9 +531,10 @@ async def send(conversation_id: str, body: MessageBody, db: DB, user: Actor):
                     if isinstance(error, HTTPException)
                     else "Não consegui concluir a consulta com segurança. Tente novamente ou chame um analista."
                 )
-                failure = add_message(
-                    db, current, "SYSTEM", "Service desk", str(detail), {"error": True, "retryable": True}
-                )
+                failure_data = {"error": True, "retryable": True}
+                if isinstance(error, AgentFailure):
+                    failure_data.update(code=error.code, request_id=error.request_id)
+                failure = add_message(db, current, "SYSTEM", "Service desk", str(detail), failure_data)
                 db.commit()
                 yield event("error", message_json(failure))
         finally:

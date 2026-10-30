@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { decide, inputSchema } from "./decision.ts";
+import { classifyFailure } from "./diagnostics.ts";
 
 createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
@@ -25,6 +26,13 @@ createServer(async (req, res) => {
     return;
   }
   let body = "";
+  const suppliedId = req.headers["x-request-id"];
+  const requestId =
+    typeof suppliedId === "string" && /^[0-9a-f-]{36}$/i.test(suppliedId)
+      ? suppliedId
+      : randomUUID();
+  const started = performance.now();
+  res.setHeader("X-Request-ID", requestId);
   try {
     for await (const chunk of req) {
       body += chunk.toString();
@@ -39,10 +47,27 @@ createServer(async (req, res) => {
       return;
     }
     res.end(JSON.stringify(await decide(parsed.data)));
-  } catch {
-    // Never log prompts, provider credentials, or raw provider error responses.
-    res
-      .writeHead(503)
-      .end(JSON.stringify({ error: "agent_unavailable", retryable: true }));
+  } catch (error) {
+    const failure = classifyFailure(error);
+    console.error(
+      JSON.stringify({
+        event: "agent_failure",
+        request_id: requestId,
+        code: failure.code,
+        provider_status: failure.status,
+        finish_reason: failure.finish_reason,
+        tool_count: failure.tool_count,
+        validation: failure.validation,
+        duration_ms: Math.round(performance.now() - started),
+      }),
+    );
+    res.writeHead(503).end(
+      JSON.stringify({
+        error: "agent_unavailable",
+        code: failure.code,
+        request_id: requestId,
+        retryable: true,
+      }),
+    );
   }
 }).listen(4111, "0.0.0.0");
