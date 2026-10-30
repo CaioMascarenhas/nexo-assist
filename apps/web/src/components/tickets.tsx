@@ -95,6 +95,77 @@ export function DecisionDetail({ decision }: { decision: Decision }) {
   );
 }
 
+export function TicketDeadline({ ticket }: { ticket: Ticket }) {
+  const finished = ["RESOLVED", "CLOSED"].includes(ticket.status);
+  return (
+    <div className={`deadline ${ticket.overdue && !finished ? "late" : ""}`}>
+      {finished ? (
+        <>
+          {ticket.status === "CLOSED" ? "Encerrado" : "Resolvido"}
+          {ticket.resolved_at
+            ? ` em ${date(ticket.resolved_at)}`
+            : " pelo suporte"}
+        </>
+      ) : (
+        <>
+          {ticket.overdue ? <CircleAlert size={14} /> : <Clock3 size={14} />}{" "}
+          {ticket.overdue ? "Prazo vencido" : "Prazo de resposta"} ·{" "}
+          {date(ticket.due_at)}
+        </>
+      )}
+    </div>
+  );
+}
+
+export function TicketHistory({ ticket }: { ticket: Ticket }) {
+  const updates = ticket.updates ?? [];
+  const lastReopen = updates.findLastIndex(
+    (update) => update.type === "reopen",
+  );
+  const resolution = updates.findLast(
+    (update, index) => update.type === "resolution" && index > lastReopen,
+  );
+  return (
+    <>
+      {resolution && (
+        <section className="ticket-solution" aria-label="Solução registrada">
+          <strong>Solução registrada</strong>
+          <p>{resolution.content}</p>
+          <small>
+            {resolution.author ?? "Suporte"} · {date(resolution.at)}
+          </small>
+        </section>
+      )}
+      {updates.length > 0 && (
+        <details className="ticket-updates">
+          <summary>Histórico do chamado ({updates.length})</summary>
+          <ol>
+            {[...updates].reverse().map((update, index) => (
+              <li key={`${update.at}-${index}`}>
+                <strong>
+                  {update.type === "resolution"
+                    ? "Solução registrada"
+                    : update.type === "reopen"
+                      ? "Reabertura"
+                      : update.type === "transfer"
+                        ? "Encaminhamento ao suporte"
+                        : "Atualização"}
+                </strong>
+                <small>
+                  {update.author ?? "Service desk"} · {date(update.at)}
+                </small>
+                {(update.summary || update.content) && (
+                  <p>{update.summary || update.content}</p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+    </>
+  );
+}
+
 export function TicketCard({
   ticket,
   onSelect,
@@ -152,22 +223,8 @@ export function TicketCard({
           <strong>{date(ticket.support_updated_at)}</strong>
         </div>
       </div>
-      <div className={`deadline ${ticket.overdue ? "late" : ""}`}>
-        {ticket.status === "RESOLVED" || ticket.status === "CLOSED" ? (
-          <>
-            Resolvido{" "}
-            {ticket.resolved_at
-              ? `em ${date(ticket.resolved_at)}`
-              : "pelo suporte"}
-          </>
-        ) : (
-          <>
-            {ticket.overdue ? <CircleAlert size={14} /> : <Clock3 size={14} />}{" "}
-            {ticket.overdue ? "Prazo vencido" : "Prazo de resposta"} ·{" "}
-            {date(ticket.due_at)}
-          </>
-        )}
-      </div>
+      <TicketDeadline ticket={ticket} />
+      <TicketHistory ticket={ticket} />
     </article>
   );
 }

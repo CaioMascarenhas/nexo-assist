@@ -21,6 +21,13 @@ export interface Ticket {
   created_at: string;
   resolved_at?: string | null;
   overdue: boolean;
+  updates?: {
+    type?: string;
+    author?: string;
+    content?: string;
+    summary?: string;
+    at: string;
+  }[];
 }
 export interface Decision {
   intent: string;

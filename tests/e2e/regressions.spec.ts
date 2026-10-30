@@ -143,6 +143,25 @@ test("analista registra solução, resolve o chamado e encerra a conversa separa
   expect(
     (await (await page.request.get(`/api/conversations/${id}`)).json()).state,
   ).toBe("HUMAN_ACTIVE");
+  const sideTicket = consolePage
+    .locator(".side-ticket")
+    .filter({ hasText: ticket.code });
+  await expect(
+    sideTicket.getByRole("region", { name: "Solução registrada" }),
+  ).toContainText(
+    "Fonte substituída e funcionamento validado com o funcionário.",
+  );
+  await expect(sideTicket.locator(".ticket-solution")).toContainText(
+    "Luiza Costa",
+  );
+  await expect(sideTicket.locator(".deadline")).toContainText("Resolvido em");
+  await expect(sideTicket.locator(".deadline")).not.toContainText(
+    "Prazo de resposta",
+  );
+  await sideTicket.getByText(/^Histórico do chamado/).click();
+  await expect(sideTicket.locator(".ticket-updates")).toContainText(
+    "Solução registrada",
+  );
   await consolePage
     .getByRole("button", { name: "Encerrar atendimento", exact: true })
     .click();
@@ -154,6 +173,22 @@ test("analista registra solução, resolve o chamado e encerra a conversa separa
   ).toBeDisabled();
   await consolePage.screenshot({
     path: "tmp/screenshots/regressao-chamado-resolvido.png",
+    fullPage: true,
+  });
+  await consolePage.reload();
+  await consolePage.setViewportSize({ width: 390, height: 844 });
+  await consolePage
+    .getByRole("button", { name: "Mostrar chamados", exact: true })
+    .click();
+  await expect(sideTicket.locator(".ticket-solution")).toBeVisible();
+  await expect(sideTicket.locator(".deadline")).toContainText("Resolvido em");
+  expect(
+    await consolePage.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy();
+  await consolePage.screenshot({
+    path: "tmp/screenshots/regressao-solucao-painel-mobile.png",
     fullPage: true,
   });
   await employee.close();

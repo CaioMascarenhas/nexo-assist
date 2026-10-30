@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import {
   api,
-  date,
   initials,
   labels,
   post,
@@ -27,7 +26,13 @@ import {
   type Ticket,
   type User,
 } from "@/lib/api";
-import { DecisionDetail, DraftCard, TicketCard } from "./tickets";
+import {
+  DecisionDetail,
+  DraftCard,
+  TicketCard,
+  TicketDeadline,
+  TicketHistory,
+} from "./tickets";
 import { Logo } from "./brand";
 import { Profile, ProfileLogo } from "./profile";
 import { demoPresence, PersonAvatar } from "./person-avatar";
@@ -997,9 +1002,8 @@ export function Workspace({
                 <small>
                   {t.category} · prioridade {labels[t.priority]}
                 </small>
-                <div className={t.overdue ? "amber-text" : "muted"}>
-                  Resposta: {date(t.due_at)}
-                </div>
+                <TicketDeadline ticket={t} />
+                <TicketHistory ticket={t} />
                 {human &&
                   conversation?.analyst_id === user.id &&
                   t.id === conversation.selected_ticket_id &&
