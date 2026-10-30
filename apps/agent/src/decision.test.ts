@@ -75,3 +75,21 @@ test("resolution is distinct from unsuccessful guidance and a new problem", () =
     "resolved",
   );
 });
+
+test("losing a workaround removes stale nonblocking status without assuming blockage", () => {
+  const result = stubDecision({
+    ...base,
+    facts: { workaround: true, blocked: false },
+    content: "Agora eu não tenho mais alternativa",
+  });
+  assert.equal(result.facts.workaround, false);
+  assert.equal(result.facts.blocked, undefined);
+  assert.equal(
+    stubDecision({
+      ...base,
+      facts: result.facts,
+      content: "Não consigo trabalhar",
+    }).facts.blocked,
+    true,
+  );
+});
