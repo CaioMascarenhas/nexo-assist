@@ -3,7 +3,7 @@ import { labels } from "./api";
 export const intentLabels: Record<string, string> = {
   help: "Orientação de TI",
   consult: "Consultar chamados",
-  create: "Preparar novo chamado",
+  create: "Abrir chamado",
   update: "Complementar chamado",
   handoff: "Encaminhar ao suporte",
   out_of_scope: "Redirecionar assunto fora de TI",
@@ -25,6 +25,8 @@ export const factLabels: Record<string, string> = {
 export const ruleLabels: Record<string, string> = {
   OWNER_SCOPE: "Acesso restrito aos seus chamados",
   CONFIRM_BEFORE_WRITE: "Confirmação antes de alterar chamados",
+  AUTO_REGISTER_AND_HANDOFF: "Registro automático e encaminhamento ao suporte",
+  AUTO_REGISTERED: "Chamado registrado e encaminhado ao suporte",
   PENDING_UPDATE_CONTEXT: "Complemento do chamado selecionado",
   CRITICAL: "Impacto crítico exige atendimento humano",
   LOW_CONFIDENCE: "Segurança insuficiente para decidir",

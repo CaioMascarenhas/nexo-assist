@@ -4,7 +4,7 @@ from nexo.schemas import Proposal
 from nexo.ticket_service import TicketService
 
 
-def test_failed_windows10_guidance_continues_to_confirmable_draft(database):
+def test_failed_windows10_guidance_opens_ticket_and_hands_off(database):
     user = database.get(User, "alice")
     conv = Conversation(user_id=user.id)
     database.add_all(
@@ -45,8 +45,12 @@ def test_failed_windows10_guidance_continues_to_confirmable_draft(database):
     assert "impede" in reply
     assert "Reinstale" not in reply
     reply, data = step("Não consigo trabalhar", blocked=True)
-    assert data["draft"]["operation"] == "CREATE"
-    assert data["draft"]["payload"]["priority"] == "HIGH"
+    assert "draft" not in data
+    assert data["operation"] == "CREATE"
+    assert data["tickets"][0]["priority"] == "HIGH"
+    assert data["tickets"][0]["status"] == "WAITING_ANALYST"
+    assert conv.state == "WAITING_ANALYST"
+    assert data["tickets"][0]["code"] in reply
     assert all(not key.startswith("_") for key in data["decision"]["facts"])
 
 

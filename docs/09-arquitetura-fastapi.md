@@ -2,6 +2,8 @@
 
 Status: aceita por solicitação do usuário. Este documento substitui as decisões de implementação dos documentos 02-07 quando houver divergência; o levantamento funcional e a referência visual continuam válidos.
 
+Atualização de 30/10/2026: o autor solicitou remover a confirmação do funcionário. O chat agora registra automaticamente criação/complemento/reabertura e transfere para a fila humana após a coleta necessária. A API mantém uma operação interna persistida, concluída na mesma transação do chamado e da transferência; a interface não mostra rascunhos. Esta decisão substitui o requisito de confirmação dos documentos históricos, incluindo a auditoria 11, e diverge do PRD original.
+
 ## Contexto e decisão
 
 O usuário escolheu FastAPI para a API, PostgreSQL e Docker para execução, Next.js no frontend e Gemini como provedor prioritário. O PDF pede TypeScript estrito: a API Python é uma exceção consciente a esse requisito, registrada aqui para não apresentar conformidade total indevida. Frontend e agente permanecem em TypeScript estrito; Python usa anotações e validação Pydantic. Confirmar a aceitação dessa exceção com o avaliador é recomendável antes da entrega.
@@ -17,7 +19,7 @@ O serviço de chamados é um módulo separado dentro da API FastAPI. O agente re
 
 1. Identidade obtida da sessão; o modelo e o cliente não escolhem o solicitante.
 2. Consultas e confirmação filtram proprietário; suporte exige papel de analista.
-3. Alterações exigem rascunho persistido e confirmado; idempotência evita duplicidade.
+3. Alterações do chat usam operação interna persistida e concluída automaticamente; deduplicação, locks e controle de versão protegem o registro. Endpoints antigos de confirmação permanecem para compatibilidade.
 4. Propriedade da conversa é persistida; assumir, devolver e encerrar são transições atômicas.
 5. Uma geração em andamento só conclui se estado/epoch ainda forem válidos.
 6. SLA e prioridade calculados por código; confiança do modelo é estimativa identificada.

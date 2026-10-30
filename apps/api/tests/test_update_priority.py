@@ -30,7 +30,7 @@ def setup(database, overdue=False):
     return user, ticket, conv
 
 
-def test_complement_escalates_only_after_confirmation_without_resetting_anchor(client, database):
+def test_automatic_complement_escalates_without_resetting_anchor(database):
     user, ticket, conv = setup(database)
     anchor = ticket.support_updated_at
     proposal = Proposal(
@@ -45,13 +45,10 @@ def test_complement_escalates_only_after_confirmation_without_resetting_anchor(c
         database, user, conv, proposal, TicketService(database, user), [ticket], "Agora não consigo trabalhar"
     )
     database.commit()
-    assert ticket.priority == "MEDIUM"
-    assert data["draft"]["payload"]["priority"] == "HIGH"
-    login(client)
-    response = client.post(f"/drafts/{data['draft']['id']}/confirm", json={"revision": 1})
-    assert response.status_code == 200
-    assert response.json()["ticket"]["priority"] == "HIGH"
-    assert response.json()["ticket"]["due_at"] == due_at(anchor, "HIGH").isoformat()
+    assert ticket.priority == "HIGH"
+    assert "draft" not in data
+    assert data["tickets"][0]["due_at"] == due_at(anchor, "HIGH").isoformat()
+    assert conv.state == "WAITING_ANALYST"
     assert ticket.support_updated_at == anchor
 
 

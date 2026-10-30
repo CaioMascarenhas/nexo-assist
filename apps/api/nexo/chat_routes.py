@@ -14,10 +14,10 @@ from sqlalchemy import func, select
 from .config import settings
 from .conversation_routes import add_message, get_conversation, pause
 from .domain import CATEGORIES, aware, priority_for
-from .models import Article, Message, now
+from .models import Article, Message, User, now
 from .schemas import MessageBody, Proposal
 from .security import Actor, DB
-from .serialization import draft_json, message_json
+from .serialization import message_json
 from .summaries import describe_facts
 from .ticket_service import TicketService, ticket_json
 
@@ -39,6 +39,37 @@ async def request_proposal(payload: dict[str, Any]) -> Proposal:
         )
         response.raise_for_status()
         return Proposal.model_validate(response.json())
+
+
+def register_and_handoff(db, conv, service, payload, target, data, reason="AUTO_REGISTERED"):
+    draft = service.prepare(conv, payload, target)
+    ticket = service.confirm(draft, draft.revision)
+    conv.selected_ticket_id = ticket.id
+    service.transfer(ticket.id, reason)
+    pause(
+        db,
+        conv,
+        reason,
+        f"{ticket.code}: {ticket.title}\n{ticket.description}\nContexto coletado:\n{describe_facts(conv.facts)}",
+    )
+    data["tickets"] = [ticket_json(ticket)]
+    data["operation"] = draft.operation
+    action = {"CREATE": "aberto", "UPDATE": "atualizado", "REOPEN": "reaberto"}[draft.operation]
+    data["decision"]["actions"] += [
+        "Classificou a prioridade",
+        "Calculou o SLA",
+        f"Chamado {action}",
+        "Encaminhou para atendimento humano",
+    ]
+    data["decision"]["rules"] += ["IMPACT_URGENCY", "BUSINESS_CALENDAR", "CHECK_DUPLICATES"]
+    if reason == "CRITICAL":
+        data["decision"]["rules"].append("CRITICAL")
+    return (
+        f"Chamado {ticket.code} {action}. Encaminhei sua conversa para a fila de atendimento humano "
+        "com o histórico e os dados coletados. Você está aguardando um analista; "
+        "o assistente ficará pausado até a devolução pelo suporte.",
+        data,
+    )
 
 
 def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, own_tickets, content):
@@ -72,7 +103,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         "facts": {key: value for key, value in facts.items() if not key.startswith("_")},
         "actions": ["Consultou seus chamados", "Consultou a central de ajuda"],
         "tool_events": proposal.tool_events,
-        "rules": ["OWNER_SCOPE", "CONFIRM_BEFORE_WRITE"],
+        "rules": ["OWNER_SCOPE", "AUTO_REGISTER_AND_HANDOFF"],
         "sources": [],
         "usage": proposal.usage,
         "mode": proposal.mode,
@@ -133,7 +164,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             db,
             conv,
             reason,
-            f"Relato: {content}\nContexto confirmado:\n{describe_facts(facts)}\nJustificativa: {proposal.rationale}",
+            f"Relato: {content}\nContexto coletado:\n{describe_facts(facts)}\nJustificativa: {proposal.rationale}",
         )
         if selected:
             service.transfer(selected.id, reason)
@@ -187,7 +218,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         if selected.status in {"RESOLVED", "CLOSED"}:
             data["quickReplies"] = ["O problema voltou", "Consultar meus chamados"]
             return (
-                "Este chamado já foi resolvido. Se o problema voltou, posso conferir a possibilidade de reabertura e preparar um rascunho.",
+                "Este chamado já foi resolvido. Se o problema voltou, posso conferir a possibilidade de reabertura e encaminhar ao suporte.",
                 data,
             )
         data["quickReplies"] = ["Adicionar informação", "Falar com um analista"]
@@ -241,7 +272,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         }:
             conv.facts = {**facts, "_pending_update": True}
             return (
-                "Qual informação você quer acrescentar ao chamado? Vou mostrar o complemento para sua confirmação.",
+                "Qual informação você quer acrescentar ao chamado? Vou registrar o complemento e encaminhar ao suporte.",
                 data,
             )
         conv.facts = {key: value for key, value in facts.items() if key != "_pending_update"}
@@ -298,11 +329,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     if target and ticket_json(target)["overdue"]:
         conv.selected_ticket_id = target.id
         return transfer_overdue(target)
-    draft = service.prepare(conv, payload, target)
-    data["draft"] = draft_json(draft)
-    decision["actions"] += ["Classificou a prioridade", "Calculou o SLA", "Montou o rascunho"]
-    decision["rules"] += ["IMPACT_URGENCY", "BUSINESS_CALENDAR", "CHECK_DUPLICATES"]
-    return "Confira os dados abaixo. O chamado só será criado ou alterado depois da sua confirmação.", data
+    return register_and_handoff(db, conv, service, payload, target, data)
 
 
 @router.post("/conversations/{conversation_id}/messages")
@@ -397,6 +424,8 @@ async def send(conversation_id: str, body: MessageBody, db: DB, user: Actor):
             }
             db.commit()  # No open transaction while awaiting the model.
             proposal = await request_proposal(payload)
+            # Same lock order as confirmation: owner before conversation, to serialize duplicate checks.
+            db.scalar(select(User).where(User.id == user.id).with_for_update())
             conv_live = get_conversation(db, user, conv.id, lock=True)
             if conv_live.state != "AGENT_ACTIVE" or conv_live.epoch != epoch:
                 db.rollback()

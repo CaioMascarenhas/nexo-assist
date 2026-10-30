@@ -27,7 +27,7 @@ import {
   type Ticket,
   type User,
 } from "@/lib/api";
-import { DecisionDetail, DraftCard, TicketCard } from "./tickets";
+import { DecisionDetail, TicketCard } from "./tickets";
 import { Logo } from "./brand";
 import { Profile, ProfileLogo } from "./profile";
 import { demoPresence, PersonAvatar } from "./person-avatar";
@@ -308,9 +308,6 @@ export function Workspace({
   const lastAgent = [...(conversation?.messages ?? [])]
     .reverse()
     .find((m) => m.role === "AGENT");
-  const lastDraft = conversation?.drafts
-    ?.filter((d) => d.status === "PENDING")
-    .at(-1);
   const mode = runtimeMode;
 
   function timeline() {
@@ -383,14 +380,6 @@ export function Workspace({
             </div>
           );
         })}
-        {!analyst && lastDraft && (
-          <DraftCard
-            key={`${lastDraft.id}:${lastDraft.revision}`}
-            draft={lastDraft}
-            onChanged={() => void refresh()}
-            onError={setError}
-          />
-        )}
         {!analyst && active && !busy && lastAgent?.data.quickReplies && (
           <div className="quick-replies">
             {lastAgent.data.quickReplies.map((q, i) => (
