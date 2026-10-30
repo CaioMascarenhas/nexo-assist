@@ -214,19 +214,73 @@ export function stubDecision(input: Input): Proposal {
       )
       .map((ticket) => {
         const same = normalize(ticket.title) === normalize(facts.title ?? "");
+        const reports = [
+          ...input.messages
+            .filter((message) => message.role === "USER")
+            .map((message) => message.content),
+          input.content,
+        ].join(" ");
+        const reportWords = new Set(
+          normalize(reports).match(/[a-z0-9]+/g) ?? [],
+        );
+        const identity = (
+          normalize(ticket.title).match(/[a-z0-9]+/g) ?? []
+        ).find(
+          (word) =>
+            reportWords.has(word) &&
+            ![
+              "software",
+              "programa",
+              "sistema",
+              "equipamento",
+              "computador",
+              "notebook",
+              "impressora",
+              "acesso",
+              "instalar",
+              "instalacao",
+              "pedido",
+              "solicitacao",
+              "para",
+              "do",
+              "de",
+              "da",
+              "o",
+              "a",
+              "com",
+              "sem",
+              "falha",
+              "problema",
+              "erro",
+              "no",
+              "na",
+            ].includes(word),
+        );
         return {
           ticket_id: ticket.id,
-          result: same ? ("same" as const) : ("different" as const),
+          result: same
+            ? identity
+              ? ("same" as const)
+              : ("uncertain" as const)
+            : ("different" as const),
           reason: same
             ? "Os títulos coincidem no cenário determinístico de testes."
             : "Títulos distintos no cenário determinístico de testes.",
-          evidence: same
-            ? ["system", "objective"].map((aspect) => ({
-                aspect: aspect as "system" | "objective",
-                request_quote: facts.title!.slice(0, 240),
-                ticket_quote: ticket.title.slice(0, 240),
-              }))
-            : [],
+          evidence:
+            same && identity
+              ? [
+                  {
+                    aspect: "system" as const,
+                    request_quote: identity,
+                    ticket_quote: identity,
+                  },
+                  {
+                    aspect: "objective" as const,
+                    request_quote: input.content.slice(0, 240),
+                    ticket_quote: ticket.title.slice(0, 240),
+                  },
+                ]
+              : [],
         };
       }),
     confidence: text === "nao sei" ? 0.4 : 0.9,

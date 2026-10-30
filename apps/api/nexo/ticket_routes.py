@@ -96,12 +96,17 @@ def edit(draft_id: str, body: EditDraftBody, db: DB, user: Actor):
         raise HTTPException(409, "Rascunho não está mais disponível nesta versão.")
     if draft.operation != "CREATE" and body.title != draft.payload["title"]:
         raise HTTPException(422, "O título identifica o chamado existente. Edite somente o complemento.")
+    changed = body.title != draft.payload["title"] or body.description != draft.payload["description"]
     draft.payload = {
         **draft.payload,
         "title": body.title.strip(),
         "description": body.description.strip(),
         "update_summary": "",
     }
+    if draft.operation == "CREATE" and changed:
+        # O usuário editou um novo pedido: a decisão anterior não autoriza ignorar
+        # uma correspondência exata do título editado na confirmação.
+        draft.payload = {key: value for key, value in draft.payload.items() if key != "duplicate_review"}
     draft.revision += 1
     db.commit()
     return draft_json(draft)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import re
 import unicodedata
@@ -48,7 +50,12 @@ class TicketService:
         self.available()
         owner = owner_id if self.actor.role == "ANALYST" and owner_id else self.actor.id
         return list(
-            self.db.scalars(select(Ticket).where(Ticket.user_id == owner).order_by(Ticket.created_at.desc()))
+            self.db.scalars(
+                select(Ticket)
+                .where(Ticket.user_id == owner)
+                .order_by(Ticket.created_at.desc())
+                .execution_options(populate_existing=True)
+            )
         )
 
     def get(self, ticket_id: str, lock: bool = False) -> Ticket:
@@ -147,7 +154,13 @@ class TicketService:
             and (ticket.status not in {"RESOLVED", "CLOSED"} or can_reopen(ticket.resolved_at, now()))
         ]
 
-    def prepare(self, conv: Conversation, payload: dict[str, Any], target: Ticket | None = None) -> Draft:
+    def prepare(
+        self,
+        conv: Conversation,
+        payload: dict[str, Any],
+        target: Ticket | None = None,
+        auto_related: bool = True,
+    ) -> Draft:
         self.available()
         if payload.get("category") not in CATEGORIES:
             raise HTTPException(422, "Categoria inválida.")
@@ -155,9 +168,9 @@ class TicketService:
             select(Draft).where(Draft.conversation_id == conv.id, Draft.status == "PENDING")
         ):
             old.status = "INVALIDATED"
-        if target is None:
+        if target is None and auto_related:
             target = self.related(payload["title"], payload["category"])
-        elif target.status in {"RESOLVED", "CLOSED"} and not can_reopen(target.resolved_at, now()):
+        elif target and target.status in {"RESOLVED", "CLOSED"} and not can_reopen(target.resolved_at, now()):
             target = self.related(payload["title"], payload["category"])
         operation = "CREATE"
         if target:
@@ -235,6 +248,17 @@ class TicketService:
         if draft.status != "PENDING" or aware(draft.expires_at) <= now():
             raise HTTPException(409, "Rascunho cancelado, expirado ou já substituído.")
         p = draft.payload
+        review = p.get("duplicate_review")
+        if review:
+            current = {
+                ticket.id: ticket.version for ticket in self.duplicate_candidates(p["category"], p["kind"])
+            }
+            reviewed = {candidate["id"]: candidate["version"] for candidate in review["candidates"]}
+            if current != reviewed:
+                raise HTTPException(
+                    409,
+                    "Os chamados candidatos mudaram. Peça uma nova revisão de duplicidade antes de confirmar.",
+                )
         if draft.target_id:
             ticket = self.get(draft.target_id, lock=True)
             if ticket.version != draft.target_version:
@@ -274,7 +298,7 @@ class TicketService:
             ticket.version += 1
             # A user's complement must not clear a previously overdue support SLA.
         else:
-            if self.related(p["title"], p["category"]):
+            if not review and self.related(p["title"], p["category"]):
                 raise HTTPException(
                     409, "Encontramos um chamado equivalente. Gere um rascunho de atualização."
                 )

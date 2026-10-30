@@ -16,6 +16,7 @@ from sqlalchemy import func, select
 from .config import settings
 from .conversation_routes import add_message, get_conversation, pause
 from .domain import CATEGORIES, assessed_priority, aware, priority_explanation, priority_for
+from .duplicates import assess_duplicate, candidate_json, duplicate_answer
 from .models import Article, Draft, Message, User, now
 from .schemas import MessageBody, Proposal
 from .security import Actor, DB
@@ -95,7 +96,9 @@ async def request_proposal(payload: dict[str, Any]) -> Proposal:
 
 
 def prepare_for_confirmation(db, conv, service, payload, target, data, reason="CONFIRMED_TICKET"):
-    draft = service.prepare(conv, {**payload, "handoff_reason": reason}, target)
+    draft = service.prepare(
+        conv, {**payload, "handoff_reason": reason}, target, auto_related="duplicate_review" not in payload
+    )
     data["draft"] = draft_json(draft)
     data["decision"]["actions"] += [
         "Classificou a prioridade",
@@ -126,7 +129,18 @@ def prepare_for_confirmation(db, conv, service, payload, target, data, reason="C
     )
 
 
-def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, own_tickets, content):
+def apply_proposal(
+    db,
+    user,
+    conv,
+    proposal: Proposal,
+    service: TicketService,
+    own_tickets,
+    content,
+    duplicate_candidates=None,
+):
+    choice = duplicate_answer(conv, content)
+    confidence = 1 if choice else proposal.confidence
     previous_workaround = conv.facts.get("workaround")
     allowed = {
         "os",
@@ -139,7 +153,8 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         "same_day",
         "workaround",
     }
-    facts = {**conv.facts, **{k: v for k, v in proposal.facts.items() if k in allowed and v is not None}}
+    extracted = {} if choice else proposal.facts
+    facts = {**conv.facts, **{k: v for k, v in extracted.items() if k in allowed and v is not None}}
     # Validate semantic domains independently of the provider's output schema.
     if facts.get("category") not in CATEGORIES:
         facts.pop("category", None)
@@ -162,7 +177,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         "sources": [],
         "usage": proposal.usage,
         "mode": proposal.mode,
-        "prompt_version": "triage-v1",
+        "prompt_version": "triage-v2-duplicates",
     }
     data: dict[str, Any] = {"decision": decision}
 
@@ -171,7 +186,14 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             return proposal.follow_up.question
         return fallback
 
-    intent = proposal.intent
+    intent = "create" if choice else proposal.intent
+    if choice:
+        decision.update(
+            intent=intent,
+            confidence=1,
+            confidence_source="user_choice",
+            rationale="O funcionário esclareceu explicitamente se é o mesmo assunto.",
+        )
     text = "".join(
         c for c in unicodedata.normalize("NFD", content.casefold()) if not unicodedata.combining(c)
     )
@@ -192,7 +214,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         facts["_vpn_guidance_failed"] = True
         conv.facts = {**facts}
     protocols = re.findall(r"\b(?:inc|req)-[a-z0-9]+(?:-[a-z0-9]+)*\b", text)
-    if protocols:
+    if protocols and not choice:
         matching = [t for t in own_tickets if t.code.casefold() in protocols]
         if len(matching) != 1 or len(set(protocols)) != 1:
             return (
@@ -249,12 +271,26 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "Posso ajudar com assuntos de TI. Para RH, financeiro ou facilities, procure o canal responsável da Nexo.",
             data,
         )
-    if intent in {"create", "clarify", "help"} or (intent == "update" and not selected):
+    if not choice and (intent in {"create", "clarify", "help"} or (intent == "update" and not selected)):
         reports = [*facts.get("_triage_reports", []), content][-30:]
         facts = {**facts, "_triage_reports": reports, "description": describe_request(facts, reports)}
         conv.facts = facts
         decision["facts"] = {key: value for key, value in facts.items() if not key.startswith("_")}
-    if critical and proposal.confidence >= 0.75 and facts.get("title") and facts.get("category"):
+
+    def check_duplicate(payload):
+        result = assess_duplicate(service, conv, payload, proposal, duplicate_candidates, data)
+        decision["actions"].append("Analisou a duplicidade do assunto")
+        decision["rules"].append("SEMANTIC_DUPLICATES")
+        if result.question:
+            for pending in db.scalars(
+                select(Draft).where(Draft.conversation_id == conv.id, Draft.status == "PENDING")
+            ):
+                pending.status = "INVALIDATED"
+        elif result.review:
+            payload["duplicate_review"] = result.review
+        return result
+
+    if critical and confidence >= 0.75 and facts.get("title") and facts.get("category"):
         payload = {
             "title": str(facts["title"])[:200],
             "description": describe_request(facts, facts.get("_triage_reports", [content])),
@@ -263,12 +299,25 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "priority": "CRITICAL",
             "affected_scope": facts["affected_scope"],
         }
-        target = selected if intent == "update" else service.related(payload["title"], payload["category"])
+        target = selected if intent == "update" else None
+        if not target:
+            result = check_duplicate(payload)
+            if result.question:
+                pause(
+                    db,
+                    conv,
+                    "CRITICAL",
+                    f"Caso crítico com protocolo a esclarecer.\n{payload['description']}\n{result.question}",
+                )
+                data.pop("quickReplies", None)
+                return (
+                    "Encaminhei o caso crítico ao suporte imediatamente. O analista vai esclarecer qual protocolo corresponde ao problema antes de preparar a alteração.",
+                    data,
+                )
+            target = result.target
         return prepare_for_confirmation(db, conv, service, payload, target, data, "CRITICAL")
-    if intent == "handoff" or critical or proposal.confidence < 0.75:
-        reason = (
-            "CRITICAL" if critical else "LOW_CONFIDENCE" if proposal.confidence < 0.75 else "USER_REQUEST"
-        )
+    if intent == "handoff" or critical or confidence < 0.75:
+        reason = "CRITICAL" if critical else "LOW_CONFIDENCE" if confidence < 0.75 else "USER_REQUEST"
         pause(
             db,
             conv,
@@ -532,7 +581,12 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         "priority": priority,
         "affected_scope": facts["affected_scope"],
     }
-    target = selected if intent == "update" else service.related(payload["title"], payload["category"])
+    target = selected if intent == "update" else None
+    if not target:
+        result = check_duplicate(payload)
+        if result.question:
+            return result.question, data
+        target = result.target
     if target and ticket_json(target)["overdue"]:
         conv.selected_ticket_id = target.id
         return transfer_overdue(target)
@@ -608,10 +662,12 @@ async def send(conversation_id: str, body: MessageBody, db: DB, user: Actor):
                     .limit(12)
                 )
             )
+            candidates = [candidate_json(ticket) for ticket in service.duplicate_candidates()][:30]
             payload = {
                 "request_id": str(uuid4()),
                 "content": content,
                 "facts": conv.facts,
+                "duplicate_candidates": candidates,
                 "messages": [
                     {"role": m.role, "content": m.content[:2000]}
                     for m in reversed(history)
@@ -639,7 +695,9 @@ async def send(conversation_id: str, body: MessageBody, db: DB, user: Actor):
                 db.rollback()
                 yield event("paused", "A conversa passou para atendimento humano.")
                 return
-            reply, data = apply_proposal(db, user, conv_live, proposal, service, own_tickets, content)
+            reply, data = apply_proposal(
+                db, user, conv_live, proposal, service, own_tickets, content, candidates
+            )
             data["decision"]["legacy_attempts"] = legacy_attempts
             data["decision"]["duration_ms"] = round((time.monotonic() - started) * 1000)
             response = add_message(db, conv_live, "AGENT", "Nexo Assist", reply, data)
