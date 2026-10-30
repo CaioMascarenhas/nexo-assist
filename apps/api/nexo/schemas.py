@@ -29,6 +29,13 @@ class TransitionBody(BaseModel):
     epoch: int = Field(ge=0)
 
 
+class ResolveTicketBody(TransitionBody):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    ticket_id: str = Field(min_length=1, max_length=36)
+    version: int = Field(ge=1)
+    resolution: str = Field(min_length=5, max_length=2000)
+
+
 class Proposal(BaseModel):
     model_config = ConfigDict(extra="ignore")
     intent: Literal["help", "consult", "create", "update", "handoff", "out_of_scope", "clarify", "resolved"]

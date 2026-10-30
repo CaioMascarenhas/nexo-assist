@@ -4,7 +4,7 @@ from sqlalchemy import select
 from .conversation_routes import add_message, get_conversation
 from .domain import due_at
 from .models import Conversation, Message, User, now
-from .schemas import MessageBody, TransitionBody
+from .schemas import MessageBody, ResolveTicketBody, TransitionBody
 from .security import Actor, DB, require_analyst
 from .serialization import conversation_json, message_json, user_json
 from .ticket_service import TicketService, ticket_json
@@ -127,6 +127,28 @@ def message(conversation_id: str, body: MessageBody, db: DB, user: Actor):
             )
     db.commit()
     return message_json(result)
+
+
+@router.post("/conversations/{conversation_id}/resolve-ticket")
+def resolve_ticket(conversation_id: str, body: ResolveTicketBody, db: DB, user: Actor):
+    require_analyst(user)
+    conv = get_conversation(db, user, conversation_id, lock=True)
+    if conv.state != "HUMAN_ACTIVE" or conv.analyst_id != user.id or conv.epoch != body.epoch:
+        raise HTTPException(409, "Assuma o atendimento atual para resolver o chamado.")
+    if conv.selected_ticket_id != body.ticket_id:
+        raise HTTPException(409, "O chamado não está vinculado a esta conversa.")
+    ticket = TicketService(db, user).resolve(body.ticket_id, conv.user_id, body.version, body.resolution)
+    conv.facts = {}
+    add_message(
+        db,
+        conv,
+        "SYSTEM",
+        "Service desk",
+        f"Chamado {ticket.code} resolvido por {user.name}. Solução: {body.resolution}",
+        {"tickets": [ticket_json(ticket)], "operation": "RESOLVE"},
+    )
+    db.commit()
+    return {"ticket": ticket_json(ticket), "conversation": conversation_json(conv)}
 
 
 @router.post("/conversations/{conversation_id}/{action}")

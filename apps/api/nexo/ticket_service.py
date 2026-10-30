@@ -156,6 +156,32 @@ class TicketService:
             ]
         return ticket
 
+    def resolve(self, ticket_id: str, owner_id: str, version: int, resolution: str) -> Ticket:
+        if self.actor.role != "ANALYST":
+            raise HTTPException(403, "Acesso exclusivo do suporte.")
+        ticket = self.get(ticket_id, lock=True)
+        if ticket.user_id != owner_id:
+            raise HTTPException(404, "Chamado não encontrado neste atendimento.")
+        if ticket.version != version:
+            raise HTTPException(409, "O chamado mudou. Atualize os dados antes de resolver.")
+        if ticket.status in {"RESOLVED", "CLOSED"}:
+            raise HTTPException(409, "Este chamado já está resolvido ou encerrado.")
+        instant = now()
+        ticket.status = "RESOLVED"
+        ticket.resolved_at = instant
+        ticket.support_updated_at = instant
+        ticket.version += 1
+        ticket.updates = [
+            *ticket.updates,
+            {
+                "type": "resolution",
+                "author": self.actor.name,
+                "content": resolution,
+                "at": instant.isoformat(),
+            },
+        ]
+        return ticket
+
     def confirm(self, draft: Draft, revision: int) -> Ticket:
         self.available()
         if draft.user_id != self.actor.id:

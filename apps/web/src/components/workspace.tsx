@@ -60,6 +60,9 @@ export function Workspace({
   const [search, setSearch] = useState("");
   const [listOpen, setListOpen] = useState(false);
   const [ticketsOpen, setTicketsOpen] = useState(false);
+  const [resolutionTicket, setResolutionTicket] = useState<Ticket | null>(null);
+  const [resolution, setResolution] = useState("");
+  const [resolving, setResolving] = useState(false);
   const pendingRequests = useRef(new Set<string>());
   const [pending, setPending] = useState<string[]>([]);
   const [streams, setStreams] = useState<
@@ -137,6 +140,8 @@ export function Workspace({
   useEffect(() => {
     setText("");
     setError("");
+    setResolutionTicket(null);
+    setResolution("");
     setConversation(null);
     setTickets([]);
     if (!selected) return;
@@ -297,6 +302,30 @@ export function Workspace({
       setError((e as Error).message);
     }
   }
+  async function resolveTicket() {
+    if (!conversation || !resolutionTicket || resolving) return;
+    const conversationId = selected;
+    setResolving(true);
+    setError("");
+    try {
+      await post(`/analyst/conversations/${conversationId}/resolve-ticket`, {
+        epoch: conversation.epoch,
+        ticket_id: resolutionTicket.id,
+        version: resolutionTicket.version,
+        resolution: resolution.trim(),
+      });
+      if (selectedRef.current === conversationId) {
+        setResolutionTicket(null);
+        setResolution("");
+        await refresh();
+      }
+    } catch (e) {
+      if (selectedRef.current === conversationId)
+        setError((e as Error).message);
+    } finally {
+      setResolving(false);
+    }
+  }
   const state = conversation?.state;
   const active = state === "AGENT_ACTIVE";
   const human = state === "HUMAN_ACTIVE";
@@ -424,6 +453,46 @@ export function Workspace({
   function composer() {
     return (
       <div className="composer-area">
+        {resolutionTicket && human && conversation?.analyst_id === user.id && (
+          <form
+            className="resolution-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void resolveTicket();
+            }}
+          >
+            <strong>Resolver chamado {resolutionTicket.code}</strong>
+            <label>
+              Solução aplicada
+              <textarea
+                aria-label="Solução aplicada"
+                value={resolution}
+                onChange={(event) => setResolution(event.target.value)}
+                minLength={5}
+                maxLength={2000}
+                required
+                disabled={resolving}
+                rows={2}
+              />
+            </label>
+            <div className="resolution-actions">
+              <button
+                type="button"
+                onClick={() => setResolutionTicket(null)}
+                disabled={resolving}
+              >
+                Cancelar
+              </button>
+              <button
+                className="primary"
+                type="submit"
+                disabled={resolving || resolution.trim().length < 5}
+              >
+                {resolving ? "Registrando…" : "Registrar solução"}
+              </button>
+            </div>
+          </form>
+        )}
         {state === "WAITING_ANALYST" && (
           <div className="handoff-banner">
             <Headphones size={17} />
@@ -867,7 +936,10 @@ export function Workspace({
                     : "OUTROS CHAMADOS"}
                 </span>
               )}
-              <details className="side-ticket">
+              <details
+                className="side-ticket"
+                open={t.id === conversation?.selected_ticket_id}
+              >
                 <summary>
                   <span className="mono">{t.code}</span>
                   <strong>{t.title}</strong>
@@ -882,6 +954,22 @@ export function Workspace({
                 <div className={t.overdue ? "amber-text" : "muted"}>
                   Resposta: {date(t.due_at)}
                 </div>
+                {human &&
+                  conversation?.analyst_id === user.id &&
+                  t.id === conversation.selected_ticket_id &&
+                  !["RESOLVED", "CLOSED"].includes(t.status) && (
+                    <button
+                      className="primary resolve-ticket-button"
+                      disabled={resolving}
+                      onClick={() => {
+                        setResolutionTicket(t);
+                        setResolution("");
+                        setTicketsOpen(false);
+                      }}
+                    >
+                      Resolver chamado
+                    </button>
+                  )}
               </details>
             </Fragment>
           ))}
