@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from difflib import SequenceMatcher
 import re
 import unicodedata
 from typing import Any
@@ -84,29 +83,39 @@ class TicketService:
                 "somente",
                 "software",
                 "programa",
+                "instalacao",
+                "instalar",
+                "pedido",
+                "solicitacao",
+                "aplicativo",
             }
             return {
                 word
                 for word in re.findall(r"[a-z0-9]+", normalized(value))
-                if len(word) >= 3 and word not in stopwords
+                if (len(word) >= 3 or word.isdigit()) and word not in stopwords
             }
 
-        # Categoria sozinha e uma palavra genérica nunca identificam o mesmo problema.
+        # Semelhança textual não comprova identidade: QGIS e FluxogramaQA podem
+        # compartilhar todo o restante do título. Só vinculamos automaticamente
+        # quando os termos significativos coincidem, sem descartar produto/versão.
         candidates = []
         requested_words = words(title)
+        if not requested_words:
+            return None
         for ticket in self.list():
             if ticket.category != category:
                 continue
             opened = ticket.status not in {"RESOLVED", "CLOSED"}
             if not opened and not can_reopen(ticket.resolved_at, now()):
                 continue
-            score = SequenceMatcher(None, normalized(title), normalized(ticket.title)).ratio()
             existing_words = words(ticket.title)
-            overlap = len(requested_words & existing_words)
-            containment = overlap / max(1, min(len(requested_words), len(existing_words)))
-            if score >= 0.65 or (overlap >= 2 and containment >= 0.8):
-                candidates.append((opened, max(score, containment if overlap >= 2 else 0), ticket))
-        return max(candidates, key=lambda candidate: candidate[:2])[2] if candidates else None
+            if requested_words == existing_words:
+                candidates.append((opened, ticket))
+        # Havendo mais de um alvo na mesma situação, o funcionário precisa
+        # selecionar o protocolo; não escolhemos por ordem ou similaridade.
+        preferred = [ticket for opened, ticket in candidates if opened]
+        preferred = preferred or [ticket for _, ticket in candidates]
+        return preferred[0] if len(preferred) == 1 else None
 
     def prepare(self, conv: Conversation, payload: dict[str, Any], target: Ticket | None = None) -> Draft:
         self.available()
@@ -123,6 +132,7 @@ class TicketService:
         operation = "CREATE"
         if target:
             operation = "REOPEN" if target.status in {"RESOLVED", "CLOSED"} else "UPDATE"
+            payload = {**payload, "title": target.title}
         preview_due = due_at(now(), payload["priority"])
         if target and operation == "UPDATE":
             priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]

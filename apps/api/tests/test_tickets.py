@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import pytest
 from sqlalchemy import func, select
 
 from conftest import login
@@ -273,3 +274,75 @@ def test_duplicate_prefers_open_ticket_over_recently_resolved_match(database):
     database.add_all([opened, resolved])
     database.flush()
     assert service.related(opened.title, "Hardware").id == opened.id
+
+
+@pytest.mark.parametrize(
+    "existing,requested",
+    [
+        ("Instalação do software FluxogramaQA", "Instalação do software QGIS"),
+        ("Instalação do software QGIS", "Instalação do software QGIR"),
+        ("Instalação do QGIS 3", "Instalação do QGIS 4"),
+        ("Instalação do QGIS no notebook", "Instalação do ArcGIS no notebook"),
+    ],
+)
+def test_different_software_never_updates_an_unrelated_protocol(client, database, existing, requested):
+    user = database.get(User, "alice")
+    original = Ticket(
+        code="REQ-ORIGINAL",
+        user_id=user.id,
+        title=existing,
+        description="Histórico original preservado.",
+        kind="REQ",
+        category="Software",
+        priority="MEDIUM",
+        due_at=now() + timedelta(days=5),
+    )
+    conv = Conversation(user_id=user.id)
+    database.add_all([original, conv])
+    database.flush()
+    service = TicketService(database, user)
+    draft = service.prepare(
+        conv,
+        {
+            "title": requested,
+            "description": "Solicitação de outro programa para o trabalho.",
+            "kind": "REQ",
+            "category": "Software",
+            "priority": "MEDIUM",
+            "affected_scope": "individual",
+        },
+    )
+    database.commit()
+    assert draft.operation == "CREATE"
+    assert draft.target_id is None
+    login(client)
+    response = client.post(f"/drafts/{draft.id}/confirm", json={"revision": 1})
+    assert response.status_code == 200, response.text
+    assert response.json()["ticket"]["id"] != original.id
+    database.refresh(original)
+    assert original.description == "Histórico original preservado."
+    assert original.updates == []
+
+
+def test_duplicate_ignores_accents_and_word_order_but_requires_unique_target(database):
+    service = TicketService(database, database.get(User, "alice"))
+    originals = [
+        Ticket(
+            code=f"REQ-QGIS-{index}",
+            user_id="alice",
+            title="Instalação do software QGIS",
+            description="Pedido de instalação",
+            kind="REQ",
+            category="Software",
+            priority="LOW",
+            due_at=now(),
+        )
+        for index in range(2)
+    ]
+    database.add(originals[0])
+    database.flush()
+    assert service.related("QGIS: solicitar instalacao", "Software").id == originals[0].id
+    assert service.related("Instalação de software", "Software") is None
+    database.add(originals[1])
+    database.flush()
+    assert service.related("Instalar QGIS", "Software") is None
