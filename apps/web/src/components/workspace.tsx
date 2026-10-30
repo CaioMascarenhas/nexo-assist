@@ -529,10 +529,10 @@ export function Workspace({
           <textarea
             aria-label="Mensagem"
             placeholder={
-              analyst && !canSend
-                ? "Assuma o atendimento para responder"
-                : state === "CLOSED"
-                  ? "Atendimento encerrado"
+              state === "CLOSED"
+                ? "Atendimento encerrado"
+                : analyst && !canSend
+                  ? "Assuma o atendimento para responder"
                   : "Escreva para o Nexo…"
             }
             value={text}

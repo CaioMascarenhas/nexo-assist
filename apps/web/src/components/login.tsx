@@ -56,11 +56,11 @@ export function Login({ onLogin }: { onLogin: (u: User) => void }) {
                 Nexo Assist
               </span>
               <small>
-                <Check size={11} /> consultou seus chamados · montou o rascunho
+                <Check size={11} /> abriu o chamado · encaminhou ao suporte
               </small>
               <p>
-                Preparei um chamado com prioridade alta. Confira os dados antes
-                de confirmar.
+                Abri um chamado com prioridade alta e encaminhei para um
+                analista. Seu histórico foi preservado.
               </p>
               <div className="sample-ticket">
                 <span className="blue-dot" /> Rede e VPN · Alta · 4 h úteis
