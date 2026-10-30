@@ -77,3 +77,71 @@ test("incidente crítico completo recebe protocolo antes da transferência", asy
     path: "tmp/screenshots/regressao-critico-com-protocolo.png",
   });
 });
+
+test("analista registra solução, resolve o chamado e encerra a conversa separadamente", async ({
+  browser,
+}) => {
+  const employee = await browser.newContext();
+  const support = await browser.newContext();
+  const page = await employee.newPage();
+  const consolePage = await support.newPage();
+  const id = await start(page, "bruno.tavares@nexo.com.br");
+  await send(
+    page,
+    `Notebook do laboratório QA não liga ${Date.now()}. Só eu, não consigo trabalhar.`,
+  );
+  await expect(
+    page.getByText("Aguardando um analista", { exact: true }),
+  ).toBeVisible();
+  const history = await (
+    await page.request.get(`/api/conversations/${id}`)
+  ).json();
+  const ticket = await (
+    await page.request.get(`/api/tickets/${history.selected_ticket_id}`)
+  ).json();
+  await support.request.post("/api/auth/login", {
+    data: { email: "luiza.costa@nexo.com.br", password: "demo" },
+  });
+  await consolePage.goto("/");
+  await consolePage
+    .getByLabel("Pesquisar conversa ou chamado")
+    .fill(ticket.code);
+  await consolePage.locator(".conversation-row").first().click();
+  await consolePage
+    .getByRole("button", { name: "Assumir atendimento", exact: true })
+    .click();
+  await consolePage
+    .getByRole("button", { name: "Resolver chamado", exact: true })
+    .click();
+  await consolePage
+    .getByRole("textbox", { name: "Solução aplicada", exact: true })
+    .fill("Fonte substituída e funcionamento validado com o funcionário.");
+  await consolePage
+    .getByRole("button", { name: "Registrar solução", exact: true })
+    .click();
+  await expect(consolePage.locator(".resolution-form")).toHaveCount(0);
+  await expect(page.locator(".timeline")).toContainText(
+    `Chamado ${ticket.code} resolvido`,
+  );
+  expect(
+    (await (await page.request.get(`/api/tickets/${ticket.id}`)).json()).status,
+  ).toBe("RESOLVED");
+  expect(
+    (await (await page.request.get(`/api/conversations/${id}`)).json()).state,
+  ).toBe("HUMAN_ACTIVE");
+  await consolePage
+    .getByRole("button", { name: "Encerrar atendimento", exact: true })
+    .click();
+  await expect(
+    consolePage.getByRole("textbox", { name: "Mensagem", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("textbox", { name: "Mensagem", exact: true }),
+  ).toBeDisabled();
+  await consolePage.screenshot({
+    path: "tmp/screenshots/regressao-chamado-resolvido.png",
+    fullPage: true,
+  });
+  await employee.close();
+  await support.close();
+});

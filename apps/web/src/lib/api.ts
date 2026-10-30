@@ -14,6 +14,7 @@ export interface Ticket {
   category: string;
   priority: string;
   status: string;
+  version: number;
   affected_scope: string;
   due_at: string;
   support_updated_at: string;
