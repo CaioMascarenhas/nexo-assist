@@ -55,12 +55,14 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 - Consulta sem protocolo, seleção e cards com status e SLA.
 - Base de 8 artigos com restrições de aplicabilidade, como Windows 10/11.
 - Rascunhos revisáveis para criação, complemento e reabertura, com confirmar, editar e cancelar; após confirmação, encaminhamento à fila humana com protocolo e resumo.
-- Busca de chamados semelhantes e confirmação idempotente, preservando revisão, versão do alvo e deduplicação.
+- Associação automática conservadora por categoria e termos significativos do título, preservando nomes de programas e versões. Similaridade textual sozinha não vincula protocolos. A confirmação continua idempotente e verifica revisão e versão do alvo.
+- Descrição da triagem com fatos atuais e relatos em ordem cronológica, incluindo esclarecimentos de alcance, urgência e alternativas.
 - Transferência com resumo e pausa persistente do agente, inclusive enquanto aguarda analista.
 - Incidentes críticos são encaminhados imediatamente com o contexto e, quando há dados suficientes, rascunho pendente. O protocolo é criado ou alterado somente após confirmação; se um analista assumir antes, a confirmação fica bloqueada até a devolução ao assistente.
 - Confirmação de que uma orientação funcionou conclui a ajuda sem repetir o artigo ou criar chamado.
 - Console com busca/filtros, histórico, chamados, assunção exclusiva, mensagens, devolução e encerramento.
-- Analista responsável pode usar **Resolver chamado** e registrar a solução. O protocolo fica resolvido; **Encerrar atendimento** continua sendo uma ação separada sobre a conversa.
+- Analista responsável pode usar **Resolver chamado** e registrar a solução. O protocolo fica resolvido; **Encerrar atendimento** continua sendo uma ação separada sobre a conversa. Enquanto o protocolo vinculado estiver aberto, o encerramento fica bloqueado e o acompanhamento permanece com o analista em **Minhas**.
+- Solução com autor/data e histórico de atualizações nos cartões e no painel lateral. Chamados resolvidos exibem a data da resolução em lugar de um prazo futuro de resposta; soluções de ciclos anteriores ficam no histórico após a reabertura.
 - Decisões legíveis: intenção, fatos, fontes, regras, segurança estimada e uso/latência quando disponíveis.
 - Simulador de falhas e dados preservados após reinício real.
 
@@ -149,7 +151,7 @@ GitHub Actions executa build/typecheck, testes de agente, lint/formatação Pyth
 
 - API Python é a exceção de linguagem escolhida; validar aceitação com o avaliador.
 - O registro automático sem confirmação foi revertido a pedido do autor na issue #63; o rascunho e a confirmação do PRD estão restaurados.
-- Duplicidade usa heurística de título/categoria e alvo visível antes da confirmação.
+- Duplicidade usa termos do título/categoria e alvo visível antes da confirmação. Títulos com termos diferentes ou vários candidatos igualmente válidos não são vinculados automaticamente; a abordagem favorece preservar assuntos separados e pode preparar um novo protocolo. Para complementar um protocolo específico, selecione-o na consulta.
 - Sem feriados, SSO, e-mail real, anexos, controle remoto ou integração ITSM externa.
 - Turno interrompido fica identificado e mantém contexto; não há retomada automática em background.
 - Legado indisponível não impede chat humano; sincronização automática posterior fica como evolução.
@@ -158,6 +160,6 @@ GitHub Actions executa build/typecheck, testes de agente, lint/formatação Pyth
 
 ## Documentação
 
-[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md) · [Confirmação restaurada](docs/13-confirmacao-restaurada.md).
+[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md) · [Confirmação restaurada](docs/13-confirmacao-restaurada.md) · [Correções da auditoria de conversas](docs/14-correcoes-auditoria-conversas.md).
 
 Documentos 02-07 preservam hipóteses do levantamento inicial; este README e o ADR descrevem a arquitetura implementada. Materiais originais e `.env` ficam locais. O inventário visual sanitizado está em `docs/referencias/inventario-prototipo.json`.
