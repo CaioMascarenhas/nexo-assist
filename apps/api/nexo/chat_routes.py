@@ -127,6 +127,7 @@ def prepare_for_confirmation(db, conv, service, payload, target, data, reason="C
 
 
 def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, own_tickets, content):
+    previous_workaround = conv.facts.get("workaround")
     allowed = {
         "os",
         "category",
@@ -208,14 +209,27 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     ):
         conv.selected_ticket_id = None
     selected = service.get(conv.selected_ticket_id) if conv.selected_ticket_id else None
+    add_information = content.casefold().strip() in {
+        "adicionar informação",
+        "adicionar informacao",
+        "complementar chamado",
+    }
+    if selected and add_information:
+        intent = "update"
+        decision["intent"] = "update"
     if facts.get("_pending_update") and selected and intent not in {"handoff", "out_of_scope", "consult"}:
         intent = "update"
         decision["intent"] = "update"
         decision["rules"].append("PENDING_UPDATE_CONTEXT")
     if intent in {"handoff", "out_of_scope", "consult"}:
-        conv.facts = {key: value for key, value in facts.items() if key != "_pending_update"}
+        conv.facts = {
+            key: value
+            for key, value in facts.items()
+            if key not in {"_pending_update", "_update_text", "_awaiting_update_blocked"}
+        }
     critical = (
         intent != "consult"
+        and not (intent == "update" and selected)
         and facts.get("affected_scope") in {"team", "company"}
         and facts.get("blocked") is True
     )
@@ -305,6 +319,74 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "Aqui está o status atualizado do seu chamado. O prazo mostrado é de resposta/atualização do suporte.",
             data,
         )
+    if intent == "update" and selected:
+        facts = {
+            "title": selected.title,
+            "category": selected.category,
+            "kind": selected.kind,
+            "affected_scope": selected.affected_scope,
+            **facts,
+        }
+        if add_information:
+            conv.facts = {key: value for key, value in facts.items() if key != "_awaiting_update_blocked"}
+            conv.facts = {**conv.facts, "_pending_update": True, "_update_text": ""}
+            return (
+                "Qual informação você quer acrescentar ao chamado? Vou mostrar o complemento para sua confirmação.",
+                data,
+            )
+        complement = "\n".join(part for part in (facts.get("_update_text", ""), content) if part)[-6000:]
+        # Keep the user's actual update across clarification turns, independent of model summaries.
+        facts = {**facts, "_pending_update": True, "_update_text": complement}
+        lost_workaround = any(
+            term in text
+            for term in (
+                "nao tenho mais alternativa",
+                "nao temos mais alternativa",
+                "nao ha mais alternativa",
+                "sem alternativa",
+            )
+        )
+        lost_workaround = lost_workaround or (
+            previous_workaround is True and proposal.facts.get("workaround") is False
+        )
+        if lost_workaround:
+            facts["workaround"] = False
+            if proposal.facts.get("blocked") is not True:
+                facts.pop("blocked", None)
+                facts["_awaiting_update_blocked"] = True
+        changed_workaround = proposal.facts.get("workaround") is False or lost_workaround
+        if (changed_workaround or facts.get("_awaiting_update_blocked")) and "blocked" not in facts:
+            conv.facts = facts
+            decision["facts"] = {key: value for key, value in facts.items() if not key.startswith("_")}
+            data["quickReplies"] = ["Não consigo trabalhar", "Consigo trabalhar"]
+            return "Sem a alternativa, esse problema impede você de continuar trabalhando?", data
+        conv.facts = {
+            key: value
+            for key, value in facts.items()
+            if key not in {"_pending_update", "_update_text", "_awaiting_update_blocked"}
+        }
+        decision["facts"] = {key: value for key, value in facts.items() if not key.startswith("_")}
+        scope = facts.get("affected_scope", selected.affected_scope)
+        priority = (
+            priority_for(
+                scope,
+                facts.get("blocked", False),
+                facts.get("same_day", False),
+                facts.get("workaround", False),
+            )
+            if any(key in facts for key in ("blocked", "same_day", "workaround"))
+            else selected.priority
+        )
+        payload = {
+            "title": selected.title,
+            "description": complement,
+            "kind": selected.kind,
+            "category": selected.category,
+            "priority": priority,
+            "affected_scope": scope,
+        }
+        reason = "CRITICAL" if priority == "CRITICAL" else "CONFIRMED_TICKET"
+        return prepare_for_confirmation(db, conv, service, payload, selected, data, reason)
     articles = (
         list(db.scalars(select(Article).where(Article.id.in_(proposal.article_ids))))
         if proposal.article_ids
@@ -343,81 +425,53 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "Não encontrei uma orientação aplicável com segurança. Posso coletar os dados para um chamado ou chamar o suporte.",
             data,
         )
-    if intent == "update" and selected:
-        if content.casefold().strip() in {
-            "adicionar informação",
-            "adicionar informacao",
-            "complementar chamado",
-        }:
-            conv.facts = {**facts, "_pending_update": True}
-            return (
-                "Qual informação você quer acrescentar ao chamado? Vou mostrar o complemento para sua confirmação.",
-                data,
-            )
-        conv.facts = {key: value for key, value in facts.items() if key != "_pending_update"}
-        payload = {
-            "title": selected.title,
-            "description": content,
-            "kind": selected.kind,
-            "category": selected.category,
-            "priority": priority_for(
-                facts.get("affected_scope", selected.affected_scope),
-                facts.get("blocked", False),
-                facts.get("same_day", False),
-                facts.get("workaround", False),
-            )
-            if any(key in facts for key in ("blocked", "same_day", "workaround"))
-            else selected.priority,
-            "affected_scope": facts.get("affected_scope", selected.affected_scope),
-        }
-    else:
-        if not facts.get("title") or not facts.get("category"):
-            return (
-                "Conte o que aconteceu, em qual equipamento ou sistema e desde quando. Assim consigo direcionar seu atendimento.",
-                data,
-            )
-        if not facts.get("affected_scope"):
-            data["quickReplies"] = ["Só eu", "Minha equipe", "Toda a empresa", "Não sei"]
-            return "Quem está sendo afetado por esse problema?", data
-        high_known = facts.get("blocked") is True or facts.get("same_day") is True
-        if not high_known and "blocked" in facts and "same_day" not in facts:
-            data["quickReplies"] = [
-                "Tenho compromisso em risco hoje",
-                "Não tenho compromisso em risco hoje",
-            ]
-            return (
-                "Mesmo com a alternativa, existe algum compromisso em risco hoje?"
-                if facts.get("workaround") is True
-                else "Existe algum compromisso em risco hoje?",
-                data,
-            )
-        if not high_known and "same_day" in facts and "blocked" not in facts:
-            data["quickReplies"] = ["Não consigo trabalhar", "Consigo trabalhar"]
-            return "Esse problema impede você de continuar trabalhando?", data
-        if not high_known and ("blocked" not in facts or "same_day" not in facts):
-            data["quickReplies"] = [
-                "Não consigo trabalhar",
-                "Tenho reunião hoje",
-                "Tenho alternativa, sem urgência",
-            ]
-            return (
-                "Isso impede você de trabalhar? Existe compromisso em risco hoje ou uma alternativa para continuar?",
-                data,
-            )
-        priority = priority_for(
-            facts["affected_scope"],
-            facts.get("blocked", False),
-            facts.get("same_day", False),
-            facts.get("workaround", False),
+    if not facts.get("title") or not facts.get("category"):
+        return (
+            "Conte o que aconteceu, em qual equipamento ou sistema e desde quando. Assim consigo direcionar seu atendimento.",
+            data,
         )
-        payload = {
-            "title": str(facts["title"])[:200],
-            "description": str(facts.get("description") or content)[:6000],
-            "kind": facts.get("kind") if facts.get("kind") in {"INC", "REQ"} else "INC",
-            "category": facts["category"],
-            "priority": priority,
-            "affected_scope": facts["affected_scope"],
-        }
+    if not facts.get("affected_scope"):
+        data["quickReplies"] = ["Só eu", "Minha equipe", "Toda a empresa", "Não sei"]
+        return "Quem está sendo afetado por esse problema?", data
+    high_known = facts.get("blocked") is True or facts.get("same_day") is True
+    if not high_known and "blocked" in facts and "same_day" not in facts:
+        data["quickReplies"] = [
+            "Tenho compromisso em risco hoje",
+            "Não tenho compromisso em risco hoje",
+        ]
+        return (
+            "Mesmo com a alternativa, existe algum compromisso em risco hoje?"
+            if facts.get("workaround") is True
+            else "Existe algum compromisso em risco hoje?",
+            data,
+        )
+    if not high_known and "same_day" in facts and "blocked" not in facts:
+        data["quickReplies"] = ["Não consigo trabalhar", "Consigo trabalhar"]
+        return "Esse problema impede você de continuar trabalhando?", data
+    if not high_known and ("blocked" not in facts or "same_day" not in facts):
+        data["quickReplies"] = [
+            "Não consigo trabalhar",
+            "Tenho reunião hoje",
+            "Tenho alternativa, sem urgência",
+        ]
+        return (
+            "Isso impede você de trabalhar? Existe compromisso em risco hoje ou uma alternativa para continuar?",
+            data,
+        )
+    priority = priority_for(
+        facts["affected_scope"],
+        facts.get("blocked", False),
+        facts.get("same_day", False),
+        facts.get("workaround", False),
+    )
+    payload = {
+        "title": str(facts["title"])[:200],
+        "description": str(facts.get("description") or content)[:6000],
+        "kind": facts.get("kind") if facts.get("kind") in {"INC", "REQ"} else "INC",
+        "category": facts["category"],
+        "priority": priority,
+        "affected_scope": facts["affected_scope"],
+    }
     target = selected if intent == "update" else service.related(payload["title"], payload["category"])
     if target and ticket_json(target)["overdue"]:
         conv.selected_ticket_id = target.id

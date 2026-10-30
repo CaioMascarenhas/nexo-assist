@@ -18,6 +18,10 @@ Se um analista assumir primeiro, HUMAN_ACTIVE bloqueia a confirmação. O funcio
 
 Resolver uma orientação pelo chat não resolve protocolos existentes. Também retira rascunhos pendentes da mesma conversa, evitando que um problema já solucionado seja registrado por engano.
 
+## Complementar um chamado selecionado
+
+A issue #67 separa o complemento da orientação inicial: o botão Adicionar informação coleta o relato sem exigir sistema operacional para VPN. Se houver esclarecimentos, o rascunho mantém o relato e as respostas seguintes, em vez de usar apenas a última mensagem. A perda de uma alternativa corrige esse fato e, quando o bloqueio atual não estiver claro, pergunta se o funcionário consegue continuar trabalhando. Título, categoria e protocolo permanecem vinculados ao chamado selecionado; a operação continua exigindo confirmação e preserva a regra de não reduzir prioridade existente nem reiniciar indevidamente o SLA.
+
 ## Validação
 
 Os testes cobrem ausência de mutações antes da confirmação, criação/complemento/reabertura, edição e cancelamento, replay, falha de transferência com rollback, confirmação crítica na fila, bloqueio após assunção e preservação de SLA. As jornadas de navegador verificam os botões e a transferência após confirmar. Scripts de persistência e avaliação live foram ajustados ao novo fluxo.

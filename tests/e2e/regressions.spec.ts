@@ -215,3 +215,45 @@ test("rascunho crítico bloqueia confirmação após assunção e libera após d
   await employee.close();
   await support.close();
 });
+
+test("complemento de VPN preserva perda de alternativa e pergunta somente pelo bloqueio", async ({
+  page,
+}) => {
+  await start(page, "bruno.tavares@nexo.com.br");
+  const tickets = await (await page.request.get("/api/tickets")).json();
+  const ticket = tickets.find(
+    (item: { category: string; status: string }) =>
+      item.category === "Rede e VPN" && item.status !== "RESOLVED",
+  );
+  expect(ticket).toBeTruthy();
+  await send(page, `Qual o status do chamado ${ticket.code}?`);
+  await expect(page.locator(".message-text").last()).toContainText(
+    "status atualizado",
+  );
+  await send(page, "Adicionar informação");
+  await expect(page.locator(".message-text").last()).toContainText(
+    "Qual informação",
+  );
+  await send(page, "Agora eu não tenho mais alternativa");
+  await expect(page.locator(".message-text").last()).toContainText(
+    "Sem a alternativa",
+  );
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  await send(page, "Não consigo trabalhar");
+  await expect(page.locator(".draft-card")).toContainText(
+    "Agora eu não tenho mais alternativa",
+  );
+  await expect(page.locator(".draft-card")).toContainText(
+    "Não consigo trabalhar",
+  );
+  await expect(page.locator(".draft-card")).toContainText(ticket.code);
+  const unchanged = await (
+    await page.request.get(`/api/tickets/${ticket.id}`)
+  ).json();
+  expect(unchanged.description).toBe(ticket.description);
+  await page.screenshot({
+    path: "tmp/screenshots/regressao-complemento-vpn.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+});
