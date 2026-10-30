@@ -206,7 +206,7 @@ export async function decide(input: Input) {
     }),
     {
       maxSteps: 4,
-      modelSettings: { maxOutputTokens: 1200 },
+      modelSettings: { maxOutputTokens: 4000 },
       structuredOutput: { schema: outputSchema },
       abortSignal: AbortSignal.timeout(35000),
     },
