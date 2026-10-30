@@ -7,6 +7,7 @@ from sqlalchemy import select
 from conftest import login
 from nexo import chat_routes
 from nexo.models import Conversation, Draft, Ticket, User, now
+from nexo.schemas import Proposal
 from nexo.ticket_service import TicketService
 from test_chat import events, proposal
 
@@ -64,3 +65,92 @@ def test_failed_transfer_rolls_back_automatic_registration(client, database, mon
     conv = database.get(Conversation, conv_id)
     assert conv.state == "AGENT_ACTIVE"
     assert conv.busy_until is None
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_complete_critical_incident_is_registered_before_handoff(database, existing):
+    user = database.get(User, "alice")
+    conv = Conversation(user_id=user.id)
+    database.add(conv)
+    own = []
+    if existing:
+        ticket = Ticket(
+            code="INC-NETWORK",
+            user_id=user.id,
+            title="Equipe sem rede",
+            description="Falha inicial",
+            kind="INC",
+            category="Rede e VPN",
+            priority="HIGH",
+            due_at=now() + timedelta(days=1),
+        )
+        database.add(ticket)
+        own.append(ticket)
+    database.flush()
+    reply, data = chat_routes.apply_proposal(
+        database,
+        user,
+        conv,
+        Proposal(
+            intent="create",
+            reply="",
+            rationale="Equipe impedida de trabalhar",
+            confidence=0.95,
+            facts={
+                "title": "Equipe sem rede",
+                "category": "Rede e VPN",
+                "affected_scope": "team",
+                "blocked": True,
+                "description": "Todos sem acesso, sem alternativa",
+                "kind": "INC",
+            },
+        ),
+        TicketService(database, user),
+        own,
+        "Toda a equipe está sem rede e impedida de trabalhar",
+    )
+    database.commit()
+    assert conv.state == "WAITING_ANALYST"
+    assert conv.handoff_reason == "CRITICAL"
+    assert data["tickets"][0]["priority"] == "CRITICAL"
+    assert data["tickets"][0]["status"] == "WAITING_ANALYST"
+    assert data["tickets"][0]["code"] in reply
+    assert data["operation"] == ("UPDATE" if existing else "CREATE")
+    assert len(list(database.scalars(select(Ticket)))) == 1
+
+
+def test_consultation_does_not_reopen_resolved_ticket_from_old_critical_facts(database):
+    user = database.get(User, "alice")
+    ticket = Ticket(
+        code="INC-CRITICAL-DONE",
+        user_id=user.id,
+        title="Equipe sem rede",
+        description="Restabelecida",
+        kind="INC",
+        category="Rede e VPN",
+        priority="CRITICAL",
+        status="RESOLVED",
+        due_at=now(),
+        resolved_at=now(),
+    )
+    database.add(ticket)
+    database.flush()
+    conv = Conversation(
+        user_id=user.id,
+        selected_ticket_id=ticket.id,
+        facts={"title": ticket.title, "category": ticket.category, "affected_scope": "team", "blocked": True},
+    )
+    database.add(conv)
+    database.flush()
+    _, data = chat_routes.apply_proposal(
+        database,
+        user,
+        conv,
+        Proposal(intent="consult", reply="", rationale="Consulta de status", confidence=0.95),
+        TicketService(database, user),
+        [ticket],
+        "Qual o status?",
+    )
+    assert data["tickets"][0]["status"] == "RESOLVED"
+    assert conv.state == "AGENT_ACTIVE"
+    assert database.scalar(select(Draft)) is None
