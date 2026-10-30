@@ -57,6 +57,7 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 - Criação, complemento e reabertura automáticos após coleta dos dados; encaminhamento à fila humana com protocolo e resumo.
 - Busca de chamados semelhantes e registro interno da operação, preservando revisão, versão do alvo e deduplicação. Endpoints antigos de rascunho continuam disponíveis para compatibilidade; não são exibidos no chat.
 - Transferência com resumo e pausa persistente do agente, inclusive enquanto aguarda analista.
+- Incidentes críticos com dados suficientes recebem protocolo antes da transferência. Contexto incompleto ou inseguro continua sendo encaminhado sem inventar dados.
 - Console com busca/filtros, histórico, chamados, assunção exclusiva, mensagens, devolução e encerramento.
 - Decisões legíveis: intenção, fatos, fontes, regras, segurança estimada e uso/latência quando disponíveis.
 - Simulador de falhas e dados preservados após reinício real.
@@ -123,7 +124,7 @@ npm run build
 
 Python usa PostgreSQL real em schemas temporários isolados, sem truncar dados da aplicação. Configure `TEST_DATABASE_URL` se necessário. A migration inicial é congelada e tem teste de upgrade/downgrade em schema vazio.
 
-Para repetir as 19 jornadas sem alterar os atendimentos locais:
+Para repetir as 20 jornadas sem alterar os atendimentos locais:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/test-e2e.py --reset

@@ -150,12 +150,27 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         decision["rules"].append("PENDING_UPDATE_CONTEXT")
     if intent in {"handoff", "out_of_scope", "consult"}:
         conv.facts = {key: value for key, value in facts.items() if key != "_pending_update"}
-    critical = facts.get("affected_scope") in {"team", "company"} and facts.get("blocked") is True
+    critical = (
+        intent != "consult"
+        and facts.get("affected_scope") in {"team", "company"}
+        and facts.get("blocked") is True
+    )
     if intent == "out_of_scope":
         return (
             "Posso ajudar com assuntos de TI. Para RH, financeiro ou facilities, procure o canal responsável da Nexo.",
             data,
         )
+    if critical and proposal.confidence >= 0.75 and facts.get("title") and facts.get("category"):
+        payload = {
+            "title": str(facts["title"])[:200],
+            "description": str(facts.get("description") or content)[:6000],
+            "kind": facts.get("kind") if facts.get("kind") in {"INC", "REQ"} else "INC",
+            "category": facts["category"],
+            "priority": "CRITICAL",
+            "affected_scope": facts["affected_scope"],
+        }
+        target = selected if intent == "update" else service.related(payload["title"], payload["category"])
+        return register_and_handoff(db, conv, service, payload, target, data, "CRITICAL")
     if intent == "handoff" or critical or proposal.confidence < 0.75:
         reason = (
             "CRITICAL" if critical else "LOW_CONFIDENCE" if proposal.confidence < 0.75 else "USER_REQUEST"
