@@ -36,6 +36,11 @@ class ResolveTicketBody(TransitionBody):
     resolution: str = Field(min_length=5, max_length=2000)
 
 
+class FollowUp(BaseModel):
+    field: Literal["update_details", "blocked", "same_day", "workaround"]
+    question: str = Field(min_length=5, max_length=400)
+
+
 class Proposal(BaseModel):
     model_config = ConfigDict(extra="ignore")
     intent: Literal["help", "consult", "create", "update", "handoff", "out_of_scope", "clarify", "resolved"]
@@ -43,6 +48,9 @@ class Proposal(BaseModel):
     confidence: float = Field(ge=0, le=1)
     rationale: str = Field(max_length=1200)
     facts: dict[str, str | bool | None] = Field(default_factory=dict)
+    collect_update: bool = False
+    update_summary: str = Field(default="", max_length=1200)
+    follow_up: FollowUp | None = None
     article_ids: list[str] = Field(default_factory=list, max_length=8)
     tool_events: list[dict[str, str]] = Field(default_factory=list, max_length=12)
     usage: dict[str, int | float | str | None] = Field(default_factory=dict)

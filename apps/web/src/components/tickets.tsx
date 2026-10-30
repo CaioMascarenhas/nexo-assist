@@ -258,8 +258,23 @@ export function DraftCard({
       ) : (
         <>
           <h3>{draft.payload.title}</h3>
-          <p>{draft.payload.description}</p>
+          {draft.payload.update_summary ? (
+            <>
+              <p>{draft.payload.update_summary}</p>
+              <details>
+                <summary>Relato do funcionário</summary>
+                <p>{draft.payload.description}</p>
+              </details>
+            </>
+          ) : (
+            <p>{draft.payload.description}</p>
+          )}
         </>
+      )}
+      {draft.payload.priority_review && (
+        <p className="notice" aria-label="Reavaliação da prioridade">
+          {draft.payload.priority_review.reason}
+        </p>
       )}
       <div className="ticket-grid">
         <div>

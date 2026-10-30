@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .domain import CATEGORIES, aware, can_reopen, due_at, overdue
+from .domain import CATEGORIES, assessed_priority, aware, can_reopen, due_at, overdue
 from .models import Conversation, Draft, Ticket, User, now
 
 _fault_lock = Lock()
@@ -126,7 +126,9 @@ class TicketService:
         preview_due = due_at(now(), payload["priority"])
         if target and operation == "UPDATE":
             priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
-            effective = min([target.priority, payload["priority"]], key=priorities.index)
+            review = payload.get("priority_review", {})
+            assessed = assessed_priority(payload["affected_scope"], review.get("facts", {}))
+            effective = assessed or min([target.priority, payload["priority"]], key=priorities.index)
             preview_due = (
                 target.due_at if effective == target.priority else due_at(sla_anchor(target), effective)
             )
@@ -208,19 +210,26 @@ class TicketService:
                     *ticket.updates,
                     {"type": "reopen", "at": cycle_start.isoformat(), "author": self.actor.name},
                 ]
-            elif ["CRITICAL", "HIGH", "MEDIUM", "LOW"].index(p["priority"]) < [
-                "CRITICAL",
-                "HIGH",
-                "MEDIUM",
-                "LOW",
-            ].index(ticket.priority):
-                ticket.priority = p["priority"]
-                ticket.due_at = due_at(sla_anchor(ticket), ticket.priority)
+            else:
+                reviewed = assessed_priority(
+                    p["affected_scope"], p.get("priority_review", {}).get("facts", {})
+                )
+                priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+                effective = reviewed or min([ticket.priority, p["priority"]], key=priorities.index)
+                if effective != ticket.priority:
+                    ticket.priority = effective
+                    ticket.due_at = due_at(sla_anchor(ticket), ticket.priority)
             ticket.description += "\n\nComplemento confirmado: " + p["description"]
             ticket.affected_scope = p["affected_scope"]
             ticket.updates = [
                 *ticket.updates,
-                {"author": self.actor.name, "content": p["description"], "at": now().isoformat()},
+                {
+                    "author": self.actor.name,
+                    "content": p["description"],
+                    "at": now().isoformat(),
+                    "priority_review": p.get("priority_review"),
+                    "summary": p.get("update_summary", ""),
+                },
             ]
             ticket.version += 1
             # A user's complement must not clear a previously overdue support SLA.

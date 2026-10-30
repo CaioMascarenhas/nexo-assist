@@ -93,3 +93,18 @@ test("losing a workaround removes stale nonblocking status without assuming bloc
     true,
   );
 });
+
+test("announcing information requests collection and canceled meeting removes urgency", () => {
+  assert.equal(
+    stubDecision({ ...base, content: "Tenho mais informações" }).collect_update,
+    true,
+  );
+  const changed = stubDecision({
+    ...base,
+    facts: { same_day: true, blocked: true },
+    content: "A reunião foi cancelada",
+  });
+  assert.equal(changed.collect_update, false);
+  assert.equal(changed.facts.same_day, false);
+  assert.equal(changed.facts.blocked, true);
+});

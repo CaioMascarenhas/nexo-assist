@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 
 from .config import settings
 from .conversation_routes import add_message, get_conversation, pause
-from .domain import CATEGORIES, aware, priority_for
+from .domain import CATEGORIES, assessed_priority, aware, priority_explanation, priority_for
 from .models import Article, Draft, Message, User, now
 from .schemas import MessageBody, Proposal
 from .security import Actor, DB
@@ -165,6 +165,12 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         "prompt_version": "triage-v1",
     }
     data: dict[str, Any] = {"decision": decision}
+
+    def follow_up(field, fallback):
+        if proposal.follow_up and proposal.follow_up.field == field:
+            return proposal.follow_up.question
+        return fallback
+
     intent = proposal.intent
     text = "".join(
         c for c in unicodedata.normalize("NFD", content.casefold()) if not unicodedata.combining(c)
@@ -209,10 +215,14 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     ):
         conv.selected_ticket_id = None
     selected = service.get(conv.selected_ticket_id) if conv.selected_ticket_id else None
-    add_information = content.casefold().strip() in {
+    add_information = proposal.collect_update or content.casefold().strip().rstrip(".!?") in {
         "adicionar informação",
         "adicionar informacao",
         "complementar chamado",
+        "tenho mais informações",
+        "tenho mais informacoes",
+        "tenho novas informações",
+        "tenho novas informacoes",
     }
     if selected and add_information:
         intent = "update"
@@ -225,7 +235,8 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         conv.facts = {
             key: value
             for key, value in facts.items()
-            if key not in {"_pending_update", "_update_text", "_awaiting_update_blocked"}
+            if key
+            not in {"_pending_update", "_update_text", "_awaiting_update_blocked", "_priority_review_pending"}
         }
     critical = (
         intent != "consult"
@@ -320,6 +331,10 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             data,
         )
     if intent == "update" and selected:
+        for pending in db.scalars(
+            select(Draft).where(Draft.conversation_id == conv.id, Draft.status == "PENDING")
+        ):
+            pending.status = "INVALIDATED"
         facts = {
             "title": selected.title,
             "category": selected.category,
@@ -331,12 +346,21 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             conv.facts = {key: value for key, value in facts.items() if key != "_awaiting_update_blocked"}
             conv.facts = {**conv.facts, "_pending_update": True, "_update_text": ""}
             return (
-                "Qual informação você quer acrescentar ao chamado? Vou mostrar o complemento para sua confirmação.",
+                follow_up(
+                    "update_details",
+                    "Qual informação você quer acrescentar ao chamado? Vou mostrar o complemento para sua confirmação.",
+                ),
                 data,
             )
         complement = "\n".join(part for part in (facts.get("_update_text", ""), content) if part)[-6000:]
         # Keep the user's actual update across clarification turns, independent of model summaries.
         facts = {**facts, "_pending_update": True, "_update_text": complement}
+        impact_changed = (
+            any(isinstance(proposal.facts.get(key), bool) for key in ("blocked", "same_day", "workaround"))
+            or proposal.facts.get("affected_scope", selected.affected_scope) != selected.affected_scope
+        )
+        if impact_changed:
+            facts["_priority_review_pending"] = True
         lost_workaround = any(
             term in text
             for term in (
@@ -359,11 +383,32 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             conv.facts = facts
             decision["facts"] = {key: value for key, value in facts.items() if not key.startswith("_")}
             data["quickReplies"] = ["Não consigo trabalhar", "Consigo trabalhar"]
-            return "Sem a alternativa, esse problema impede você de continuar trabalhando?", data
+            return follow_up(
+                "blocked", "Sem a alternativa, esse problema impede você de continuar trabalhando?"
+            ), data
+        scope = facts.get("affected_scope", selected.affected_scope)
+        assessed = assessed_priority(scope, facts)
+        if facts.get("_priority_review_pending") and assessed is None:
+            conv.facts = facts
+            decision["facts"] = {key: value for key, value in facts.items() if not key.startswith("_")}
+            if "blocked" not in facts:
+                data["quickReplies"] = ["Não consigo trabalhar", "Consigo trabalhar"]
+                return follow_up(
+                    "blocked", "Com a nova informação, esse problema ainda impede você de trabalhar?"
+                ), data
+            if "same_day" not in facts:
+                data["quickReplies"] = [
+                    "Tenho compromisso em risco hoje",
+                    "Não tenho compromisso em risco hoje",
+                ]
+                return follow_up("same_day", "Ainda existe algum compromisso em risco hoje?"), data
+            data["quickReplies"] = ["Tenho alternativa", "Não tenho alternativa"]
+            return follow_up("workaround", "Existe alguma alternativa para continuar trabalhando?"), data
         conv.facts = {
             key: value
             for key, value in facts.items()
-            if key not in {"_pending_update", "_update_text", "_awaiting_update_blocked"}
+            if key
+            not in {"_pending_update", "_update_text", "_awaiting_update_blocked", "_priority_review_pending"}
         }
         decision["facts"] = {key: value for key, value in facts.items() if not key.startswith("_")}
         scope = facts.get("affected_scope", selected.affected_scope)
@@ -384,7 +429,17 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "category": selected.category,
             "priority": priority,
             "affected_scope": scope,
+            "update_summary": proposal.update_summary,
         }
+        if assessed is not None and facts.get("_priority_review_pending"):
+            payload["priority_review"] = {
+                "previous": selected.priority,
+                "proposed": assessed,
+                "reason": priority_explanation(selected.priority, assessed, scope, facts),
+                "facts": {key: facts[key] for key in ("blocked", "same_day", "workaround") if key in facts},
+            }
+            payload["priority"] = priority = assessed
+            decision["actions"].append("Reavaliou a prioridade")
         reason = "CRITICAL" if priority == "CRITICAL" else "CONFIRMED_TICKET"
         return prepare_for_confirmation(db, conv, service, payload, selected, data, reason)
     articles = (
