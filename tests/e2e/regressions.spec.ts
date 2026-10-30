@@ -26,6 +26,31 @@ async function send(page: Page, text: string) {
   await expect(page.locator(".streaming")).toHaveCount(0);
 }
 
+test("resolução após orientação não repete o artigo nem abre chamado", async ({
+  page,
+}) => {
+  await start(page, "carla.mendes@nexo.com.br");
+  const before = await (await page.request.get("/api/tickets")).json();
+  await send(page, "Minha VPN mostra erro 809 no Windows 10");
+  await expect(page.locator(".message-text").last()).toContainText("reinstale");
+  await send(
+    page,
+    "Reinstalei e reiniciei. A VPN voltou a funcionar, está resolvido. Não preciso de chamado.",
+  );
+  await expect(page.locator(".message-text").last()).toContainText(
+    "Que bom que voltou a funcionar",
+  );
+  await expect(page.locator(".message-text").last()).not.toContainText(
+    "reinstale",
+  );
+  expect((await (await page.request.get("/api/tickets")).json()).length).toBe(
+    before.length,
+  );
+  await page.screenshot({
+    path: "tmp/screenshots/regressao-orientacao-resolvida.png",
+  });
+});
+
 test("incidente crítico completo recebe protocolo antes da transferência", async ({
   page,
 }) => {

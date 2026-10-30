@@ -119,6 +119,46 @@ def test_complete_critical_incident_is_registered_before_handoff(database, exist
     assert len(list(database.scalars(select(Ticket)))) == 1
 
 
+def test_self_service_resolution_clears_triage_without_resolving_existing_ticket(database):
+    user = database.get(User, "alice")
+    ticket = Ticket(
+        code="INC-KEEP",
+        user_id=user.id,
+        title="VPN",
+        description="Falha",
+        kind="INC",
+        category="Rede e VPN",
+        priority="HIGH",
+        due_at=now() + timedelta(days=1),
+    )
+    database.add(ticket)
+    database.flush()
+    conv = Conversation(
+        user_id=user.id,
+        selected_ticket_id=ticket.id,
+        facts={"category": "Rede e VPN", "os": "Windows 10", "_vpn_guidance_offered": True},
+    )
+    database.add(conv)
+    database.flush()
+    reply, data = chat_routes.apply_proposal(
+        database,
+        user,
+        conv,
+        Proposal(intent="resolved", reply="", rationale="Usuário confirmou sucesso", confidence=0.95),
+        TicketService(database, user),
+        [ticket],
+        "A VPN voltou a funcionar. Não preciso de chamado.",
+    )
+    assert "Que bom" in reply
+    assert "reinstale" not in reply
+    assert conv.state == "AGENT_ACTIVE"
+    assert conv.facts == {}
+    assert ticket.status == "OPEN"
+    assert ticket.resolved_at is None
+    assert "draft" not in data and "tickets" not in data
+    assert database.scalar(select(Draft)) is None
+
+
 def test_consultation_does_not_reopen_resolved_ticket_from_old_critical_facts(database):
     user = database.get(User, "alice")
     ticket = Ticket(
