@@ -51,7 +51,7 @@ test("resolução após orientação não repete o artigo nem abre chamado", asy
   });
 });
 
-test("incidente crítico completo recebe protocolo antes da transferência", async ({
+test("incidente crítico entra na fila mas só recebe protocolo após confirmar", async ({
   page,
 }) => {
   const id = await start(page, "bruno.tavares@nexo.com.br");
@@ -66,9 +66,19 @@ test("incidente crítico completo recebe protocolo antes da transferência", asy
     await page.request.get(`/api/conversations/${id}`)
   ).json();
   expect(history.handoff_reason).toBe("CRITICAL");
-  expect(history.selected_ticket_id).toBeTruthy();
+  expect(history.selected_ticket_id).toBeNull();
+  await expect(page.locator(".draft-card")).toContainText("Crítica");
+  await expect(
+    page.getByRole("button", { name: "Confirmar", exact: true }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  const confirmed = await (
+    await page.request.get(`/api/conversations/${id}`)
+  ).json();
+  expect(confirmed.selected_ticket_id).toBeTruthy();
   const ticket = await (
-    await page.request.get(`/api/tickets/${history.selected_ticket_id}`)
+    await page.request.get(`/api/tickets/${confirmed.selected_ticket_id}`)
   ).json();
   expect(ticket.priority).toBe("CRITICAL");
   expect(ticket.status).toBe("WAITING_ANALYST");
@@ -90,6 +100,10 @@ test("analista registra solução, resolve o chamado e encerra a conversa separa
     page,
     `Notebook do laboratório QA não liga ${Date.now()}. Só eu, não consigo trabalhar.`,
   );
+  await expect(page.locator(".draft-card")).toContainText(
+    "Aguardando confirmação",
+  );
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(
     page.getByText("Aguardando um analista", { exact: true }),
   ).toBeVisible();
@@ -142,6 +156,62 @@ test("analista registra solução, resolve o chamado e encerra a conversa separa
     path: "tmp/screenshots/regressao-chamado-resolvido.png",
     fullPage: true,
   });
+  await employee.close();
+  await support.close();
+});
+
+test("rascunho crítico bloqueia confirmação após assunção e libera após devolução", async ({
+  browser,
+}) => {
+  const employee = await browser.newContext();
+  const support = await browser.newContext();
+  const page = await employee.newPage();
+  const consolePage = await support.newPage();
+  const id = await start(page, "carla.mendes@nexo.com.br");
+  const before = await (await page.request.get("/api/tickets")).json();
+  await send(
+    page,
+    "A VPN não conecta no Windows 11 para minha equipe inteira. Estamos parados e não consigo trabalhar.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Confirmar", exact: true }),
+  ).toBeEnabled();
+  await support.request.post("/api/auth/login", {
+    data: { email: "luiza.costa@nexo.com.br", password: "demo" },
+  });
+  await consolePage.goto("/");
+  await consolePage
+    .getByRole("button", { name: "Para você", exact: true })
+    .click();
+  await consolePage
+    .locator(".conversation-row")
+    .filter({ hasText: "Carla Mendes" })
+    .first()
+    .click();
+  await consolePage
+    .getByRole("button", { name: "Assumir atendimento", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Confirmar", exact: true }),
+  ).toBeDisabled();
+  await expect(page.locator(".draft-card")).toContainText(
+    "O rascunho não foi efetivado",
+  );
+  expect((await (await page.request.get("/api/tickets")).json()).length).toBe(
+    before.length,
+  );
+  await consolePage
+    .getByRole("button", { name: "Devolver ao assistente", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Confirmar", exact: true }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  expect(
+    (await (await page.request.get(`/api/conversations/${id}`)).json())
+      .selected_ticket_id,
+  ).toBeTruthy();
   await employee.close();
   await support.close();
 });

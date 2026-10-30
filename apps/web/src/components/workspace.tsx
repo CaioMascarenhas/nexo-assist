@@ -27,7 +27,7 @@ import {
   type Ticket,
   type User,
 } from "@/lib/api";
-import { DecisionDetail, TicketCard } from "./tickets";
+import { DecisionDetail, DraftCard, TicketCard } from "./tickets";
 import { Logo } from "./brand";
 import { Profile, ProfileLogo } from "./profile";
 import { demoPresence, PersonAvatar } from "./person-avatar";
@@ -337,6 +337,15 @@ export function Workspace({
   const lastAgent = [...(conversation?.messages ?? [])]
     .reverse()
     .find((m) => m.role === "AGENT");
+  const lastDraft = conversation?.drafts
+    ?.filter((d) => d.status === "PENDING")
+    .at(-1);
+  const canConfirmDraft =
+    active ||
+    (state === "WAITING_ANALYST" &&
+      conversation?.handoff_reason === "CRITICAL" &&
+      lastDraft?.payload.handoff_reason === "CRITICAL" &&
+      lastDraft.payload.priority === "CRITICAL");
   const mode = runtimeMode;
 
   function timeline() {
@@ -409,21 +418,36 @@ export function Workspace({
             </div>
           );
         })}
-        {!analyst && active && !busy && lastAgent?.data.quickReplies && (
-          <div className="quick-replies">
-            {lastAgent.data.quickReplies.map((q, i) => (
-              <button
-                key={q}
-                onClick={() =>
-                  q === "Falar com um analista" ? void handoff() : void send(q)
-                }
-              >
-                <kbd>{i + 1}</kbd>
-                {q}
-              </button>
-            ))}
-          </div>
+        {!analyst && lastDraft && (
+          <DraftCard
+            key={`${lastDraft.id}:${lastDraft.revision}`}
+            draft={lastDraft}
+            canConfirm={canConfirmDraft}
+            onChanged={() => void refresh()}
+            onError={setError}
+          />
         )}
+        {!analyst &&
+          active &&
+          !busy &&
+          !lastDraft &&
+          lastAgent?.data.quickReplies && (
+            <div className="quick-replies">
+              {lastAgent.data.quickReplies.map((q, i) => (
+                <button
+                  key={q}
+                  onClick={() =>
+                    q === "Falar com um analista"
+                      ? void handoff()
+                      : void send(q)
+                  }
+                >
+                  <kbd>{i + 1}</kbd>
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
         {busy && (
           <div className="streaming" aria-live="polite">
             <div className="message-author">

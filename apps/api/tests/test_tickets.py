@@ -109,7 +109,7 @@ def test_recent_resolved_reopens_and_duplicate_prepares_update(client, database)
     result = client.post(f"/drafts/{draft.id}/confirm", json={"revision": 1})
     assert result.status_code == 200
     assert result.json()["ticket"]["code"] == "INC-321"
-    assert result.json()["ticket"]["status"] == "OPEN"
+    assert result.json()["ticket"]["status"] == "WAITING_ANALYST"
     conv = database.get(Conversation, draft.conversation_id)
     next_draft = TicketService(database, database.get(User, "alice")).prepare(conv, draft.payload)
     assert next_draft.operation == "UPDATE"

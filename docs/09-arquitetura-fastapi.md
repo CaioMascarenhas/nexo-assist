@@ -2,7 +2,7 @@
 
 Status: aceita por solicitação do usuário. Este documento substitui as decisões de implementação dos documentos 02-07 quando houver divergência; o levantamento funcional e a referência visual continuam válidos.
 
-Atualização de 30/10/2026: o autor solicitou remover a confirmação do funcionário. O chat agora registra automaticamente criação/complemento/reabertura e transfere para a fila humana após a coleta necessária. A API mantém uma operação interna persistida, concluída na mesma transação do chamado e da transferência; a interface não mostra rascunhos. Esta decisão substitui o requisito de confirmação dos documentos históricos, incluindo a auditoria 11, e diverge do PRD original.
+Fluxo vigente após a issue #63: o autor solicitou restaurar o rascunho revisável e a confirmação exigidos pelo PRD. A remoção anterior, registrada na issue #48, foi revertida. A interface mostra confirmar/editar/cancelar; a API só cria, complementa ou reabre após confirmação por ID/revisão. Casos críticos são encaminhados imediatamente, mas o chamado também aguarda confirmação enquanto a conversa está na fila. Após assunção humana, a confirmação é bloqueada até a devolução. Os documentos da auditoria anterior preservam o histórico; a descrição atual está em docs/13-confirmacao-restaurada.md.
 
 ## Contexto e decisão
 
@@ -19,7 +19,7 @@ O serviço de chamados é um módulo separado dentro da API FastAPI. O agente re
 
 1. Identidade obtida da sessão; o modelo e o cliente não escolhem o solicitante.
 2. Consultas e confirmação filtram proprietário; suporte exige papel de analista.
-3. Alterações do chat usam operação interna persistida e concluída automaticamente; deduplicação, locks e controle de versão protegem o registro. Endpoints antigos de confirmação permanecem para compatibilidade.
+3. Alterações do chat exigem rascunho persistido e confirmação explícita do funcionário; deduplicação, locks, revisão, validade e versão do alvo protegem o registro. Operação e encaminhamento após confirmação usam a mesma transação.
 4. Propriedade da conversa é persistida; assumir, devolver e encerrar são transições atômicas.
 5. Uma geração em andamento só conclui se estado/epoch ainda forem válidos.
 6. SLA e prioridade calculados por código; confiança do modelo é estimativa identificada.

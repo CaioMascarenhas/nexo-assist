@@ -6,7 +6,7 @@ async function login(page: Page, email: string) {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
 }
 
-test("funcionário abre chamado automaticamente e consulta os detalhes da decisão", async ({
+test("funcionário revisa e confirma o chamado antes do encaminhamento", async ({
   page,
 }) => {
   await login(page, "bruno.tavares@nexo.com.br");
@@ -23,18 +23,16 @@ test("funcionário abre chamado automaticamente e consulta os detalhes da decis�
       "Minha VPN tem erro 809 no Windows 11. Só eu sou afetado e não consigo trabalhar.",
     );
   await page.getByRole("button", { name: "Enviar mensagem" }).click();
-  await expect(
-    page.getByText("Aguardando um analista", { exact: true }),
-  ).toBeVisible();
-  await expect(page.locator(".draft-card")).toHaveCount(0);
-  await expect(page.locator(".timeline")).toContainText(
-    "fila de atendimento humano",
+  await expect(page.locator(".draft-card")).toContainText(
+    "Aguardando confirmação",
   );
   await page.getByText("Entenda esta decisão").last().click();
   await expect(
     page.getByText("estimativa não calibrada", { exact: false }),
   ).toBeVisible();
-  await expect(page.getByText("Abrir chamado", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Preparar novo chamado", { exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByText("Pessoas afetadas: Somente você", { exact: true }),
   ).toBeVisible();
@@ -44,13 +42,18 @@ test("funcionário abre chamado automaticamente e consulta os detalhes da decis�
   await expect(page.locator(".decision-panel")).not.toContainText(
     "OWNER_SCOPE",
   );
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(
+    page.getByText("Aguardando um analista", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
   await page.screenshot({
     path: "tmp/screenshots/employee-chat.png",
     fullPage: true,
   });
   await page.reload();
   await expect(page.locator(".timeline")).toContainText(
-    "fila de atendimento humano",
+    "operação confirmada e concluída",
   );
 });
 
@@ -62,6 +65,13 @@ test("analista recebe transferência e responde com o assistente pausado", async
   const userPage = await employee.newPage();
   const analystPage = await support.newPage();
   await login(userPage, "carla.mendes@nexo.com.br");
+  await expect(
+    userPage.getByRole("button", { name: "Novo atendimento" }),
+  ).toBeVisible();
+  const tickets = await (await userPage.request.get("/api/tickets")).json();
+  const openCount = tickets.filter(
+    (ticket: { status: string }) => ticket.status !== "RESOLVED",
+  ).length;
   await userPage.getByRole("button", { name: "Novo atendimento" }).click();
   await expect(
     userPage.getByRole("textbox", { name: "Mensagem", exact: true }),
@@ -90,7 +100,7 @@ test("analista recebe transferência e responde com o assistente pausado", async
   });
   await expect(
     analystPage.locator(".ticket-history > p").first(),
-  ).toContainText("Abertos: 1");
+  ).toContainText(`Abertos: ${openCount}`);
   await expect(analystPage.locator(".workspace-header")).toContainText(
     "Offline · Comercial · presença simulada",
   );

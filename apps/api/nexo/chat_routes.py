@@ -16,10 +16,10 @@ from sqlalchemy import func, select
 from .config import settings
 from .conversation_routes import add_message, get_conversation, pause
 from .domain import CATEGORIES, aware, priority_for
-from .models import Article, Message, User, now
+from .models import Article, Draft, Message, User, now
 from .schemas import MessageBody, Proposal
 from .security import Actor, DB
-from .serialization import message_json
+from .serialization import draft_json, message_json
 from .summaries import describe_facts
 from .ticket_service import TicketService, ticket_json
 
@@ -94,33 +94,34 @@ async def request_proposal(payload: dict[str, Any]) -> Proposal:
     raise failure
 
 
-def register_and_handoff(db, conv, service, payload, target, data, reason="AUTO_REGISTERED"):
-    draft = service.prepare(conv, payload, target)
-    ticket = service.confirm(draft, draft.revision)
-    conv.selected_ticket_id = ticket.id
-    service.transfer(ticket.id, reason)
-    pause(
-        db,
-        conv,
-        reason,
-        f"{ticket.code}: {ticket.title}\n{ticket.description}\nContexto coletado:\n{describe_facts(conv.facts)}",
-    )
-    data["tickets"] = [ticket_json(ticket)]
-    data["operation"] = draft.operation
-    action = {"CREATE": "aberto", "UPDATE": "atualizado", "REOPEN": "reaberto"}[draft.operation]
+def prepare_for_confirmation(db, conv, service, payload, target, data, reason="CONFIRMED_TICKET"):
+    draft = service.prepare(conv, {**payload, "handoff_reason": reason}, target)
+    data["draft"] = draft_json(draft)
     data["decision"]["actions"] += [
         "Classificou a prioridade",
         "Calculou o SLA",
-        f"Chamado {action}",
-        "Encaminhou para atendimento humano",
+        "Montou o rascunho",
     ]
     data["decision"]["rules"] += ["IMPACT_URGENCY", "BUSINESS_CALENDAR", "CHECK_DUPLICATES"]
     if reason == "CRITICAL":
+        pause(
+            db,
+            conv,
+            reason,
+            f"Caso crítico. Rascunho aguardando confirmação: {payload['title']}\n"
+            f"{payload['description']}\nContexto coletado:\n{describe_facts(conv.facts)}",
+        )
+        data["decision"]["actions"].append("Encaminhou o caso crítico ao suporte")
         data["decision"]["rules"].append("CRITICAL")
+        return (
+            "O caso é crítico e encaminhei a conversa ao suporte imediatamente. "
+            "Confira o rascunho: o chamado só será criado ou alterado após sua confirmação. "
+            "Você pode confirmar enquanto aguarda; se um analista assumir, combine a alteração com ele.",
+            data,
+        )
     return (
-        f"Chamado {ticket.code} {action}. Encaminhei sua conversa para a fila de atendimento humano "
-        "com o histórico e os dados coletados. Você está aguardando um analista; "
-        "o assistente ficará pausado até a devolução pelo suporte.",
+        "Confira os dados abaixo. O chamado só será criado ou alterado depois da sua confirmação. "
+        "Após confirmar, encaminharei o atendimento ao suporte com o histórico.",
         data,
     )
 
@@ -156,7 +157,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         "facts": {key: value for key, value in facts.items() if not key.startswith("_")},
         "actions": ["Consultou seus chamados", "Consultou a central de ajuda"],
         "tool_events": proposal.tool_events,
-        "rules": ["OWNER_SCOPE", "AUTO_REGISTER_AND_HANDOFF"],
+        "rules": ["OWNER_SCOPE", "CONFIRM_BEFORE_WRITE"],
         "sources": [],
         "usage": proposal.usage,
         "mode": proposal.mode,
@@ -169,6 +170,10 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     )
     if intent == "resolved" and proposal.confidence >= 0.75:
         conv.facts = {}
+        for pending in db.scalars(
+            select(Draft).where(Draft.conversation_id == conv.id, Draft.status == "PENDING")
+        ):
+            pending.status = "INVALIDATED"
         data["quickReplies"] = ["Consultar meus chamados", "Preciso de outra ajuda"]
         decision["actions"] = ["Concluiu a orientação"]
         decision["rules"].append("SELF_SERVICE_RESOLVED")
@@ -229,7 +234,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
             "affected_scope": facts["affected_scope"],
         }
         target = selected if intent == "update" else service.related(payload["title"], payload["category"])
-        return register_and_handoff(db, conv, service, payload, target, data, "CRITICAL")
+        return prepare_for_confirmation(db, conv, service, payload, target, data, "CRITICAL")
     if intent == "handoff" or critical or proposal.confidence < 0.75:
         reason = (
             "CRITICAL" if critical else "LOW_CONFIDENCE" if proposal.confidence < 0.75 else "USER_REQUEST"
@@ -346,7 +351,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
         }:
             conv.facts = {**facts, "_pending_update": True}
             return (
-                "Qual informação você quer acrescentar ao chamado? Vou registrar o complemento e encaminhar ao suporte.",
+                "Qual informação você quer acrescentar ao chamado? Vou mostrar o complemento para sua confirmação.",
                 data,
             )
         conv.facts = {key: value for key, value in facts.items() if key != "_pending_update"}
@@ -403,7 +408,7 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     if target and ticket_json(target)["overdue"]:
         conv.selected_ticket_id = target.id
         return transfer_overdue(target)
-    return register_and_handoff(db, conv, service, payload, target, data)
+    return prepare_for_confirmation(db, conv, service, payload, target, data)
 
 
 @router.post("/conversations/{conversation_id}/messages")

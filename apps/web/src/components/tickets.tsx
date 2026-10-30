@@ -174,10 +174,12 @@ export function TicketCard({
 
 export function DraftCard({
   draft,
+  canConfirm = true,
   onChanged,
   onError,
 }: {
   draft: Draft;
+  canConfirm?: boolean;
   onChanged: () => void;
   onError: (e: string) => void;
 }) {
@@ -291,7 +293,7 @@ export function DraftCard({
         <div className="draft-actions">
           <button
             className="primary"
-            disabled={working}
+            disabled={working || !canConfirm}
             onClick={() => action(editing ? "edit" : "confirm")}
           >
             <Check size={14} />
@@ -299,7 +301,7 @@ export function DraftCard({
           </button>
           <button
             className="text-button"
-            disabled={working}
+            disabled={working || !canConfirm}
             onClick={() => setEditing(!editing)}
           >
             <Pencil size={13} />
@@ -319,6 +321,13 @@ export function DraftCard({
         <p className="notice">
           Este rascunho expirou. Peça um novo rascunho na conversa antes de
           confirmar.
+        </p>
+      )}
+      {pending && !canConfirm && (
+        <p className="notice">
+          O atendimento está com o suporte ou foi encerrado. O rascunho não foi
+          efetivado; combine a alteração com o analista ou aguarde a devolução
+          ao assistente.
         </p>
       )}
     </article>

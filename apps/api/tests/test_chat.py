@@ -36,7 +36,7 @@ def events(response):
     return [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")]
 
 
-def test_chat_registers_and_hands_off_without_confirmation_or_duplicate(client, database, monkeypatch):
+def test_chat_requires_confirmation_then_hands_off_without_duplicate(client, database, monkeypatch):
     async def fake(_):
         return proposal()
 
@@ -51,14 +51,21 @@ def test_chat_registers_and_hands_off_without_confirmation_or_duplicate(client, 
     persisted = database.scalar(select(Draft).where(Draft.conversation_id == conv))
     assert persisted is not None
     assert persisted.payload["due_at"]
-    assert persisted.status == "COMMITTED"
-    assert len(list(database.scalars(select(Ticket)))) == 1
-    assert database.get(Conversation, conv).state == "WAITING_ANALYST"
+    assert persisted.status == "PENDING"
+    assert database.scalar(select(Ticket)) is None
+    assert database.get(Conversation, conv).state == "AGENT_ACTIVE"
     assert client.post(
         f"/conversations/{conv}/messages", json={"content": "VPN sem funcionar", "client_id": "once"}
     ).json()["replayed"]
     saved = database.get(Conversation, conv)
     assert saved.turns == 1
+    confirmed = client.post(f"/drafts/{persisted.id}/confirm", json={"revision": persisted.revision})
+    assert confirmed.status_code == 200
+    assert saved.state == "WAITING_ANALYST"
+    assert (
+        client.post(f"/drafts/{persisted.id}/confirm", json={"revision": persisted.revision}).status_code
+        == 200
+    )
     assert client.post(
         f"/conversations/{conv}/messages", json={"content": "Aguardando", "client_id": "human"}
     ).json()["agent_paused"]
@@ -171,8 +178,8 @@ def test_add_information_collects_content_before_preparing_update(database):
     _, data = chat_routes.apply_proposal(
         database, user, conv, request, service, [ticket], "A lentidão começou depois da atualização."
     )
-    assert "draft" not in data
-    assert data["operation"] == "UPDATE"
-    assert data["tickets"][0]["id"] == ticket.id
-    assert "A lentidão começou depois da atualização." in ticket.description
-    assert conv.state == "WAITING_ANALYST"
+    assert data["draft"]["operation"] == "UPDATE"
+    assert data["draft"]["target_id"] == ticket.id
+    assert data["draft"]["payload"]["description"] == "A lentidão começou depois da atualização."
+    assert ticket.description == "Relato inicial"
+    assert conv.state == "AGENT_ACTIVE"

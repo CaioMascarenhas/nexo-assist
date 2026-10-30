@@ -31,3 +31,4 @@ As entregas abaixo formalizam as mudanças solicitadas e as correções verifica
 | Permitir que o analista responsável resolva o chamado com registro da solução | [#52](https://github.com/CaioMascarenhas/nexo-assist/issues/52) | [#60](https://github.com/CaioMascarenhas/nexo-assist/pull/60) |
 | Atualizar o exemplo do login e o campo de atendimento encerrado | [#53](https://github.com/CaioMascarenhas/nexo-assist/issues/53) | [#61](https://github.com/CaioMascarenhas/nexo-assist/pull/61) |
 | Registrar correções da auditoria e a verificação live reproduzível | [#54](https://github.com/CaioMascarenhas/nexo-assist/issues/54) | [#62](https://github.com/CaioMascarenhas/nexo-assist/pull/62) |
+| Restaurar rascunho e confirmação antes de criar, complementar ou reabrir chamados, preservando o encaminhamento após confirmar | [#63](https://github.com/CaioMascarenhas/nexo-assist/issues/63) | [#64](https://github.com/CaioMascarenhas/nexo-assist/pull/64) |
