@@ -88,12 +88,32 @@ class TicketService:
                 "pedido",
                 "solicitacao",
                 "aplicativo",
+                "o",
+                "a",
+                "os",
+                "as",
+                "um",
+                "uns",
+                "umas",
+                "de",
+                "do",
+                "da",
+                "dos",
+                "das",
+                "no",
+                "na",
+                "nos",
+                "nas",
+                "em",
+                "e",
+                "ou",
+                "eu",
+                "me",
+                "ao",
+                "aos",
+                "so",
             }
-            return {
-                word
-                for word in re.findall(r"[a-z0-9]+", normalized(value))
-                if (len(word) >= 3 or word.isdigit()) and word not in stopwords
-            }
+            return {word for word in re.findall(r"[a-z0-9]+", normalized(value)) if word not in stopwords}
 
         # Semelhança textual não comprova identidade: QGIS e FluxogramaQA podem
         # compartilhar todo o restante do título. Só vinculamos automaticamente

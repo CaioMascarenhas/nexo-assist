@@ -283,6 +283,8 @@ def test_duplicate_prefers_open_ticket_over_recently_resolved_match(database):
         ("Instalação do software QGIS", "Instalação do software QGIR"),
         ("Instalação do QGIS 3", "Instalação do QGIS 4"),
         ("Instalação do QGIS no notebook", "Instalação do ArcGIS no notebook"),
+        ("Instalação do ERP BI", "Instalação do ERP BO"),
+        ("Instalação do software R", "Instalação do software Q"),
     ],
 )
 def test_different_software_never_updates_an_unrelated_protocol(client, database, existing, requested):
