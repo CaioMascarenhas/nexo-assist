@@ -21,8 +21,12 @@ scenarios = [
     ),
 ]
 with httpx.Client(base_url="http://127.0.0.1:8000", timeout=55) as client:
-    client.post("/auth/login", json={"email": "ana.souza@nexo.com.br", "password": "demo"}).raise_for_status()
-    assert client.get("/runtime").json()["mode"] == "live", "O agente deve estar em modo real."
+    client.post(
+        "/auth/login", json={"email": "ana.souza@nexo.com.br", "password": "demo"}
+    ).raise_for_status()
+    assert client.get("/runtime").json()["mode"] == "live", (
+        "O agente deve estar em modo real."
+    )
     for name, content, intent, state in scenarios:
         created = client.post("/conversations")
         created.raise_for_status()
@@ -32,7 +36,11 @@ with httpx.Client(base_url="http://127.0.0.1:8000", timeout=55) as client:
             json={"content": content, "client_id": str(uuid4())},
         )
         response.raise_for_status()
-        events = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")]
+        events = [
+            json.loads(line[6:])
+            for line in response.text.splitlines()
+            if line.startswith("data: ")
+        ]
         decisions = [event["data"] for event in events if event["type"] == "decision"]
         assert decisions, f"Sem decisão validada no cenário {name}."
         decision = decisions[-1]
@@ -45,7 +53,10 @@ with httpx.Client(base_url="http://127.0.0.1:8000", timeout=55) as client:
             f"Operação pendente indevida em {name}."
         )
         if name == "horário":
-            assert any(source["id"] == "hours" and source["applicable"] for source in decision["sources"])
+            assert any(
+                source["id"] == "hours" and source["applicable"]
+                for source in decision["sources"]
+            )
         if name == "crítico":
             assert history["handoff_reason"] == "CRITICAL"
             assert history["selected_ticket_id"], "Incidente crítico completo deve ter protocolo."

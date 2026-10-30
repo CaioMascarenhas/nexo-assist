@@ -16,3 +16,18 @@ O desenvolvimento foi feito em branches, commits incrementais e PRs. Consulte as
 A revisão de 28/10/2026 está registrada na [auditoria do desafio](11-auditoria-do-desafio.md), com mapeamento individual das issues 19–43 para as respectivas PRs. A [issue 22](https://github.com/CaioMascarenhas/nexo-assist/issues/22) reúne a bateria ampliada e a matriz de aderência ao PDF/protótipo.
 
 Materiais originais do processo seletivo são locais. O repositório contém o inventário visual sanitizado e as licenças das fontes utilizadas.
+
+## Ajustes e auditoria de 30/10/2026
+
+As entregas abaixo formalizam as mudanças solicitadas e as correções verificadas nesta sessão. Os checks de cada PR registram a validação antes do merge.
+
+| Entrega | Issue | PR |
+| --- | --- | --- |
+| Corrigir truncamento aumentando a saída do agente para 4.000 tokens | [#47](https://github.com/CaioMascarenhas/nexo-assist/issues/47) | [#55](https://github.com/CaioMascarenhas/nexo-assist/pull/55) |
+| Registrar chamados automaticamente e encaminhar a conversa para a fila humana | [#48](https://github.com/CaioMascarenhas/nexo-assist/issues/48) | [#56](https://github.com/CaioMascarenhas/nexo-assist/pull/56) |
+| Garantir protocolo para incidente crítico com contexto suficiente | [#49](https://github.com/CaioMascarenhas/nexo-assist/issues/49) | [#57](https://github.com/CaioMascarenhas/nexo-assist/pull/57) |
+| Concluir orientação quando o usuário confirma que o problema foi resolvido | [#50](https://github.com/CaioMascarenhas/nexo-assist/issues/50) | [#58](https://github.com/CaioMascarenhas/nexo-assist/pull/58) |
+| Diagnosticar falhas do modelo e reservar os passos finais para a decisão | [#51](https://github.com/CaioMascarenhas/nexo-assist/issues/51) | [#59](https://github.com/CaioMascarenhas/nexo-assist/pull/59) |
+| Permitir que o analista responsável resolva o chamado com registro da solução | [#52](https://github.com/CaioMascarenhas/nexo-assist/issues/52) | [#60](https://github.com/CaioMascarenhas/nexo-assist/pull/60) |
+| Atualizar o exemplo do login e o campo de atendimento encerrado | [#53](https://github.com/CaioMascarenhas/nexo-assist/issues/53) | [#61](https://github.com/CaioMascarenhas/nexo-assist/pull/61) |
+| Registrar correções da auditoria e a verificação live reproduzível | [#54](https://github.com/CaioMascarenhas/nexo-assist/issues/54) | [#62](https://github.com/CaioMascarenhas/nexo-assist/pull/62) |
