@@ -31,7 +31,7 @@ class TransitionBody(BaseModel):
 
 class Proposal(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    intent: Literal["help", "consult", "create", "update", "handoff", "out_of_scope", "clarify"]
+    intent: Literal["help", "consult", "create", "update", "handoff", "out_of_scope", "clarify", "resolved"]
     reply: str = Field(max_length=4000)
     confidence: float = Field(ge=0, le=1)
     rationale: str = Field(max_length=1200)

@@ -114,6 +114,12 @@ def apply_proposal(db, user, conv, proposal: Proposal, service: TicketService, o
     text = "".join(
         c for c in unicodedata.normalize("NFD", content.casefold()) if not unicodedata.combining(c)
     )
+    if intent == "resolved" and proposal.confidence >= 0.75:
+        conv.facts = {}
+        data["quickReplies"] = ["Consultar meus chamados", "Preciso de outra ajuda"]
+        decision["actions"] = ["Concluiu a orientação"]
+        decision["rules"].append("SELF_SERVICE_RESOLVED")
+        return "Que bom que voltou a funcionar! Se precisar de mais ajuda de TI, é só me chamar.", data
     if facts.get("_vpn_guidance_offered") and (
         intent == "update"
         or any(term in text for term in ("nao resolveu", "nao funcionou", "continua sem funcionar"))

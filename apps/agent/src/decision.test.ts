@@ -27,3 +27,27 @@ test("unknown impact is not guessed and Windows restriction is retained", () => 
   assert.equal(result.facts.affected_scope, undefined);
   assert.equal(result.facts.blocked, undefined);
 });
+
+test("resolution is distinct from unsuccessful guidance and a new problem", () => {
+  assert.equal(
+    stubDecision({
+      ...base,
+      content: "Reinstalei. A VPN voltou a funcionar, está resolvido.",
+    }).intent,
+    "resolved",
+  );
+  assert.notEqual(
+    stubDecision({
+      ...base,
+      content: "Não está resolvido, a VPN continua sem funcionar.",
+    }).intent,
+    "resolved",
+  );
+  assert.notEqual(
+    stubDecision({
+      ...base,
+      content: "Voltou a funcionar, mas ainda apresenta erro.",
+    }).intent,
+    "resolved",
+  );
+});

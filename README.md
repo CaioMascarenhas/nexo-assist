@@ -58,6 +58,7 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 - Busca de chamados semelhantes e registro interno da operação, preservando revisão, versão do alvo e deduplicação. Endpoints antigos de rascunho continuam disponíveis para compatibilidade; não são exibidos no chat.
 - Transferência com resumo e pausa persistente do agente, inclusive enquanto aguarda analista.
 - Incidentes críticos com dados suficientes recebem protocolo antes da transferência. Contexto incompleto ou inseguro continua sendo encaminhado sem inventar dados.
+- Confirmação de que uma orientação funcionou conclui a ajuda sem repetir o artigo ou criar chamado.
 - Console com busca/filtros, histórico, chamados, assunção exclusiva, mensagens, devolução e encerramento.
 - Decisões legíveis: intenção, fatos, fontes, regras, segurança estimada e uso/latência quando disponíveis.
 - Simulador de falhas e dados preservados após reinício real.
@@ -124,7 +125,7 @@ npm run build
 
 Python usa PostgreSQL real em schemas temporários isolados, sem truncar dados da aplicação. Configure `TEST_DATABASE_URL` se necessário. A migration inicial é congelada e tem teste de upgrade/downgrade em schema vazio.
 
-Para repetir as 20 jornadas sem alterar os atendimentos locais:
+Para repetir as 21 jornadas sem alterar os atendimentos locais:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/test-e2e.py --reset
@@ -133,7 +134,7 @@ Para repetir as 20 jornadas sem alterar os atendimentos locais:
 
 O script usa o projeto Docker `nexo-revisao`, portas 3100/8100/55432, banco separado, modo stub e chave vazia. `--reset` recria somente o volume descartável de testes. Requer Compose com suporte a `!override` (2.24.4 ou posterior). Não troque de branch durante a execução. Com outro ambiente limpo em stub, também é possível executar `npm run test:e2e` e configurar `E2E_URL`.
 
-As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, registro automático, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. Os testes PostgreSQL incluem regressões de registro automático e rollback. O agente tem 2 testes de contrato.
+As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, registro automático, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. Os testes PostgreSQL incluem regressões de registro automático e rollback. O agente tem 3 testes de contrato.
 
 - `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, operação concluída, chamado e atendimento humano. Tokens ficam apenas em memória.
 - `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.

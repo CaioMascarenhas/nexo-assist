@@ -8,6 +8,7 @@ export const intentLabels: Record<string, string> = {
   handoff: "Encaminhar ao suporte",
   out_of_scope: "Redirecionar assunto fora de TI",
   clarify: "Esclarecer informações",
+  resolved: "Concluir orientação",
 };
 
 export const factLabels: Record<string, string> = {
@@ -27,6 +28,7 @@ export const ruleLabels: Record<string, string> = {
   CONFIRM_BEFORE_WRITE: "Confirmação antes de alterar chamados",
   AUTO_REGISTER_AND_HANDOFF: "Registro automático e encaminhamento ao suporte",
   AUTO_REGISTERED: "Chamado registrado e encaminhado ao suporte",
+  SELF_SERVICE_RESOLVED: "Usuário confirmou que o problema foi resolvido",
   PENDING_UPDATE_CONTEXT: "Complemento do chamado selecionado",
   CRITICAL: "Impacto crítico exige atendimento humano",
   LOW_CONFIDENCE: "Segurança insuficiente para decidir",
