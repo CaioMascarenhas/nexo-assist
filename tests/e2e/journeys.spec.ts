@@ -243,7 +243,7 @@ for (const [name, email, content] of [
   });
 }
 
-test("analista filtra, assume e encerra sem resolver o chamado automaticamente", async ({
+test("chamado aberto impede encerramento e mantém o analista responsável", async ({
   browser,
 }) => {
   const employee = await browser.newContext();
@@ -277,19 +277,28 @@ test("analista filtra, assume e encerra sem resolver o chamado automaticamente",
   await expect(consolePage.locator(".conversation-row").first()).toContainText(
     "Você está atendendo",
   );
-  await consolePage
-    .getByRole("button", { name: "Encerrar atendimento", exact: true })
-    .click();
   await expect(
-    page.locator(".workspace-header").getByText("Encerrado", { exact: true }),
+    consolePage.getByRole("button", {
+      name: "Encerrar atendimento",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(consolePage.getByRole("status")).toContainText(
+    "O acompanhamento permanece com você em Minhas.",
+  );
+  await expect(
+    page
+      .locator(".workspace-header")
+      .getByText("Analista atendendo", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Mensagem", exact: true }),
-  ).toBeDisabled();
-  const closed = await (
+  ).toBeEnabled();
+  const current = await (
     await page.request.get(`/api/conversations/${id}`)
   ).json();
-  expect(closed.state).toBe("CLOSED");
+  expect(current.state).toBe("HUMAN_ACTIVE");
+  expect(current.analyst_id).toBeTruthy();
   const ticket = await (
     await page.request.get("/api/tickets/INC-20888")
   ).json();

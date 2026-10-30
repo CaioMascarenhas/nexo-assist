@@ -329,6 +329,12 @@ export function Workspace({
   const state = conversation?.state;
   const active = state === "AGENT_ACTIVE";
   const human = state === "HUMAN_ACTIVE";
+  const linkedTicket = tickets.find(
+    (ticket) => ticket.id === conversation?.selected_ticket_id,
+  );
+  const closeBlocked =
+    !!conversation?.selected_ticket_id &&
+    (!linkedTicket || !["RESOLVED", "CLOSED"].includes(linkedTicket.status));
   const canSend =
     !!conversation &&
     (analyst
@@ -839,6 +845,12 @@ export function Workspace({
                     </button>
                     <button
                       className="danger-button"
+                      disabled={closeBlocked}
+                      title={
+                        closeBlocked
+                          ? "Resolva o chamado vinculado antes de encerrar o atendimento."
+                          : undefined
+                      }
                       onClick={() => transition("close")}
                     >
                       Encerrar atendimento
@@ -889,6 +901,16 @@ export function Workspace({
           <>
             <div className={`timeline ${analyst ? "analyst-timeline" : ""}`}>
               <div className="timeline-inner">
+                {analyst &&
+                  human &&
+                  conversation.analyst_id === user.id &&
+                  closeBlocked && (
+                    <p className="notice" role="status">
+                      {linkedTicket
+                        ? `O chamado ${linkedTicket.code} continua aberto. Resolva o chamado antes de encerrar o atendimento. O acompanhamento permanece com você em Minhas.`
+                        : "Aguardando a consulta do chamado vinculado para liberar o encerramento."}
+                    </p>
+                  )}
                 {analyst && conversation.summary && (
                   <details className="handoff-summary" open>
                     <summary>

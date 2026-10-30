@@ -164,6 +164,14 @@ def transition(conversation_id: str, action: str, body: TransitionBody, db: DB, 
     )
     if not allowed or conv.epoch != body.epoch:
         raise HTTPException(409, "Atendimento indisponível para esta ação.")
+    if action == "close" and conv.selected_ticket_id:
+        ticket = TicketService(db, user).get(conv.selected_ticket_id, lock=True)
+        if ticket.status not in {"RESOLVED", "CLOSED"}:
+            raise HTTPException(
+                409,
+                f"O chamado {ticket.code} ainda está aberto. Resolva o chamado antes de encerrar. "
+                "O atendimento continua sob sua responsabilidade em Minhas.",
+            )
     conv.state = "AGENT_ACTIVE" if action == "release" else "CLOSED"
     conv.analyst_id = None
     conv.busy_until = None

@@ -82,3 +82,34 @@ def test_resolution_failure_keeps_ticket_and_human_channel(client, database, mon
     assert ticket.status == "IN_PROGRESS"
     assert ticket.resolved_at is None
     assert database.get(Conversation, conv_id).state == "HUMAN_ACTIVE"
+
+
+def test_close_of_unresolved_ticket_preserves_assignee_and_active_queue(client, database):
+    conv_id, ticket, body = claimed(client, database)
+    response = client.post(f"/analyst/conversations/{conv_id}/close", json={"epoch": body["epoch"]})
+    assert response.status_code == 409
+    assert "ainda está aberto" in response.json()["detail"]
+    database.refresh(ticket)
+    conversation = database.get(Conversation, conv_id)
+    assert ticket.status == "IN_PROGRESS"
+    assert conversation.state == "HUMAN_ACTIVE"
+    assert conversation.analyst_id == "support"
+    assert conversation.epoch == body["epoch"]
+    mine = client.get("/analyst/conversations", params={"filter": "mine"}).json()
+    assert conv_id in [item["id"] for item in mine]
+    history = client.get(f"/conversations/{conv_id}").json()
+    assert not any("encerrou o atendimento" in item["content"] for item in history["messages"])
+
+
+def test_close_requires_legacy_verification_and_preserves_owner_on_failure(client, database, monkeypatch):
+    from nexo.config import settings
+
+    conv_id, ticket, body = claimed(client, database)
+    monkeypatch.setattr(settings, "ticket_failure_mode", "always")
+    response = client.post(f"/analyst/conversations/{conv_id}/close", json={"epoch": body["epoch"]})
+    assert response.status_code == 503
+    conversation = database.get(Conversation, conv_id)
+    assert conversation.state == "HUMAN_ACTIVE"
+    assert conversation.analyst_id == "support"
+    database.refresh(ticket)
+    assert ticket.status == "IN_PROGRESS"
