@@ -1,5 +1,7 @@
 # Correções da auditoria de 30/10/2026
 
+> Registro histórico da auditoria anterior. A issue #63 restaurou o rascunho e a confirmação do funcionário; os trechos abaixo sobre registro automático foram substituídos pelo fluxo descrito em [Confirmação restaurada](13-confirmacao-restaurada.md). As demais correções permanecem.
+
 O fluxo continua registrando chamados automaticamente após a coleta e encaminhando à fila humana, conforme solicitado pelo autor. Inferências contextuais continuam permitidas; dúvida explícita deve gerar esclarecimento antes do registro.
 
 ## Comportamentos corrigidos

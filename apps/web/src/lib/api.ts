@@ -57,6 +57,7 @@ export interface Draft {
     priority: string;
     affected_scope: string;
     due_at?: string;
+    handoff_reason?: string;
   };
 }
 export interface Message {

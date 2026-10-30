@@ -144,6 +144,19 @@ async function main() {
     "03-critico",
   );
   expect(h.handoff_reason).toBe("CRITICAL");
+  expect(h.selected_ticket_id).toBeNull();
+  await expect(carla.page.locator(".draft-card")).toContainText(
+    "Aguardando confirmação",
+  );
+  await carla.page.screenshot({
+    path: path.join(output, "03-rascunho-critico.png"),
+    fullPage: true,
+  });
+  await carla.page
+    .getByRole("button", { name: "Confirmar", exact: true })
+    .click();
+  await expect(carla.page.locator(".draft-card")).toHaveCount(0);
+  h = await history(carla);
   expect(h.selected_ticket_id).toBeTruthy();
   const ticket = await (
     await carla.page.request.get(base + "/api/tickets/" + h.selected_ticket_id)

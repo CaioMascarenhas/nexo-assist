@@ -74,4 +74,5 @@ def test_failed_model_preserves_history_and_allows_explicit_retry(client, databa
         f"/conversations/{conv_id}/messages", json={"content": "Tente novamente", "client_id": "retry"}
     )
     assert any(e["type"] == "done" for e in events(response))
-    assert database.get(Conversation, conv_id).state == "WAITING_ANALYST"
+    assert database.get(Conversation, conv_id).state == "AGENT_ACTIVE"
+    assert any(e["type"] == "done" and e["data"]["data"].get("draft") for e in events(response))

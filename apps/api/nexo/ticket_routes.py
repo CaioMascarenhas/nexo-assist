@@ -2,12 +2,13 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
 from .config import settings
-from .conversation_routes import add_message, get_conversation
+from .conversation_routes import add_message, get_conversation, pause
 from .domain import aware
 from .models import Draft, now
 from .schemas import EditDraftBody, RevisionBody
 from .security import Actor, DB
 from .serialization import draft_json
+from .summaries import describe_facts
 from .ticket_service import TicketService, ticket_json
 
 router = APIRouter()
@@ -48,17 +49,35 @@ def confirm(draft_id: str, body: RevisionBody, db: DB, user: Actor):
     conv = get_conversation(db, user, reference.conversation_id, lock=True)
     draft = owned_draft(db, user, draft_id)
     already_done = draft.status == "COMMITTED"
-    if not already_done and conv.state != "AGENT_ACTIVE":
+    critical_waiting = (
+        conv.state == "WAITING_ANALYST"
+        and conv.handoff_reason == "CRITICAL"
+        and draft.payload.get("handoff_reason") == "CRITICAL"
+        and draft.payload.get("priority") == "CRITICAL"
+    )
+    if not already_done and conv.state != "AGENT_ACTIVE" and not critical_waiting:
         raise HTTPException(409, "O atendimento mudou. Confirme com o suporte antes de alterar o chamado.")
-    result = TicketService(db, user).confirm(draft, body.revision)
+    service = TicketService(db, user)
+    result = service.confirm(draft, body.revision)
     conv.selected_ticket_id = result.id
     if not already_done:
+        reason = "CRITICAL" if draft.payload.get("priority") == "CRITICAL" else "CONFIRMED_TICKET"
+        service.transfer(result.id, reason)
+        summary = (
+            f"{result.code}: {result.title}\n{result.description}\n"
+            f"Contexto coletado:\n{describe_facts(conv.facts)}"
+        )
+        if conv.state == "AGENT_ACTIVE":
+            pause(db, conv, reason, summary)
+        else:
+            conv.summary = summary
         add_message(
             db,
             conv,
             "SYSTEM",
             "Service desk",
-            f"Chamado {result.code}: operação confirmada e concluída.",
+            f"Chamado {result.code}: operação confirmada e concluída. "
+            "Encaminhei o atendimento para a fila humana; você está aguardando um analista.",
             {"tickets": [ticket_json(result)], "operation": draft.operation},
         )
     db.commit()

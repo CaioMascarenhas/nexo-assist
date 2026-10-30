@@ -49,7 +49,7 @@ with httpx.Client(base_url="http://127.0.0.1:8000", timeout=55) as client:
             assert decision["intent"] == intent, f"Intenção inesperada em {name}."
         history = client.get(f"/conversations/{conversation}").json()
         assert history["state"] == state, f"Estado inesperado em {name}."
-        assert not any(d["status"] == "PENDING" for d in history["drafts"]), (
+        assert name == "crítico" or not any(d["status"] == "PENDING" for d in history["drafts"]), (
             f"Operação pendente indevida em {name}."
         )
         if name == "horário":
@@ -59,8 +59,10 @@ with httpx.Client(base_url="http://127.0.0.1:8000", timeout=55) as client:
             )
         if name == "crítico":
             assert history["handoff_reason"] == "CRITICAL"
-            assert history["selected_ticket_id"], "Incidente crítico completo deve ter protocolo."
-            ticket = client.get(f"/tickets/{history['selected_ticket_id']}").json()
+            draft = next(d for d in history["drafts"] if d["status"] == "PENDING")
+            confirmed = client.post(f"/drafts/{draft['id']}/confirm", json={"revision": draft["revision"]})
+            confirmed.raise_for_status()
+            ticket = confirmed.json()["ticket"]
             assert ticket["priority"] == "CRITICAL"
         print(
             json.dumps(

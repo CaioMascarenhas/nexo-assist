@@ -48,11 +48,11 @@ with (
     )
     response.raise_for_status()
     before = employee.get(f"/conversations/{conversation}").json()
-    assert any(d["status"] == "COMMITTED" for d in before["drafts"]), (
-        "Expected automatically committed operation before restart"
+    assert any(d["status"] == "PENDING" for d in before["drafts"]), (
+        "Expected pending draft before restart"
     )
-    assert before["state"] == "WAITING_ANALYST"
-    assert before["selected_ticket_id"]
+    assert before["state"] == "AGENT_ACTIVE"
+    assert not before["selected_ticket_id"]
     paused = employee.post(f"/conversations/{conversation}/handoff").json()
     claimed = analyst.post(
         f"/analyst/conversations/{conversation}/claim", json={"epoch": paused["epoch"]}

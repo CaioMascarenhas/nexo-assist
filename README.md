@@ -4,7 +4,7 @@ Service desk de TI com chat para funcionários, agente Mastra/Gemini e console p
 
 > **Decisão de stack:** o PRD pede TypeScript estrito. Por escolha explícita do autor, a API usa Python/FastAPI; isso é uma exceção ao enunciado. Frontend e agente mantêm TypeScript estrito. A justificativa está no [ADR](docs/09-arquitetura-fastapi.md).
 
-> **Fluxo atualizado em 30/10/2026:** por solicitação do autor, após coletar os dados necessários o sistema registra o chamado automaticamente e transfere a conversa à fila humana, sem confirmação do funcionário. Isso substitui o fluxo de rascunho revisável exigido pelo PRD e descrito nos documentos históricos e no relatório PDF anterior. O assistente pausa enquanto aguarda o analista; a mensagem não afirma que alguém já assumiu.
+> **Fluxo vigente:** criação, complemento e reabertura exigem rascunho revisável e confirmação do funcionário, conforme o PRD. Após confirmar, o atendimento é encaminhado à fila humana. Casos críticos entram na fila imediatamente; o rascunho pode ser confirmado enquanto aguarda, mas nenhum chamado é criado ou alterado pelo assistente antes dessa confirmação.
 
 ## Executar
 
@@ -54,10 +54,10 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 - Chat com histórico, ações durante execução, opções rápidas e limite de 30 turnos por conversa.
 - Consulta sem protocolo, seleção e cards com status e SLA.
 - Base de 8 artigos com restrições de aplicabilidade, como Windows 10/11.
-- Criação, complemento e reabertura automáticos após coleta dos dados; encaminhamento à fila humana com protocolo e resumo.
-- Busca de chamados semelhantes e registro interno da operação, preservando revisão, versão do alvo e deduplicação. Endpoints antigos de rascunho continuam disponíveis para compatibilidade; não são exibidos no chat.
+- Rascunhos revisáveis para criação, complemento e reabertura, com confirmar, editar e cancelar; após confirmação, encaminhamento à fila humana com protocolo e resumo.
+- Busca de chamados semelhantes e confirmação idempotente, preservando revisão, versão do alvo e deduplicação.
 - Transferência com resumo e pausa persistente do agente, inclusive enquanto aguarda analista.
-- Incidentes críticos com dados suficientes recebem protocolo antes da transferência. Contexto incompleto ou inseguro continua sendo encaminhado sem inventar dados.
+- Incidentes críticos são encaminhados imediatamente com o contexto e, quando há dados suficientes, rascunho pendente. O protocolo é criado ou alterado somente após confirmação; se um analista assumir antes, a confirmação fica bloqueada até a devolução ao assistente.
 - Confirmação de que uma orientação funcionou conclui a ajuda sem repetir o artigo ou criar chamado.
 - Console com busca/filtros, histórico, chamados, assunção exclusiva, mensagens, devolução e encerramento.
 - Analista responsável pode usar **Resolver chamado** e registrar a solução. O protocolo fica resolvido; **Encerrar atendimento** continua sendo uma ação separada sobre a conversa.
@@ -85,7 +85,7 @@ flowchart LR
 
 ### Decisão, custo e latência
 
-O modelo interpreta linguagem e extrai fatos. Código controla prioridade, SLA, autorização, reabertura e efeitos. Lacunas geram perguntas; ao completar a coleta, a API prepara e conclui a operação na mesma transação e encaminha ao suporte. Pedido humano, criticidade, vencimento ou insegurança também geram transferência. Confiança é uma estimativa não calibrada.
+O modelo interpreta linguagem e extrai fatos. Código controla prioridade, SLA, autorização, reabertura e efeitos. Lacunas geram perguntas; ao completar a coleta, a API persiste um rascunho, sem alterar o chamado. O funcionário revisa e confirma para concluir a operação e encaminhar ao suporte na mesma transação. Pedido humano, criticidade, vencimento ou insegurança também geram transferência. Confiança é uma estimativa não calibrada.
 
 Limites: 4 passos de agente, 4.000 tokens de saída, timeout de 35s no modelo e 42s na API, histórico recente limitado, até 30 resumos de chamados e 10 artigos. A demonstração limita 30 turnos por conversa, 10 conversas por funcionário/dia e 300 mensagens de usuário/dia. Mensagens humanas continuam disponíveis ao acabar a cota do agente.
 
@@ -99,7 +99,7 @@ O stream mostra atividade durante a execução e texto em blocos após validar a
 
 Sessão opaca com hash no banco e cookie HttpOnly/SameSite. Mutações verificam origem; consultas de funcionário filtram o dono. Analistas autenticados acessam o contexto do suporte. O agente é privado no Compose e exige segredo interno.
 
-Locks/epoch protegem transições e descartam geração tardia. O registro automático serializa escritas por funcionário e usa a mesma verificação de duplicidade e versão do serviço. Uma falha antes do commit desfaz operação e transferência juntas. Complementos do funcionário não renovam artificialmente SLA vencido. Encerrar conversa não resolve chamado automaticamente.
+Locks/epoch protegem transições e descartam geração tardia. A confirmação serializa escritas por funcionário e verifica proprietário, revisão, validade e versão do alvo. Uma falha antes do commit desfaz operação e transferência juntas, mantendo o rascunho pendente. Repetir uma confirmação concluída retorna o mesmo resultado. Complementos do funcionário não renovam artificialmente SLA vencido. Encerrar conversa não resolve chamado automaticamente.
 
 O login de senha arbitrária é intencional para os dados fictícios do desafio. Produção exige identidade real; não inserir dados reais nesta demonstração.
 
@@ -126,7 +126,7 @@ npm run build
 
 Python usa PostgreSQL real em schemas temporários isolados, sem truncar dados da aplicação. Configure `TEST_DATABASE_URL` se necessário. A migration inicial é congelada e tem teste de upgrade/downgrade em schema vazio.
 
-Para repetir as 22 jornadas sem alterar os atendimentos locais:
+Para repetir as 23 jornadas sem alterar os atendimentos locais:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/test-e2e.py --reset
@@ -135,9 +135,9 @@ Para repetir as 22 jornadas sem alterar os atendimentos locais:
 
 O script usa o projeto Docker `nexo-revisao`, portas 3100/8100/55432, banco separado, modo stub e chave vazia. `--reset` recria somente o volume descartável de testes. Requer Compose com suporte a `!override` (2.24.4 ou posterior). Não troque de branch durante a execução. Com outro ambiente limpo em stub, também é possível executar `npm run test:e2e` e configurar `E2E_URL`.
 
-As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, registro automático, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, resolução explícita do chamado, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. Os testes PostgreSQL incluem regressões de registro automático, criticidade, resolução com autorização e versão, diagnósticos seguros, retentativa explícita e rollback. O agente tem 6 testes de contrato/diagnóstico.
+As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, rascunho, edição, cancelamento, confirmação, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, resolução explícita do chamado, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. Os testes PostgreSQL verificam ausência de mutação antes da confirmação, criticidade com rascunho na fila, bloqueio após assunção, resolução com autorização e versão, diagnósticos seguros, retentativa explícita e rollback. O agente tem 6 testes de contrato/diagnóstico.
 
-- `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, operação concluída, chamado e atendimento humano. Tokens ficam apenas em memória.
+- `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, rascunho pendente, chamados e atendimento humano. Tokens ficam apenas em memória.
 - `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.
 - `scripts/evaluate-live.py`: três cenários reais limitados, de horário, assunto fora de TI e criticidade. Consome créditos do Gemini local e não imprime credenciais.
 - `node scripts/verify-live-fixes.cjs`: valida pelo navegador quatro chamadas reais (VPN, orientação resolvida, criticidade e dúvida explícita), resolução pelo analista e formulário no celular. Consome Gemini e cria dados fictícios; resultados ficam em `output/verificacao-correcoes-live`. Exige dependências Node instaladas e aplicação em modo live.
@@ -148,7 +148,7 @@ GitHub Actions executa build/typecheck, testes de agente, lint/formatação Pyth
 ## Limitações e trabalho futuro
 
 - API Python é a exceção de linguagem escolhida; validar aceitação com o avaliador.
-- Registro automático sem confirmação é uma divergência adicional do PRD, solicitada pelo autor em 30/10/2026.
+- O registro automático sem confirmação foi revertido a pedido do autor na issue #63; o rascunho e a confirmação do PRD estão restaurados.
 - Duplicidade usa heurística de título/categoria e alvo visível antes da confirmação.
 - Sem feriados, SSO, e-mail real, anexos, controle remoto ou integração ITSM externa.
 - Turno interrompido fica identificado e mantém contexto; não há retomada automática em background.
@@ -158,6 +158,6 @@ GitHub Actions executa build/typecheck, testes de agente, lint/formatação Pyth
 
 ## Documentação
 
-[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md).
+[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md) · [Confirmação restaurada](docs/13-confirmacao-restaurada.md).
 
 Documentos 02-07 preservam hipóteses do levantamento inicial; este README e o ADR descrevem a arquitetura implementada. Materiais originais e `.env` ficam locais. O inventário visual sanitizado está em `docs/referencias/inventario-prototipo.json`.

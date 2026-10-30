@@ -81,7 +81,7 @@ test("dúvida e assunto fora de TI não criam chamados", async ({ page }) => {
   expect(after.length).toBe(before.length);
 });
 
-test("orientação de VPN sem resultado abre chamado e transfere automaticamente", async ({
+test("orientação de VPN sem resultado prepara rascunho e permite cancelar", async ({
   page,
 }) => {
   await start(page, "bruno.tavares@nexo.com.br");
@@ -98,16 +98,14 @@ test("orientação de VPN sem resultado abre chamado e transfere automaticamente
     "impede você de trabalhar",
   );
   await send(page, "Não consigo trabalhar");
-  await expect(
-    page.getByText("Aguardando um analista", { exact: true }),
-  ).toBeVisible();
-  await expect(page.locator(".ticket-card").last()).toContainText("Alta");
+  await expect(page.locator(".draft-card")).toContainText("Alta");
+  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await expect(page.locator(".draft-card")).toHaveCount(0);
   await page.reload();
   await expect(page.locator(".draft-card")).toHaveCount(0);
 });
 
-test("registro automático cria uma requisição e outro atendimento atualiza sem duplicar", async ({
+test("revisão e confirmação criam uma requisição e permitem complemento sem duplicar", async ({
   page,
 }) => {
   await start(page, "bruno.tavares@nexo.com.br");
@@ -115,6 +113,25 @@ test("registro automático cria uma requisição e outro atendimento atualiza se
   const content = `Quero um software Vetor ${marker}. Só eu, sem urgência.`;
   const before = await (await page.request.get("/api/tickets")).json();
   await send(page, content);
+  await expect(page.locator(".draft-card")).toContainText("Requisição");
+  expect((await (await page.request.get("/api/tickets")).json()).length).toBe(
+    before.length,
+  );
+  await page.getByRole("button", { name: "Editar", exact: true }).click();
+  await page
+    .getByLabel("Título", { exact: true })
+    .fill(`Software Vetor ${marker}`);
+  await page
+    .getByRole("textbox", { name: "Descrição", exact: true })
+    .fill("Preciso do software de desenho para preparar propostas.");
+  await page
+    .getByRole("button", { name: "Salvar revisão", exact: true })
+    .click();
+  await expect(page.locator(".draft-card")).toContainText(
+    "Preciso do software de desenho",
+  );
+  await page.screenshot({ path: "tmp/screenshots/tela-2-rascunho.png" });
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(
     page.getByText("Aguardando um analista", { exact: true }),
   ).toBeVisible();
@@ -130,8 +147,11 @@ test("registro automático cria uma requisição e outro atendimento atualiza se
   expect(created.kind).toBe("REQ");
   await start(page, "bruno.tavares@nexo.com.br");
   await send(page, content);
+  await expect(page.locator(".draft-card")).toContainText("Atualizar chamado");
+  await expect(page.locator(".draft-card")).toContainText(created.code);
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(page.locator(".timeline")).toContainText(
-    `Chamado ${created.code} atualizado`,
+    `Chamado ${created.code}: operação confirmada`,
   );
   await expect(page.locator(".draft-card")).toHaveCount(0);
   expect((await (await page.request.get("/api/tickets")).json()).length).toBe(
@@ -139,7 +159,7 @@ test("registro automático cria uma requisição e outro atendimento atualiza se
   );
 });
 
-test("consulta, complemento automático e reabertura preservam o protocolo", async ({
+test("consulta, complemento e reabertura exigem confirmação e preservam o protocolo", async ({
   page,
 }) => {
   await start(page, "ana.souza@nexo.com.br");
@@ -150,8 +170,10 @@ test("consulta, complemento automático e reabertura preservam o protocolo", asy
     "Qual informação",
   );
   await send(page, "A pasta apresenta erro de permissão desde ontem.");
+  await expect(page.locator(".draft-card")).toContainText("INC-20298");
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(page.locator(".timeline")).toContainText(
-    "Chamado INC-20298 atualizado",
+    "Chamado INC-20298: operação confirmada",
   );
   await expect(page.locator(".draft-card")).toHaveCount(0);
   await start(page, "ana.souza@nexo.com.br");
@@ -170,8 +192,14 @@ test("consulta, complemento automático e reabertura preservam o protocolo", asy
     "já foi resolvido",
   );
   await send(page, "O problema voltou");
+  await expect(page.locator(".draft-card")).toContainText("Reabrir chamado");
+  const beforeReopen = await (
+    await page.request.get("/api/tickets/INC-20150")
+  ).json();
+  expect(beforeReopen.status).toBe("RESOLVED");
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(page.locator(".timeline")).toContainText(
-    "Chamado INC-20150 reaberto",
+    "Chamado INC-20150: operação confirmada",
   );
   await expect(page.locator(".draft-card")).toHaveCount(0);
   const ticket = await (
