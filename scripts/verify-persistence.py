@@ -54,7 +54,9 @@ with (
     assert before["state"] == "WAITING_ANALYST"
     assert before["selected_ticket_id"]
     paused = employee.post(f"/conversations/{conversation}/handoff").json()
-    claimed = analyst.post(f"/analyst/conversations/{conversation}/claim", json={"epoch": paused["epoch"]})
+    claimed = analyst.post(
+        f"/analyst/conversations/{conversation}/claim", json={"epoch": paused["epoch"]}
+    )
     claimed.raise_for_status()
     before = employee.get(f"/conversations/{conversation}").json()
     tickets_before = employee.get("/tickets").json()
@@ -74,7 +76,9 @@ with (
     restored = after.json()
     assert restored["state"] == "HUMAN_ACTIVE"
     assert restored["analyst_id"] == "rafael"
-    assert [m["id"] for m in restored["messages"]] == [m["id"] for m in before["messages"]]
+    assert [m["id"] for m in restored["messages"]] == [
+        m["id"] for m in before["messages"]
+    ]
     assert [d["id"] for d in restored["drafts"]] == [d["id"] for d in before["drafts"]]
     assert restored["turns"] == before["turns"]
     assert employee.get("/tickets").json() == tickets_before
