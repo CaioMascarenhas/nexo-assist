@@ -134,7 +134,7 @@ test("analista registra solução, resolve o chamado e encerra a conversa separa
     .click();
   await expect(
     consolePage.getByRole("textbox", { name: "Mensagem", exact: true }),
-  ).toBeDisabled();
+  ).toHaveAttribute("placeholder", "Atendimento encerrado");
   await expect(
     page.getByRole("textbox", { name: "Mensagem", exact: true }),
   ).toBeDisabled();
