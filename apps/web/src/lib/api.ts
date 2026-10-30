@@ -52,12 +52,19 @@ export interface Draft {
   payload: {
     title: string;
     description: string;
+    update_summary?: string;
     kind: string;
     category: string;
     priority: string;
     affected_scope: string;
     due_at?: string;
     handoff_reason?: string;
+    priority_review?: {
+      previous: string;
+      proposed: string;
+      reason: string;
+      facts: Record<string, boolean>;
+    };
   };
 }
 export interface Message {

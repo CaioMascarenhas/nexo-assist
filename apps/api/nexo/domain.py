@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from itertools import product
 from typing import Literal
 from zoneinfo import ZoneInfo
 
@@ -20,6 +21,40 @@ def priority_for(scope: str, blocked: bool, same_day: bool, workaround: bool) ->
     if workaround:
         return "MEDIUM"
     return "LOW"
+
+
+def assessed_priority(scope: str, facts: dict) -> Priority | None:
+    """Decide only when unknown facts cannot change the resulting priority."""
+    if scope not in {"individual", "team", "company"}:
+        return None
+    possibilities = [
+        [facts[key]] if isinstance(facts.get(key), bool) else [False, True]
+        for key in ("blocked", "same_day", "workaround")
+    ]
+    priorities = {priority_for(scope, *values) for values in product(*possibilities)}
+    return priorities.pop() if len(priorities) == 1 else None
+
+
+def priority_explanation(previous: str, proposed: str, scope: str, facts: dict) -> str:
+    labels = {"CRITICAL": "Crítica", "HIGH": "Alta", "MEDIUM": "Média", "LOW": "Baixa"}
+    if proposed == "CRITICAL":
+        reason = "o problema impede o trabalho da equipe ou empresa"
+    elif proposed == "HIGH":
+        reason = (
+            "o problema ainda impede o trabalho"
+            if facts.get("blocked") is True
+            else "ainda existe compromisso em risco hoje"
+        )
+    elif proposed == "MEDIUM":
+        reason = "não há bloqueio do trabalho nem compromisso em risco hoje, e existe alternativa"
+    else:
+        reason = "não há bloqueio do trabalho nem compromisso em risco hoje; o caso pode seguir sem urgência"
+    change = (
+        f"Prioridade mantida em {labels[proposed]}"
+        if previous == proposed
+        else f"Prioridade reavaliada de {labels[previous]} para {labels[proposed]}"
+    )
+    return f"{change}: {reason}."
 
 
 def due_at(start: datetime, priority: str) -> datetime:

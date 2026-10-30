@@ -257,3 +257,45 @@ test("complemento de VPN preserva perda de alternativa e pergunta somente pelo b
   });
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 });
+
+test("novas informações reavaliam prioridade para baixo com justificativa antes de confirmar", async ({
+  page,
+}) => {
+  await start(page, "bruno.tavares@nexo.com.br");
+  const tickets = await (await page.request.get("/api/tickets")).json();
+  const ticket = tickets.find(
+    (item: { category: string; priority: string }) =>
+      item.category === "Rede e VPN" && item.priority === "CRITICAL",
+  );
+  expect(ticket).toBeTruthy();
+  await send(page, `Qual o status do chamado ${ticket.code}?`);
+  await send(page, "Tenho mais informações");
+  await expect(page.locator(".message-text").last()).toContainText(
+    "Qual informação",
+  );
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  await send(
+    page,
+    "A reunião foi cancelada. Consigo trabalhar, tenho alternativa.",
+  );
+  await expect(page.locator(".draft-card")).toContainText(
+    "Prioridade reavaliada de Crítica para Média",
+  );
+  const before = await (
+    await page.request.get(`/api/tickets/${ticket.id}`)
+  ).json();
+  expect(before.priority).toBe("CRITICAL");
+  await page.screenshot({
+    path: "tmp/screenshots/regressao-reavaliacao-prioridade.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  const after = await (
+    await page.request.get(`/api/tickets/${ticket.id}`)
+  ).json();
+  expect(after.priority).toBe("MEDIUM");
+  expect(after.support_updated_at).toBe(before.support_updated_at);
+  expect(after.description).toContain(before.description);
+  expect(after.description).toContain("A reunião foi cancelada");
+});

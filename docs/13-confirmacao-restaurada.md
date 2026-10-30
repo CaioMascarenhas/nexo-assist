@@ -20,7 +20,11 @@ Resolver uma orientação pelo chat não resolve protocolos existentes. Também 
 
 ## Complementar um chamado selecionado
 
-A issue #67 separa o complemento da orientação inicial: o botão Adicionar informação coleta o relato sem exigir sistema operacional para VPN. Se houver esclarecimentos, o rascunho mantém o relato e as respostas seguintes, em vez de usar apenas a última mensagem. A perda de uma alternativa corrige esse fato e, quando o bloqueio atual não estiver claro, pergunta se o funcionário consegue continuar trabalhando. Título, categoria e protocolo permanecem vinculados ao chamado selecionado; a operação continua exigindo confirmação e preserva a regra de não reduzir prioridade existente nem reiniciar indevidamente o SLA.
+A issue #67 separa o complemento da orientação inicial: o botão Adicionar informação coleta o relato sem exigir sistema operacional para VPN. Se houver esclarecimentos, o rascunho mantém o relato e as respostas seguintes, em vez de usar apenas a última mensagem. A perda de uma alternativa corrige esse fato e, quando o bloqueio atual não estiver claro, pergunta se o funcionário consegue continuar trabalhando. Título, categoria e protocolo permanecem vinculados ao chamado selecionado; a operação continua exigindo confirmação, sem reiniciar indevidamente o SLA.
+
+A issue #69 substitui a trava de não reduzir prioridade por reavaliação fundamentada: aumentar ou diminuir exige fatos que determinem a classificação pelas regras do PRD. Se dados desconhecidos puderem mudar o resultado, a API pede esclarecimento. O prazo proposto usa a mesma âncora de resposta do suporte, sem fingir nova atualização. A justificativa e a classificação anterior/proposta aparecem no rascunho e no histórico após confirmar. Sem reavaliação suficiente, um complemento comum preserva a prioridade existente.
+
+O modelo interpreta o relato livre, identifica anúncios sem conteúdo (`collect_update`), propõe resumo (`update_summary`) e pergunta contextual (`follow_up`). A API usa a pergunta somente quando corresponde ao dado realmente faltante. Os textos fixos são fallback; o modelo não executa escritas nem decide sozinho permissões, SLA e efeitos. O resumo é mostrado junto do relato original revisável. Anunciar novas informações invalida rascunhos pendentes da conversa para evitar confirmação de dados anteriores. Editar o relato limpa o resumo anterior.
 
 ## Validação
 

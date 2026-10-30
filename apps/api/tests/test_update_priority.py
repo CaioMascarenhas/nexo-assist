@@ -1,10 +1,11 @@
 from datetime import timedelta
+import pytest
 
 from conftest import login
 from nexo.chat_routes import apply_proposal
 from nexo.domain import due_at
 from nexo.models import Conversation, Ticket, User, now
-from nexo.schemas import Proposal
+from nexo.schemas import FollowUp, Proposal
 from nexo.ticket_service import TicketService
 from sqlalchemy import select
 from nexo.models import Draft
@@ -69,7 +70,7 @@ def test_overdue_complement_transfers_instead_of_preparing_draft(database):
     assert "draft" not in data
 
 
-def test_confirmed_impact_is_persisted_and_existing_priority_does_not_drop(client, database):
+def test_update_without_review_cannot_silently_lower_existing_priority(client, database):
     user, ticket, conv = setup(database)
     ticket.priority = "HIGH"
     service = TicketService(database, user)
@@ -191,3 +192,123 @@ def test_leaving_complement_discards_buffer_instead_of_leaking_to_another_reques
         key in conv.facts for key in ("_pending_update", "_update_text", "_awaiting_update_blocked")
     )
     assert database.scalar(select(Draft)) is None
+
+
+@pytest.mark.parametrize(
+    "previous,scope,facts,expected",
+    [
+        ("HIGH", "individual", {"same_day": False, "blocked": False, "workaround": True}, "MEDIUM"),
+        ("MEDIUM", "individual", {"same_day": True}, "HIGH"),
+        ("HIGH", "individual", {"same_day": False, "blocked": True}, "HIGH"),
+        ("CRITICAL", "individual", {"blocked": True}, "HIGH"),
+        ("HIGH", "team", {"blocked": True}, "CRITICAL"),
+    ],
+)
+def test_reassessment_moves_both_directions_only_after_confirmation(
+    client, database, previous, scope, facts, expected
+):
+    user, ticket, conv = setup(database)
+    ticket.priority = previous
+    anchor = ticket.support_updated_at
+    old_description = ticket.description
+    proposal = update_proposal({**facts, "affected_scope": scope})
+    proposal.update_summary = "A situação mudou e o impacto atual foi esclarecido pelo funcionário."
+    _, data = apply_proposal(
+        database,
+        user,
+        conv,
+        proposal,
+        TicketService(database, user),
+        [ticket],
+        "A reunião foi cancelada; segue o impacto atual.",
+    )
+    draft = data["draft"]
+    assert draft["payload"]["priority"] == expected
+    review = draft["payload"]["priority_review"]
+    assert review["previous"] == previous
+    assert review["proposed"] == expected
+    assert "Prioridade" in review["reason"]
+    assert ticket.priority == previous
+    assert ticket.description == old_description
+    database.commit()
+    login(client)
+    response = client.post(f"/drafts/{draft['id']}/confirm", json={"revision": 1})
+    assert response.status_code == 200, response.text
+    result = response.json()["ticket"]
+    assert result["priority"] == expected
+    assert ticket.support_updated_at == anchor
+    if previous != expected:
+        assert result["due_at"] == due_at(anchor, expected).isoformat()
+    assert result["description"].startswith(old_description)
+    assert any(update.get("priority_review") == review for update in result["updates"])
+    replay = client.post(f"/drafts/{draft['id']}/confirm", json={"revision": 1})
+    assert replay.json()["ticket"]["version"] == result["version"]
+
+
+def test_model_collects_announced_information_and_asks_contextual_missing_fact(database):
+    user, ticket, conv = setup(database)
+    ticket.priority = "HIGH"
+    service = TicketService(database, user)
+    older = service.prepare(
+        conv,
+        {
+            "title": ticket.title,
+            "description": "Informação anterior",
+            "kind": ticket.kind,
+            "category": ticket.category,
+            "priority": ticket.priority,
+            "affected_scope": ticket.affected_scope,
+        },
+        ticket,
+    )
+    proposal = update_proposal()
+    proposal.collect_update = True
+    proposal.follow_up = FollowUp(
+        **{
+            "field": "update_details",
+            "question": "O que mudou desde o atendimento com Rafael?",
+        }
+    )
+    # Use validated structured output exactly as the live adapter does.
+    proposal = Proposal.model_validate(proposal.model_dump())
+    reply, data = apply_proposal(
+        database, user, conv, proposal, service, [ticket], "Queria te contar uma novidade sobre esse problema"
+    )
+    assert reply == "O que mudou desde o atendimento com Rafael?"
+    assert "draft" not in data
+    assert older.status == "INVALIDATED"
+    proposal = update_proposal({"same_day": False})
+    proposal.follow_up = FollowUp(
+        **{
+            "field": "blocked",
+            "question": "Com o cancelamento da reunião, você consegue continuar trabalhando?",
+        }
+    )
+    proposal = Proposal.model_validate(proposal.model_dump())
+    reply, data = apply_proposal(database, user, conv, proposal, service, [ticket], "A reunião foi cancelada")
+    assert reply == "Com o cancelamento da reunião, você consegue continuar trabalhando?"
+    assert "draft" not in data
+    assert ticket.priority == "HIGH"
+    _, data = apply_proposal(
+        database,
+        user,
+        conv,
+        update_proposal({"blocked": False, "workaround": True}),
+        service,
+        [ticket],
+        "Consigo trabalhar, tenho alternativa",
+    )
+    assert data["draft"]["payload"]["priority"] == "MEDIUM"
+    assert "A reunião foi cancelada" in data["draft"]["payload"]["description"]
+
+
+def test_model_question_is_ignored_when_it_does_not_match_missing_fact(database):
+    user, ticket, conv = setup(database)
+    proposal = update_proposal({"same_day": False})
+    proposal.follow_up = FollowUp(field="workaround", question="Existe uma alternativa?")
+    proposal = Proposal.model_validate(proposal.model_dump())
+    reply, data = apply_proposal(
+        database, user, conv, proposal, TicketService(database, user), [ticket], "A reunião foi cancelada"
+    )
+    assert "impede você de trabalhar" in reply
+    assert "draft" not in data
