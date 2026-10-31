@@ -55,7 +55,8 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 - Consulta sem protocolo, seleção e cards com status e SLA.
 - Base de 8 artigos com restrições de aplicabilidade, como Windows 10/11.
 - Rascunhos revisáveis para criação, complemento e reabertura, com confirmar, editar e cancelar; após confirmação, encaminhamento à fila humana com protocolo e resumo.
-- Associação automática conservadora por categoria e termos significativos do título, preservando nomes de programas e versões. Similaridade textual sozinha não vincula protocolos. A confirmação continua idempotente e verifica revisão e versão do alvo.
+- Análise de duplicidade pelo agente na mesma decisão de triagem, comparando sistema/programa, equipamento, sintoma e objetivo. A API filtra candidatos do funcionário por elegibilidade e valida categoria, tipo, versão e trechos das evidências. Título parecido ou confiança numérica sozinhos não autorizam associação.
+- Em caso de dúvida, o funcionário esclarece se é o mesmo assunto ou um novo pedido. O rascunho mostra o protocolo e o motivo da associação antes da confirmação. Mudanças nos candidatos exigem nova revisão; confirmar continua sendo uma operação idempotente.
 - Descrição da triagem com fatos atuais e relatos em ordem cronológica, incluindo esclarecimentos de alcance, urgência e alternativas.
 - Transferência com resumo e pausa persistente do agente, inclusive enquanto aguarda analista.
 - Incidentes críticos são encaminhados imediatamente com o contexto e, quando há dados suficientes, rascunho pendente. O protocolo é criado ou alterado somente após confirmação; se um analista assumir antes, a confirmação fica bloqueada até a devolução ao assistente.
@@ -142,6 +143,7 @@ As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção,
 - `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, rascunho pendente, chamados e atendimento humano. Tokens ficam apenas em memória.
 - `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.
 - `scripts/evaluate-live.py`: três cenários reais limitados, de horário, assunto fora de TI e criticidade. Consome créditos do Gemini local e não imprime credenciais.
+- `scripts/verify-duplicate-live.py`: duas chamadas reais, somente leitura, com candidatos fictícios para verificar programas diferentes e o mesmo pedido com títulos distintos. Execute no contêiner da API conforme a instrução no arquivo. Consome o modelo configurado, sem criar ou alterar dados da auditoria.
 - `node scripts/verify-live-fixes.cjs`: valida pelo navegador quatro chamadas reais (VPN, orientação resolvida, criticidade e dúvida explícita), resolução pelo analista e formulário no celular. Consome Gemini e cria dados fictícios; resultados ficam em `output/verificacao-correcoes-live`. Exige dependências Node instaladas e aplicação em modo live.
 - `scripts/verify-no-secrets.py`: verifica os segredos locais contra arquivos rastreados e bundle do browser, sem exibir valores.
 
@@ -151,7 +153,7 @@ GitHub Actions executa build/typecheck, testes de agente, lint/formatação Pyth
 
 - API Python é a exceção de linguagem escolhida; validar aceitação com o avaliador.
 - O registro automático sem confirmação foi revertido a pedido do autor na issue #63; o rascunho e a confirmação do PRD estão restaurados.
-- Duplicidade usa termos do título/categoria e alvo visível antes da confirmação. Títulos com termos diferentes ou vários candidatos igualmente válidos não são vinculados automaticamente; a abordagem favorece preservar assuntos separados e pode preparar um novo protocolo. Para complementar um protocolo específico, selecione-o na consulta.
+- Duplicidade semântica depende da interpretação do modelo e do contexto disponível. São enviados até 30 candidatos elegíveis e até 2.000 caracteres de descrição por candidato; falta de análise ou evidência válida exige esclarecimento. A regra de termos do título permanece como proteção de confirmação para rascunhos antigos ou editados, sem substituir a revisão semântica do fluxo de triagem.
 - Sem feriados, SSO, e-mail real, anexos, controle remoto ou integração ITSM externa.
 - Turno interrompido fica identificado e mantém contexto; não há retomada automática em background.
 - Legado indisponível não impede chat humano; sincronização automática posterior fica como evolução.
