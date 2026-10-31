@@ -62,6 +62,7 @@ Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
 - Incidentes críticos são encaminhados imediatamente com o contexto e, quando há dados suficientes, rascunho pendente. O protocolo é criado ou alterado somente após confirmação; se um analista assumir antes, a confirmação fica bloqueada até a devolução ao assistente.
 - Confirmação de que uma orientação funcionou conclui a ajuda sem repetir o artigo ou criar chamado.
 - Console com busca/filtros, histórico, chamados, assunção exclusiva, mensagens, devolução e encerramento.
+- Encaminhamento direto entre analistas: N1 escolhe o destinatário N2 e registra o motivo em **Encaminhar atendimento**. O atendimento passa para **Minhas** do destinatário com o mesmo protocolo e histórico; a IA permanece pausada. A troca de responsável não renova o SLA.
 - Analista responsável pode usar **Resolver chamado** e registrar a solução. O protocolo fica resolvido; **Encerrar atendimento** continua sendo uma ação separada sobre a conversa. Enquanto o protocolo vinculado estiver aberto, o encerramento fica bloqueado e o acompanhamento permanece com o analista em **Minhas**.
 - Solução com autor/data e histórico de atualizações nos cartões e no painel lateral. Chamados resolvidos exibem a data da resolução em lugar de um prazo futuro de resposta; soluções de ciclos anteriores ficam no histórico após a reabertura.
 - Decisões legíveis: intenção, fatos, fontes, regras, segurança estimada e uso/latência quando disponíveis.
@@ -162,6 +163,6 @@ GitHub Actions executa build/typecheck, testes de agente, lint/formatação Pyth
 
 ## Documentação
 
-[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md) · [Confirmação restaurada](docs/13-confirmacao-restaurada.md) · [Correções da auditoria de conversas](docs/14-correcoes-auditoria-conversas.md).
+[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md) · [Confirmação restaurada](docs/13-confirmacao-restaurada.md) · [Correções da auditoria de conversas](docs/14-correcoes-auditoria-conversas.md) · [Duplicidade semântica](docs/15-duplicidade-semantica.md) · [Encaminhamento N1 → N2](docs/16-encaminhamento-entre-analistas.md).
 
 Documentos 02-07 preservam hipóteses do levantamento inicial; este README e o ADR descrevem a arquitetura implementada. Materiais originais e `.env` ficam locais. O inventário visual sanitizado está em `docs/referencias/inventario-prototipo.json`.

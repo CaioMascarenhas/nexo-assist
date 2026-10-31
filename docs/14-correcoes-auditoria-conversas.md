@@ -4,6 +4,8 @@ A análise do relato em `la.txt` resultou nas correções abaixo. O encaminhamen
 
 > A regra inicial de associação por termos descrita neste registro foi evoluída para a [verificação semântica pelo agente](15-duplicidade-semantica.md). As demais correções continuam vigentes.
 
+> O encaminhamento N1 → N2, adiado nesta rodada histórica, foi implementado posteriormente em [Encaminhamento entre analistas](16-encaminhamento-entre-analistas.md).
+
 ## Integridade do protocolo
 
 A comparação por similaridade textual permitia misturar pedidos de instalação de programas diferentes. A associação automática agora exige a mesma categoria e igualdade dos termos significativos do título, desconsiderando apenas palavras de ligação e expressões genéricas do pedido. Nomes curtos, números e versões participam da identificação. Se houver vários alvos na mesma situação, nenhum é escolhido automaticamente. Um chamado aberto tem preferência sobre uma correspondência já resolvida dentro da janela de reabertura.
