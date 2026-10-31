@@ -277,6 +277,7 @@ test("chamado aberto impede encerramento e mantém o analista responsável", asy
   await expect(consolePage.locator(".conversation-row").first()).toContainText(
     "Você está atendendo",
   );
+  await consolePage.locator(".conversation-row").first().click();
   await expect(
     consolePage.getByRole("button", {
       name: "Encerrar atendimento",

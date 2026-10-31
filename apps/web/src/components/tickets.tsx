@@ -242,7 +242,7 @@ export function DraftCard({
 }: {
   draft: Draft;
   canConfirm?: boolean;
-  onChanged: () => void;
+  onChanged: () => void | Promise<void>;
   onError: (e: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -265,7 +265,7 @@ export function DraftCard({
       else
         await post(`/drafts/${draft.id}/${kind}`, { revision: draft.revision });
       setEditing(false);
-      onChanged();
+      await onChanged();
     } catch (e) {
       onError((e as Error).message);
     } finally {

@@ -434,7 +434,7 @@ export function Workspace({
             key={`${lastDraft.id}:${lastDraft.revision}`}
             draft={lastDraft}
             canConfirm={canConfirmDraft}
-            onChanged={() => void refresh()}
+            onChanged={refresh}
             onError={setError}
           />
         )}
