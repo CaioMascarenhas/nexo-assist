@@ -145,6 +145,7 @@ As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção,
 - `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.
 - `scripts/evaluate-live.py`: três cenários reais limitados, de horário, assunto fora de TI e criticidade. Consome créditos do Gemini local e não imprime credenciais.
 - `scripts/verify-duplicate-live.py`: duas chamadas reais, somente leitura, com candidatos fictícios para verificar programas diferentes e o mesmo pedido com títulos distintos. Execute no contêiner da API conforme a instrução no arquivo. Consome o modelo configurado, sem criar ou alterar dados da auditoria.
+- `node scripts/audit-live-flows.cjs`: apresenta o plano de dez conversas sem chamar a IA. Com `--run-live`, executa a auditoria pelo navegador, limitada a 40 execuções de triagem, e salva diálogos, métricas e capturas em `output/`. Consome o modelo real e cria dados fictícios. [Resultado da rodada de dez conversas](docs/17-estabilidade-10-conversas-live.md).
 - `node scripts/verify-live-fixes.cjs`: valida pelo navegador quatro chamadas reais (VPN, orientação resolvida, criticidade e dúvida explícita), resolução pelo analista e formulário no celular. Consome Gemini e cria dados fictícios; resultados ficam em `output/verificacao-correcoes-live`. Exige dependências Node instaladas e aplicação em modo live.
 - `scripts/verify-no-secrets.py`: verifica os segredos locais contra arquivos rastreados e bundle do browser, sem exibir valores.
 
