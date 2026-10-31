@@ -653,6 +653,11 @@ async function runScenario(row, fn) {
       );
       current.estado_final = h.state;
       current.ticket_id = h.selected_ticket_id;
+      await openEmployee(s);
+      if (h.state === "CLOSED")
+        await expect(
+          s.page.getByRole("textbox", { name: "Mensagem", exact: true }),
+        ).toHaveAttribute("placeholder", "Atendimento encerrado");
       await shot(s, "estado-final");
     }
   } catch (error) {
@@ -1194,6 +1199,7 @@ async function main() {
       .locator(".side-ticket")
       .filter({ hasText: shared.qgis.code });
     await expect(panel.locator(".ticket-solution")).toBeVisible();
+    await panel.locator(".ticket-solution").scrollIntoViewIfNeeded();
     check(
       "Painel resolvido mostra solução e data sem prazo futuro",
       (await panel.locator(".deadline").innerText()).includes("Resolvido em") &&
