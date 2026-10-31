@@ -66,6 +66,13 @@ export interface Draft {
     affected_scope: string;
     due_at?: string;
     handoff_reason?: string;
+    duplicate_review?: {
+      source: "agent" | "user";
+      result: "same" | "different";
+      reason: string;
+      requested_title: string;
+      candidates: { id: string; version: number }[];
+    };
     priority_review?: {
       previous: string;
       proposed: string;

@@ -26,6 +26,60 @@ async function send(page: Page, text: string) {
   await expect(page.locator(".streaming")).toHaveCount(0);
 }
 
+test("duplicidade incerta pergunta ao funcionário e mostra o protocolo antes da confirmação", async ({
+  page,
+}) => {
+  const first = await start(page, "ana.souza@nexo.com.br");
+  await send(page, "Instalar software.");
+  await send(page, "Só eu, tenho alternativa, sem urgência.");
+  await expect(page.locator(".draft-card")).toBeVisible();
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  const previous = await (
+    await page.request.get(`/api/conversations/${first}`)
+  ).json();
+  const ticket = await (
+    await page.request.get(`/api/tickets/${previous.selected_ticket_id}`)
+  ).json();
+
+  await start(page, "ana.souza@nexo.com.br");
+  await send(page, "Instalar software.");
+  await send(page, "Só eu, tenho alternativa, sem urgência.");
+  await expect(page.locator(".message-text").last()).toContainText(
+    "É o mesmo assunto",
+  );
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  await expect(page.locator(".message-text").last()).toContainText(ticket.code);
+  await page
+    .getByRole("button", {
+      name: `É o mesmo chamado ${ticket.code}`,
+      exact: true,
+    })
+    .click();
+  await expect(page.locator(".draft-card")).toContainText(ticket.code);
+  await expect(page.getByLabel("Verificação de duplicidade")).toContainText(
+    "O funcionário confirmou que é o mesmo assunto.",
+  );
+  await expect(page.getByLabel("Verificação de duplicidade")).toContainText(
+    "Confira se é o mesmo assunto",
+  );
+  const unchanged = await (
+    await page.request.get(`/api/tickets/${ticket.id}`)
+  ).json();
+  expect(unchanged.version).toBe(ticket.version);
+  await page.screenshot({
+    path: "tmp/screenshots/regressao-duplicidade-confirmada.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  const updated = await (
+    await page.request.get(`/api/tickets/${ticket.id}`)
+  ).json();
+  expect(updated.version).toBeGreaterThan(ticket.version);
+  expect(updated.description).toContain("Complemento confirmado");
+});
+
 test("resolução após orientação não repete o artigo nem abre chamado", async ({
   page,
 }) => {

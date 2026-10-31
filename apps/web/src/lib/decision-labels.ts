@@ -39,6 +39,7 @@ export const ruleLabels: Record<string, string> = {
   IMPACT_URGENCY: "Prioridade por impacto e urgência",
   BUSINESS_CALENDAR: "Prazos conforme o calendário de atendimento",
   CHECK_DUPLICATES: "Verificação de chamados semelhantes",
+  SEMANTIC_DUPLICATES: "Análise do assunto e confirmação do protocolo",
 };
 
 export function factValue(value: string | boolean | null): string {

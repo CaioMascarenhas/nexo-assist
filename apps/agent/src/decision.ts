@@ -213,7 +213,53 @@ export function stubDecision(input: Input): Proposal {
           ticket.category === facts.category && ticket.kind === facts.kind,
       )
       .map((ticket) => {
-        const same = normalize(ticket.title) === normalize(facts.title ?? "");
+        const filler = new Set([
+          "quero",
+          "preciso",
+          "solicitar",
+          "solicito",
+          "uma",
+          "um",
+          "para",
+          "com",
+          "sem",
+          "urgencia",
+          "somente",
+          "software",
+          "programa",
+          "instalacao",
+          "instalar",
+          "pedido",
+          "solicitacao",
+          "aplicativo",
+          "o",
+          "a",
+          "os",
+          "as",
+          "de",
+          "do",
+          "da",
+          "no",
+          "na",
+          "em",
+          "e",
+          "eu",
+          "so",
+        ]);
+        const terms = (value: string) =>
+          [
+            ...new Set(
+              (normalize(value).match(/[a-z0-9]+/g) ?? []).filter(
+                (word) => !filler.has(word),
+              ),
+            ),
+          ]
+            .sort()
+            .join(" ");
+        const same =
+          normalize(ticket.title) === normalize(facts.title ?? "") ||
+          (!!terms(ticket.title) &&
+            terms(ticket.title) === terms(facts.title ?? ""));
         const reports = [
           ...input.messages
             .filter((message) => message.role === "USER")
@@ -264,7 +310,7 @@ export function stubDecision(input: Input): Proposal {
               : ("uncertain" as const)
             : ("different" as const),
           reason: same
-            ? "Os títulos coincidem no cenário determinístico de testes."
+            ? "Os termos do pedido coincidem no cenário determinístico de testes."
             : "Títulos distintos no cenário determinístico de testes.",
           evidence:
             same && identity

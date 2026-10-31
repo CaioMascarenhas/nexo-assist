@@ -53,10 +53,15 @@ export function DecisionDetail({ decision }: { decision: Decision }) {
             <dd>
               {intentLabels[decision.intent] ?? "Intenção não identificada"}
             </dd>
-            <dt>Segurança estimada</dt>
+            <dt>
+              {decision.confidence_source === "user_choice"
+                ? "Origem da decisão"
+                : "Segurança estimada"}
+            </dt>
             <dd>
-              {Math.round(decision.confidence * 100)}% · estimativa não
-              calibrada
+              {decision.confidence_source === "user_choice"
+                ? "Escolha explícita do funcionário"
+                : `${Math.round(decision.confidence * 100)}% · estimativa não calibrada`}
             </dd>
           </dl>
           <p>{decision.rationale}</p>
@@ -332,6 +337,22 @@ export function DraftCard({
         <p className="notice" aria-label="Reavaliação da prioridade">
           {draft.payload.priority_review.reason}
         </p>
+      )}
+      {!!draft.payload.duplicate_review?.candidates.length && (
+        <div className="notice" aria-label="Verificação de duplicidade">
+          <p>
+            {draft.payload.duplicate_review.result === "same"
+              ? `Este pedido será vinculado ao chamado ${draft.target_code}: ${draft.payload.title}. Confira se é o mesmo assunto antes de confirmar.`
+              : "Este pedido será registrado em um novo protocolo após sua confirmação."}
+          </p>
+          <p>{draft.payload.duplicate_review.reason}</p>
+          {draft.payload.duplicate_review.requested_title !==
+            draft.payload.title && (
+            <p>
+              Pedido relatado: {draft.payload.duplicate_review.requested_title}
+            </p>
+          )}
+        </div>
       )}
       <div className="ticket-grid">
         <div>
