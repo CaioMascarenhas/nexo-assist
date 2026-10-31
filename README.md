@@ -1,121 +1,138 @@
-﻿# Nexo Assist
+# Nexo Assist
 
-Service desk de TI com chat para funcionários, agente Mastra/Gemini e console para analistas. Next.js na interface, FastAPI nos serviços de negócio e PostgreSQL como fonte de verdade. Execução local com Docker Compose.
+Service desk de TI com um agente que orienta o funcionário, prepara chamados para revisão e entrega o contexto ao suporte humano. O analista acompanha a fila, assume conversas, encaminha entre N1 e N2 e registra a solução sem perder o histórico.
 
-> **Decisão de stack:** o PRD pede TypeScript estrito. Por escolha explícita do autor, a API usa Python/FastAPI; isso é uma exceção ao enunciado. Frontend e agente mantêm TypeScript estrito. A justificativa está no [ADR](docs/09-arquitetura-fastapi.md).
+**Demonstração:** [nexoassist.duckdns.org](https://nexoassist.duckdns.org) · **Stack:** Next.js, TypeScript, FastAPI, Mastra, Gemini, PostgreSQL e Docker Compose.
 
-> **Fluxo vigente:** criação, complemento e reabertura exigem rascunho revisável e confirmação do funcionário, conforme o PRD. Após confirmar, o atendimento é encaminhado à fila humana. Casos críticos entram na fila imediatamente; o rascunho pode ser confirmado enquanto aguarda, mas nenhum chamado é criado ou alterado pelo assistente antes dessa confirmação.
+Este projeto foi construído para um desafio técnico. As contas, os chamados iniciais e os artigos são fictícios. O login aceita qualquer senha não vazia, como solicitado no enunciado; não representa autenticação pronta para uso corporativo.
 
-## Executar
+## Como rodar
 
-Pré-requisitos: Docker com Compose e Python 3 para gerar o ambiente local. No Windows:
+É necessário Docker com Compose e Python 3. No Windows:
 
 ```powershell
 py -3.11 scripts/setup.py
 docker compose up -d --build --wait web
 ```
 
-No Linux/macOS, use `python3 scripts/setup.py`. O script preserva um `.env` existente e gera um segredo interno aleatório no primeiro uso. Alternativamente, copie `.env.example` para `.env` e substitua o segredo indicado manualmente.
+No Linux/macOS, use `python3 scripts/setup.py`. O script cria o `.env` com segredo interno aleatório e preserva configurações existentes. Migrations e seed executam antes da API; reiniciar os serviços preserva os dados.
 
 - Interface: **http://localhost:3000**.
-- API/OpenAPI locais: **http://localhost:8000/docs**.
-- Migrations e seed executam antes da API. Reiniciar não apaga dados.
-- `docker compose down` encerra os containers preservando o volume.
+- API e OpenAPI locais: **http://localhost:8000/docs**.
+- `docker compose logs -f api agent` acompanha os serviços.
+- `docker compose down` encerra os containers sem remover o volume do PostgreSQL.
 
-O modo padrão é **stub**, claramente identificado no chat e nas decisões. Permite testar as jornadas sem chave ou custo. Não existe fallback silencioso de Gemini para stub.
+O padrão local é **stub**: respostas determinísticas para desenvolvimento e testes sem consumir o provedor. A interface informa o modo. Uma falha do modelo real não muda silenciosamente para stub.
 
-### Gemini real
+### Usar o modelo real
 
-Configure somente no `.env` local:
+Edite somente o `.env` local:
 
 ```dotenv
 LLM_MODE=live
-GOOGLE_API_KEY=sua-chave-local
+GOOGLE_API_KEY=sua-chave
 LLM_MODEL=google/gemini-3.8-flash
 ```
 
-Execute `docker compose up -d --no-deps --force-recreate agent`. A chave é passada apenas ao agente: não entra no frontend, Dockerfile ou Git. O modelo é configurável. Uma chamada real curta foi validada; créditos e preços dependem do projeto/conta do provedor.
+Depois execute `docker compose up -d --no-deps --force-recreate agent`. A chave fica no ambiente do agente, sem entrar no browser, no Git ou nas imagens. O modelo é configurável; disponibilidade, limites e cobrança dependem da conta no provedor.
 
-### Contas fictícias
+### Contas de demonstração
 
-Use qualquer senha não vazia. A senha não é armazenada nem enviada ao modelo.
+Use qualquer senha não vazia. Ela não é armazenada nem enviada ao modelo.
 
 | E-mail | Perfil |
 | --- | --- |
-| `ana.souza@nexo.com.br` | Funcionária, Financeiro |
-| `carla.mendes@nexo.com.br` | Funcionária, Comercial |
+| `ana.souza@nexo.com.br` | Funcionária do Financeiro |
+| `carla.mendes@nexo.com.br` | Funcionária do Comercial |
 | `bruno.tavares@nexo.com.br` | Funcionário |
-| `rafael.lima@nexo.com.br` | Analista N2 |
 | `luiza.costa@nexo.com.br` | Analista N1 |
+| `rafael.lima@nexo.com.br` | Analista N2 |
 
-## Funcionalidades
+## Arquitetura e escolhas
 
-- Sessões persistentes e autorização por recurso.
-- Chat com histórico, ações durante execução, opções rápidas e limite de 30 turnos por conversa.
-- Consulta sem protocolo, seleção e cards com status e SLA.
-- Base de 8 artigos com restrições de aplicabilidade, como Windows 10/11.
-- Rascunhos revisáveis para criação, complemento e reabertura, com confirmar, editar e cancelar; após confirmação, encaminhamento à fila humana com protocolo e resumo.
-- Análise de duplicidade pelo agente na mesma decisão de triagem, comparando sistema/programa, equipamento, sintoma e objetivo. A API filtra candidatos do funcionário por elegibilidade e valida categoria, tipo, versão e trechos das evidências. Título parecido ou confiança numérica sozinhos não autorizam associação.
-- Em caso de dúvida, o funcionário esclarece se é o mesmo assunto ou um novo pedido. O rascunho mostra o protocolo e o motivo da associação antes da confirmação. Mudanças nos candidatos exigem nova revisão; confirmar continua sendo uma operação idempotente.
-- Descrição da triagem com fatos atuais e relatos em ordem cronológica, incluindo esclarecimentos de alcance, urgência e alternativas.
-- Transferência com resumo e pausa persistente do agente, inclusive enquanto aguarda analista.
-- Incidentes críticos são encaminhados imediatamente com o contexto e, quando há dados suficientes, rascunho pendente. O protocolo é criado ou alterado somente após confirmação; se um analista assumir antes, a confirmação fica bloqueada até a devolução ao assistente.
-- Confirmação de que uma orientação funcionou conclui a ajuda sem repetir o artigo ou criar chamado.
-- Console com busca/filtros, histórico, chamados, assunção exclusiva, mensagens, devolução e encerramento.
-- Encaminhamento direto entre analistas: N1 escolhe o destinatário N2 e registra o motivo em **Encaminhar atendimento**. O atendimento passa para **Minhas** do destinatário com o mesmo protocolo e histórico; a IA permanece pausada. A troca de responsável não renova o SLA.
-- Analista responsável pode usar **Resolver chamado** e registrar a solução. O protocolo fica resolvido; **Encerrar atendimento** continua sendo uma ação separada sobre a conversa. Enquanto o protocolo vinculado estiver aberto, o encerramento fica bloqueado e o acompanhamento permanece com o analista em **Minhas**.
-- Solução com autor/data e histórico de atualizações nos cartões e no painel lateral. Chamados resolvidos exibem a data da resolução em lugar de um prazo futuro de resposta; soluções de ciclos anteriores ficam no histórico após a reabertura.
-- Decisões legíveis: intenção, fatos, fontes, regras, segurança estimada e uso/latência quando disponíveis.
-- Simulador de falhas e dados preservados após reinício real.
-
-O visual segue o protótipo: identificação com painel escuro, fontes locais Newsreader/Schibsted Grotesk, chat com sidebar e console em colunas. As fontes incluem licenças OFL. Meu perfil reproduz os cartões de dados e senha da referência; o tempo de alteração e a redefinição são apenas ilustrativos, sem envio de e-mail ou alteração de credenciais.
-
-O chat aproveita a largura disponível e usa mensagens maiores. O seletor de atendimentos anteriores fica recolhido; o console mantém acesso às conversas e aos chamados também no celular. Avatares identificam os participantes e a presença online/offline é explicitamente simulada.
-
-## Arquitetura
+Organizei o projeto em um monorepo com três aplicações e um banco persistente. A interpretação da conversa fica no agente; autorização, regras de negócio e alterações de estado ficam na API.
 
 ```mermaid
-flowchart LR
-    Browser[Next.js: funcionário e analista] --> Proxy[Proxy de mesma origem]
-    Proxy --> API[FastAPI: sessões, autorização e conversas]
-    API --> Tickets[TicketService: legado simulado]
-    Tickets --> DB[(PostgreSQL)]
-    API --> DB
-    API --> Agent[Mastra: decisão estruturada em TypeScript]
-    Agent --> Gemini[Gemini API]
+flowchart TD
+    Pessoa[Funcionário ou analista] -->|HTTPS| Proxy[Nginx Proxy Manager<br/>Let's Encrypt e DuckDNS]
+    Proxy -->|rede Docker proxy / porta 3000| Web[Next.js<br/>Interface e BFF de mesma origem]
+    Web -->|HTTP interno / cookies / SSE| API[FastAPI<br/>Sessões, conversas e regras de negócio]
+    API --> Tickets[TicketService<br/>Fronteira do legado simulado]
+    API --> DB[(PostgreSQL<br/>Histórico, rascunhos, chamados e artigos)]
+    Tickets --> DB
+    API -->|Contexto autorizado e limitado| Agent[Mastra / TypeScript<br/>Ferramentas de leitura e saída estruturada]
+    Agent -->|API do provedor| Gemini[Gemini]
+    Agent -->|Decisão validada por Zod e Pydantic| API
 ```
 
-`apps/web` contém UI/proxy; `apps/api/nexo`, os módulos de negócio; `apps/agent`, Mastra. `ticket_service.py` separa o legado simulado do agente. A API busca dados autorizados e envia contexto limitado ao modelo. Ferramentas Mastra consultam esse contexto de leitura. O modelo não recebe banco nem ferramentas de escrita.
+O Nginx e o domínio fazem parte do deploy público. Localmente, o navegador acessa o Next.js diretamente. O `TicketService` é um módulo separado dentro da API, representando a integração com um sistema legado; não é um microserviço independente.
 
-### Decisão, custo e latência
+| Componente | Escolha e motivo |
+| --- | --- |
+| **Next.js / React / TypeScript estrito** — `apps/web` | Já conheço e uso bastante Next.js. Para este projeto, preferi sua camada de servidor e as rotas do App Router para integrar a interface à API, manter cookies na mesma origem e encaminhar o stream. React com Vite também atenderia à interface, mas exigiria organizar essa camada à parte. A [documentação do React recomenda começar aplicações novas com um framework](https://react.dev/learn/creating-a-react-app), incluindo Next.js. |
+| **FastAPI / Python / Pydantic** — `apps/api` | Optei por demonstrar conhecimento de outra linguagem e de uma stack frequente em projetos de IA e machine learning. FastAPI oferece contratos tipados, validação e OpenAPI com pouco código adicional. Aqui ele concentra o domínio; não há treinamento de modelos. O enunciado pede TypeScript estrito: usar Python na API é uma divergência consciente, documentada no [ADR](docs/09-arquitetura-fastapi.md). Frontend e agente mantêm TypeScript estrito. |
+| **Mastra / Zod / TypeScript** — `apps/agent` | Mastra estrutura o agente, as ferramentas e a geração de decisões. Zod define o contrato recebido pela API. Mantive esse serviço separado para isolar chave, dependências, execução e limites do modelo. Mastra é a biblioteca de orquestração, não o executor dos testes. |
+| **PostgreSQL / SQLAlchemy / Alembic** | Escolhi PostgreSQL pela familiaridade, praticidade e eficiência em dados relacionais. Transações, restrições e locks ajudam a manter confirmação, chamado e encaminhamento consistentes. SQLAlchemy organiza a persistência; Alembic versiona o schema. |
+| **Docker Compose** | Gerencia os serviços, redes, healthchecks e ordem de inicialização. O mesmo projeto pode ser reproduzido localmente e executado na VM com imagens prontas. Para o tamanho desta entrega, evita a complexidade de um orquestrador maior. |
+| **Gemini configurável** | O objetivo foi equilibrar latência, uso de tokens e suporte a ferramentas/saída estruturada. A escolha pode ser revista a partir de avaliações; o domínio não depende de um modelo específico. |
 
-O modelo interpreta linguagem e extrai fatos. Código controla prioridade, SLA, autorização, reabertura e efeitos. Lacunas geram perguntas; ao completar a coleta, a API persiste um rascunho, sem alterar o chamado. O funcionário revisa e confirma para concluir a operação e encaminhar ao suporte na mesma transação. Pedido humano, criticidade, vencimento ou insegurança também geram transferência. Confiança é uma estimativa não calibrada.
+O Next.js funciona como **BFF** (Backend for Frontend), encaminhando chamadas para o FastAPI. As regras não ficam duplicadas nas rotas do frontend. A interface usa CSS próprio, `lucide-react` e fontes locais com licença OFL.
 
-Limites: 4 passos de agente, 4.000 tokens de saída, timeout de 35s no modelo e 42s na API, histórico recente limitado, até 30 resumos de chamados e 10 artigos. A demonstração limita 30 turnos por conversa, 10 conversas por funcionário/dia e 300 mensagens de usuário/dia. Mensagens humanas continuam disponíveis ao acabar a cota do agente.
+## Como o agente decide o que fazer
 
-Leituras do legado têm até 3 tentativas no chat, com espera progressiva. Não repetimos automaticamente a chamada ao LLM. Tokens/duração são registrados quando fornecidos. Não calculamos custo monetário sem preço verificado/configurado.
+Cada mensagem passa por uma sequência em que a IA propõe uma interpretação e o código decide quais efeitos são permitidos:
 
-O agente usa saída concisa e esforço de raciocínio baixo nos modelos Gemini 3/4, mantendo o limite de 4.000 tokens. Após duas etapas de consulta, as ferramentas são desativadas para reservar os passos restantes à decisão estruturada. Os limites de tempo continuam valendo para a execução inteira. Timeout, quota, autenticação do provedor, saída truncada/inválida e indisponibilidade recebem códigos próprios e mensagens técnicas distintas de baixa confiança. Logs correlacionam API/agente por `request_id`, código, status e duração, sem imprimir prompts, respostas brutas ou credenciais. Saída inválida inclui somente nomes de campos conhecidos e códigos de validação. A interface permite nova mensagem ou transferência explícita; não existe fallback silencioso.
+1. **A API monta o contexto autorizado.** Recupera a conversa, o chamado selecionado, candidatos do próprio funcionário e artigos aplicáveis. O modelo não recebe acesso ao banco, SQL ou ferramentas de escrita.
+2. **O Mastra interpreta a intenção e consulta ferramentas de leitura.** `listMyTickets` e `searchKnowledge` trabalham sobre o contexto limitado. A saída contém intenção, fatos, evidências, fontes, pergunta de continuidade e segurança estimada.
+3. **Zod e Pydantic validam o contrato.** Respostas inválidas, timeout ou falhas do provedor geram erros identificados. Não são convertidos em uma decisão aparentemente válida.
+4. **A API aplica regras determinísticas.** Verifica dono, estado, categoria, prioridade, calendário de SLA, janela de reabertura e permissões. Informações ausentes geram perguntas; assunto fora do escopo recebe redirecionamento; uma orientação resolvida pode terminar sem chamado.
+5. **O funcionário revisa antes da escrita.** Criação, complemento e reabertura geram um rascunho editável, com confirmar e cancelar. Confirmar aplica a operação e encaminha ao suporte na mesma transação. Incidente crítico entra imediatamente na fila humana, mas não cria nem altera um protocolo sem confirmação.
+6. **O atendimento humano pausa a IA.** O analista recebe resumo, tentativas e histórico. Pode devolver à IA, resolver o chamado ou encaminhar diretamente a outro analista, preservando o contexto.
 
-O stream mostra atividade durante a execução e texto em blocos após validar a decisão estruturada. Não é streaming nativo de cada token do provedor.
+### Duplicidade com evidência
 
-### Segurança e consistência
+Título parecido não basta para anexar um pedido a outro chamado. A API primeiro restringe os candidatos por proprietário e elegibilidade; o agente faz a verificação semântica na própria chamada de triagem, comparando programa/sistema, equipamento, sintoma e objetivo.
 
-Sessão opaca com hash no banco e cookie HttpOnly/SameSite. Mutações verificam origem; consultas de funcionário filtram o dono. Analistas autenticados acessam o contexto do suporte. O agente é privado no Compose e exige segredo interno.
+A análise distingue **mesmo assunto**, **assunto diferente** e **incerto**. Para propor associação, a API exige um único alvo válido, tipo/categoria compatíveis e trechos verificáveis com pelo menos dois aspectos distintos, incluindo sistema ou equipamento. Sem evidência suficiente, pergunta ao funcionário. O rascunho mostra o protocolo e o motivo da associação; a confirmação revalida a versão do alvo. Isso evita misturar pedidos como instalar QGIS e instalar FluxogramaQA apenas porque ambos são software.
 
-Locks/epoch protegem transições e descartam geração tardia. A confirmação serializa escritas por funcionário e verifica proprietário, revisão, validade e versão do alvo. Uma falha antes do commit desfaz operação e transferência juntas, mantendo o rascunho pendente. Repetir uma confirmação concluída retorna o mesmo resultado. Complementos do funcionário não renovam artificialmente SLA vencido. Encerrar conversa não resolve chamado automaticamente.
+São enviados até 30 candidatos e até 2.000 caracteres de descrição por candidato. Esse recorte limita custo e exposição, mas pode deixar de fora um chamado relevante. A confiança numérica do modelo é uma estimativa, não uma probabilidade calibrada.
 
-O login de senha arbitrária é intencional para os dados fictícios do desafio. Produção exige identidade real; não inserir dados reais nesta demonstração.
+### Consistência, transparência e limites
 
-### Premissas de SLA
+A interface mostra intenção, fatos usados, fontes, regras aplicadas e métricas disponíveis. É uma justificativa resumida da decisão, sem exposição de raciocínio interno ou resposta bruta do provedor.
 
-Seg-sex, 08h-18h, America/Fortaleza, sem feriados. Crítica: 1h corrida; alta: 4h úteis; média: 30h úteis; baixa: 50h úteis. Primeira resposta e atualizações substantivas do suporte ancoram o prazo. Bot, usuário e transferência não zeram atraso.
+Confirmações verificam proprietário, revisão, validade e versão do alvo; são idempotentes. Locks e uma versão de execução impedem uma resposta tardia da IA depois de uma assunção humana. Falha antes do commit desfaz operação e transferência juntas. Encerrar uma conversa com chamado vinculado ainda aberto é bloqueado, evitando deixar atendimento sem responsável. Resolver o chamado e encerrar a conversa são ações distintas.
 
-Reabertura até 168h corridas inclusivas, iniciando novo ciclo de primeira resposta. Elevações de prioridade usam a atualização do suporte ou a reabertura mais recente; complementos comuns não renovam esse ciclo. Para vencimento, priorizamos a transferência prevista no Anexo A; o protótipo apresenta oferta opcional. [Premissas e divergências](docs/07-decisoes-e-pendencias.md).
+A passagem **N1 → N2** já é direta: o responsável escolhe outro analista e registra o motivo. O destinatário recebe em **Minhas**, com o mesmo histórico e protocolo; a IA continua pausada e o SLA não é reiniciado. N1 e N2 são identificações de equipe, com o mesmo papel de autorização de analista.
 
-## Testar
+Os limites da demonstração são 30 turnos por conversa, 10 conversas novas por funcionário/dia e 300 mensagens de usuário/dia. Cada execução tem até 4 passos, 4.000 tokens de saída, 35 segundos no modelo e 42 segundos na API. Leituras do legado têm retentativa limitada; a chamada ao LLM não é repetida automaticamente. O suporte humano continua disponível quando a cota de IA acaba.
 
-Para testes fora do Docker, Node.js 24 e Python 3.11:
+O stream usa **SSE** para mostrar atividade e entregar blocos depois da validação da decisão. Não é transmissão de cada token do provedor. O console consulta atualizações periodicamente. Os logs usam `request_id`, código, status e duração, sem imprimir credenciais, prompts ou respostas brutas.
+
+Sessões usam tokens opacos com hash no banco e cookies HttpOnly/SameSite; no deploy, também Secure. Mutações verificam a origem e os recursos do funcionário são filtrados por dono. Essas proteções não substituem a autenticação real, que está fora da implementação de demonstração.
+
+O calendário de SLA considera segunda a sexta, 08h–18h, `America/Fortaleza`, sem feriados. Crítica: 1 hora corrida; alta: 4 horas úteis; média: 30 horas úteis; baixa: 50 horas úteis. Reabertura é permitida em até 168 horas corridas. Complementos do funcionário, respostas do bot e trocas de responsável não renovam artificialmente o prazo.
+
+## Como garanti a qualidade das decisões
+
+Combinei contratos, testes de regras e jornadas completas com conversas reais. O stub torna a integração reproduzível; as rodadas com Gemini verificam interpretação e comportamento que um stub não consegue medir.
+
+| Camada | Ferramentas e evidências |
+| --- | --- |
+| **Domínio e integração** | `pytest`, `httpx`/`TestClient` e PostgreSQL real: 132 testes na rodada anterior ao deploy. Cobrem autorização, SLA, confirmação idempotente, rollback, concorrência, revisão de rascunho, duplicidade e passagem entre analistas. Os testes usam schemas temporários isolados. |
+| **Contrato do agente** | Test runner nativo do Node com `tsx`: 11 testes de contrato e diagnóstico. Validam estruturas e falhas esperadas; não provam a qualidade semântica de todo retorno do modelo. |
+| **Ponta a ponta** | Playwright com navegador e aplicação Docker: 27 testes na rodada de estabilidade, além da regressão de origem adicionada para o deploy. Exercitam funcionário, N1 e N2, revisão, cancelamento, resolução, reabertura e telas em desktop/mobile. |
+| **Verificações estáticas** | TypeScript estrito, Prettier, Ruff e build do Next.js. Alembic tem verificação de migration em schema vazio. |
+| **Persistência e segredos** | Scripts verificam reinício dos serviços preservando sessão, mensagens e rascunhos, e procuram segredos locais nos arquivos rastreados e no bundle do browser. |
+| **Conversas reais** | Auditoria em Chrome, com dez conversas diversas e 25 respostas reais do agente. Incluiu VPN, programas diferentes, duplicidade verdadeira, impressora, Outlook, acesso, criticidade, reabertura e N1 → N2. |
+
+Na [rodada de dez conversas](docs/17-estabilidade-10-conversas-live.md), não houve erro técnico nem timeout. A latência medida pela API teve **mediana de 5,39 s**, mínima de 2,65 s e máxima de 6,57 s. Nove cenários passaram diretamente; um precisou esclarecer se a falha após uma instalação era um novo incidente ou a reabertura da solicitação original. A expectativa inicial que falhou foi preservada no relatório.
+
+Essas verificações também originaram regressões concretas: programas diferentes não devem compartilhar chamado; o alcance individual deve atualizar a descrição; encerrar a conversa não deve abandonar o chamado; solução, autor e data devem permanecer visíveis após resolver e reabrir. A amostra real é evidência de comportamento nesses cenários, não garantia estatística para qualquer conversa ou carga.
+
+### Reproduzir os testes
+
+Para executar fora dos containers, use Node.js 24 e Python 3.11:
 
 ```powershell
 npm ci
@@ -124,46 +141,78 @@ py -3.11 -m venv .venv
 npm run typecheck
 npm run format:check
 npm run test:agent
+.\.venv\Scripts\ruff.exe check apps/api/nexo apps/api/tests apps/api/migrations
 .\.venv\Scripts\python.exe -m pytest apps/api/tests -q
 npm run build
 ```
 
-Python usa PostgreSQL real em schemas temporários isolados, sem truncar dados da aplicação. Configure `TEST_DATABASE_URL` se necessário. A migration inicial é congelada e tem teste de upgrade/downgrade em schema vazio.
-
-Para repetir as 25 jornadas sem alterar os atendimentos locais:
+Os testes Python precisam de PostgreSQL acessível; configure `TEST_DATABASE_URL` para outro endereço. Para as jornadas, use um ambiente separado:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/test-e2e.py --reset
 .\.venv\Scripts\python.exe scripts/verify-persistence.py --isolated
 ```
 
-O script usa o projeto Docker `nexo-revisao`, portas 3100/8100/55432, banco separado, modo stub e chave vazia. `--reset` recria somente o volume descartável de testes. Requer Compose com suporte a `!override` (2.24.4 ou posterior). Não troque de branch durante a execução. Com outro ambiente limpo em stub, também é possível executar `npm run test:e2e` e configurar `E2E_URL`.
+O projeto Docker `nexo-revisao` usa portas 3100/8100/55432, banco próprio e modo stub. `--reset` recria apenas o volume descartável dos testes. Requer Compose 2.24.4 ou posterior. Com outro ambiente limpo em stub, use `npm run test:e2e` e ajuste `E2E_URL`. A CI instala Chromium; localmente a configuração usa Chrome.
 
-As jornadas cobrem login/perfil/saída, dúvidas, triagem, consulta e seleção, rascunho, edição, cancelamento, confirmação, duplicidade, complemento, reabertura, transferências, resposta/devolução/encerramento humano, resolução explícita do chamado, erros e concorrência de navegação. Há verificações em 1920, 1366 e 390 px. Localmente usam Chrome; CI instala Chromium. Os testes PostgreSQL verificam ausência de mutação antes da confirmação, criticidade com rascunho na fila, bloqueio após assunção, resolução com autorização e versão, diagnósticos seguros, retentativa explícita e rollback. O agente tem 9 testes de contrato/diagnóstico.
+`node scripts/audit-live-flows.cjs` mostra o roteiro das dez conversas sem consumir IA. Com `--run-live`, executa pelo navegador, consome o modelo configurado e cria dados fictícios. Não execute essa auditoria contra um banco com dados de usuários. Os scripts `smoke-live.py`, `evaluate-live.py` e `verify-duplicate-live.py` permitem verificações menores; seus limites estão nos próprios arquivos.
 
-- `scripts/verify-persistence.py`: reinicia API/agente/web e verifica sessão, mensagens, rascunho pendente, chamados e atendimento humano. Tokens ficam apenas em memória.
-- `scripts/smoke-live.py`: uma conversa curta; falha se não houver decisão real. Consome a API configurada.
-- `scripts/evaluate-live.py`: três cenários reais limitados, de horário, assunto fora de TI e criticidade. Consome créditos do Gemini local e não imprime credenciais.
-- `scripts/verify-duplicate-live.py`: duas chamadas reais, somente leitura, com candidatos fictícios para verificar programas diferentes e o mesmo pedido com títulos distintos. Execute no contêiner da API conforme a instrução no arquivo. Consome o modelo configurado, sem criar ou alterar dados da auditoria.
-- `node scripts/audit-live-flows.cjs`: apresenta o plano de dez conversas sem chamar a IA. Com `--run-live`, executa a auditoria pelo navegador, limitada a 40 execuções de triagem, e salva diálogos, métricas e capturas em `output/`. Consome o modelo real e cria dados fictícios. [Resultado da rodada de dez conversas](docs/17-estabilidade-10-conversas-live.md).
-- `node scripts/verify-live-fixes.cjs`: valida pelo navegador quatro chamadas reais (VPN, orientação resolvida, criticidade e dúvida explícita), resolução pelo analista e formulário no celular. Consome Gemini e cria dados fictícios; resultados ficam em `output/verificacao-correcoes-live`. Exige dependências Node instaladas e aplicação em modo live.
-- `scripts/verify-no-secrets.py`: verifica os segredos locais contra arquivos rastreados e bundle do browser, sem exibir valores.
+## Deploy: Oracle Cloud, GHCR e HTTPS
 
-GitHub Actions executa build/typecheck, testes de agente, lint/formatação Python, integração PostgreSQL e E2E Docker sem chave paga. `main` é protegida; entregas entram por PR após checks.
+O ambiente público usa uma VM **Oracle Cloud amd64**, com os arquivos em **`/opt/projetos/nexo-assist`**. O domínio **`nexoassist.duckdns.org`** aponta para essa máquina. O **Nginx Proxy Manager** recebe HTTP/HTTPS, força HTTPS e termina o TLS com certificado **Let's Encrypt**.
 
-## Limitações e trabalho futuro
+Separei build de execução: o GitHub Actions constrói as imagens; a VM faz somente pull e inicia os containers. Isso evita compilar Next.js em uma máquina pequena e permite identificar a revisão em execução.
 
-- API Python é a exceção de linguagem escolhida; validar aceitação com o avaliador.
-- O registro automático sem confirmação foi revertido a pedido do autor na issue #63; o rascunho e a confirmação do PRD estão restaurados.
-- Duplicidade semântica depende da interpretação do modelo e do contexto disponível. São enviados até 30 candidatos elegíveis e até 2.000 caracteres de descrição por candidato; falta de análise ou evidência válida exige esclarecimento. A regra de termos do título permanece como proteção de confirmação para rascunhos antigos ou editados, sem substituir a revisão semântica do fluxo de triagem.
-- Sem feriados, SSO, e-mail real, anexos, controle remoto ou integração ITSM externa.
-- Turno interrompido fica identificado e mantém contexto; não há retomada automática em background.
-- Legado indisponível não impede chat humano; sincronização automática posterior fica como evolução.
-- Testes validam cenários específicos. Um smoke real não equivale a benchmark completo do modelo.
-- Deploy público é diferencial e não foi feito. O repositório é público; a aplicação escuta em localhost.
+1. A [CI](.github/workflows/ci.yml) roda tipos, formatação, build, testes do agente, integração PostgreSQL e E2E sem chave paga. A `main` exige os checks `web`, `api` e `e2e` para receber o PR.
+2. Após a CI da `main` passar, o workflow [Publicar imagens](.github/workflows/images.yml) publica `nexo-assist-web`, `nexo-assist-api` e `nexo-assist-agent` no **GitHub Container Registry**, sob `ghcr.io/caiomascarenhas`. Cada imagem recebe `sha-<commit completo>` e `latest`. O alvo atual é `linux/amd64`; o build não gera ARM.
+3. Na VM, [compose.deploy.yaml](compose.deploy.yaml) usa essas imagens, executa migrations/seed e espera os healthchecks. O volume do banco é persistente. A atualização é iniciada por SSH; o workflow não faz rollout automático na máquina.
 
-## Documentação
+Para reproduzir a instalação na VM, com Docker, Compose e Git disponíveis:
 
-[Requisitos](docs/01-requisitos.md) · [Telas](docs/05-telas-e-experiencia.md) · [ADR vigente](docs/09-arquitetura-fastapi.md) · [Backlog e issues](docs/BACKLOG.md) · [Auditoria do PDF e das jornadas](docs/11-auditoria-do-desafio.md) · [Confirmação restaurada](docs/13-confirmacao-restaurada.md) · [Correções da auditoria de conversas](docs/14-correcoes-auditoria-conversas.md) · [Duplicidade semântica](docs/15-duplicidade-semantica.md) · [Encaminhamento N1 → N2](docs/16-encaminhamento-entre-analistas.md).
+```bash
+sudo install -d -m 0750 -o "$USER" -g "$(id -gn)" /opt/projetos/nexo-assist
+cd /opt/projetos/nexo-assist
+git clone https://github.com/CaioMascarenhas/nexo-assist.git .
+python3 scripts/setup-deploy.py
+# Edite .env: LLM_MODE=live e GOOGLE_API_KEY para usar Gemini.
+# Substitua <commit> pela revisão publicada pelo workflow.
+bash scripts/deploy.sh sha-<commit>
+```
 
-Documentos 02-07 preservam hipóteses do levantamento inicial; este README e o ADR descrevem a arquitetura implementada. Materiais originais e `.env` ficam locais. O inventário visual sanitizado está em `docs/referencias/inventario-prototipo.json`.
+O gerador cria senhas aleatórias para o PostgreSQL e para a comunicação interna, com `.env` privado e sem sobrescrever uma configuração existente. Nenhuma chave do provedor é necessária no GitHub Actions. O banco nasce com o seed fictício; não se copia o banco das auditorias para o servidor.
+
+No Nginx Proxy Manager, o proxy host usa:
+
+| Campo | Valor |
+| --- | --- |
+| Domain Names | `nexoassist.duckdns.org` |
+| Scheme | `http` |
+| Forward Hostname | `nexoassistweb` |
+| Forward Port | `3000` |
+| Rede Docker compartilhada | `proxy` |
+| SSL | Certificado Let's Encrypt e Force SSL |
+
+O Nginx precisa participar da mesma rede `proxy` do container web, seguindo o [modelo de rede compartilhada do NPM](https://nginxproxymanager.com/advanced-config/). O alias `nexoassistweb` é declarado no Compose. API, agente e banco ficam somente na rede da aplicação, sem portas publicadas no host. Essa rede permite saída para a API do Gemini.
+
+`PUBLIC_ORIGIN` configura a origem HTTPS aceita pela API e pelo BFF. O proxy preserva o cookie seguro e o controle de buffering do SSE, para manter login e atividade do agente funcionando atrás da terminação TLS. O Compose de deploy difere do local justamente nas imagens, redes, credenciais e cookies.
+
+Para atualizar, faça `git pull --ff-only` na VM e execute `bash scripts/deploy.sh sha-<novo-commit>`. O script registra a última tag aplicada em `.deploy-release`; sem argumento, reutiliza essa tag. Voltar a uma imagem anterior exige compatibilidade com as migrations já aplicadas. Backup do banco deve preceder alterações de schema; rollback de imagem não desfaz migration.
+
+## Trade-offs e o que faria com mais tempo
+
+O prazo do desafio guiou o recorte: priorizei o fluxo completo, a confirmação segura e a continuidade entre IA e humano. As principais concessões e evoluções são:
+
+- **Duas stacks de backend.** Python evidencia outra competência e facilita evoluções em IA/ML, mas adiciona um serviço, contratos e operação. Para uma equipe pequena, unificar em TypeScript reduziria manutenção e atenderia integralmente ao requisito de linguagem do enunciado.
+- **Conhecimento mockado.** Os oito artigos são textos curtos de seed, consultados por correspondência lexical e regras de aplicabilidade. Não existe ingestão de documentos nem RAG vetorial. Evoluiria para um pipeline no FastAPI com extração, versionamento, chunks, embeddings e [pgvector no PostgreSQL](https://github.com/pgvector/pgvector), incluindo filtros de acesso, busca híbrida, citações e avaliação de recuperação.
+- **Encaminhamento N1/N2 manual.** A passagem direta já funciona, mas ainda não considera competências, disponibilidade ou capacidade da equipe. O agente poderia recomendar o nível pela complexidade, tentativas e especialidade, com justificativa e regras de escalonamento revisáveis. Melhoraria também notificações, aceite da transferência e visibilidade das pendências.
+- **Identidade demonstrativa.** Implementaria login real com senha protegida ou SSO/OIDC, ciclo de sessão, convite, recuperação de senha com token expirável e envio real de e-mail. Hoje o perfil e a redefinição são ilustrativos; presença online/offline também é simulada.
+- **Legado simulado no mesmo serviço.** Criaria um adaptador para ITSM real, com contratos, idempotência e uma fila/outbox para reconciliação. Hoje o chat humano continua quando o legado está indisponível, mas não há sincronização posterior automática.
+- **Avaliação semântica ainda pequena.** Ampliaria o conjunto versionado de conversas, casos ambíguos, adversariais e de regressão; mediria precisão de duplicidade, encaminhamento, uso de fontes e custo por tarefa. A confiança do modelo precisaria de calibração. Testes reais seriam executados em ambiente isolado com orçamento definido.
+- **Atualização e experiência.** Substituiria polling por eventos onde fizer sentido, refinaria a retomada de turnos interrompidos e destacaria a solução no topo de descrições extensas. Feriados, anexos e integrações de notificações também ficaram fora do recorte.
+- **Operação em uma VM.** É uma implantação simples, sem alta disponibilidade ou teste de carga representativo. Acrescentaria backups automatizados e restauração ensaiada, métricas/tracing, alertas, imagens menores, política de atualização e um pipeline de rollout com verificação e rollback compatível com o banco.
+
+## Referências do projeto
+
+[Requisitos](docs/01-requisitos.md) · [Arquitetura e ADR](docs/09-arquitetura-fastapi.md) · [Auditoria do desafio](docs/11-auditoria-do-desafio.md) · [Duplicidade semântica](docs/15-duplicidade-semantica.md) · [Encaminhamento N1 → N2](docs/16-encaminhamento-entre-analistas.md) · [Dez conversas reais](docs/17-estabilidade-10-conversas-live.md) · [Backlog](docs/BACKLOG.md).
+
+Os documentos iniciais preservam hipóteses do levantamento; este README e o ADR descrevem a implementação vigente. O enunciado original, credenciais e evidências locais não são publicados.
