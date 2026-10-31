@@ -1,6 +1,11 @@
 /* Auditoria opt-in: dez conversas reais, evidências incrementais e teto de chamadas. */
 const { chromium, expect } = require("@playwright/test");
-const { mkdirSync, writeFileSync } = require("node:fs");
+const {
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  existsSync,
+} = require("node:fs");
 const path = require("node:path");
 
 const plan = [
@@ -71,22 +76,47 @@ const runId = process.env.LIVE_RUN_ID || `estabilidade-${Date.now()}`;
 if (!/^[a-zA-Z0-9_-]+$/.test(runId))
   throw new Error("Identificador da rodada inválido.");
 const output = path.resolve("output", runId);
+const resume = process.argv.includes("--resume");
+const resultPath = path.join(output, "resultados.json");
+if (existsSync(resultPath) && !resume)
+  throw new Error(
+    "A rodada já existe. Use outro LIVE_RUN_ID ou --resume para preservar as evidências.",
+  );
+if (resume && !existsSync(resultPath))
+  throw new Error("Rodada não encontrada para retomada.");
 mkdirSync(output, { recursive: true });
-const report = {
-  rodada: runId,
-  inicio_utc: new Date().toISOString(),
-  teto_chamadas: 40,
-  tentativas_ia: 0,
-  plano: plan,
-  conversas: [],
-  eventos: [],
-  verificacoes: [],
-  baseline: {},
-  final: {},
-};
+const report = resume
+  ? JSON.parse(readFileSync(resultPath, "utf8"))
+  : {
+      rodada: runId,
+      inicio_utc: new Date().toISOString(),
+      teto_chamadas: 40,
+      tentativas_ia: 0,
+      plano: plan,
+      conversas: [],
+      eventos: [],
+      verificacoes: [],
+      baseline: {},
+      final: {},
+    };
+if (resume) {
+  writeFileSync(
+    path.join(output, `resultados-antes-retomada-${Date.now()}.json`),
+    JSON.stringify(report, null, 2),
+  );
+  report.retomadas = [
+    ...(report.retomadas || []),
+    {
+      instante_utc: new Date().toISOString(),
+      motivo:
+        "Coleta pelo histórico persistido, sem repetir mensagens respondidas.",
+    },
+  ];
+}
 const sessions = {};
-const createdTickets = new Set();
-const shared = {};
+const createdTickets = new Set(report.protocolos_criados || []);
+const shared = report.shared || {};
+report.shared = shared;
 let browser, current;
 function save() {
   writeFileSync(
@@ -179,6 +209,19 @@ async function openEmployee(s, id = s.id) {
   ).toBeVisible();
 }
 async function fresh(s) {
+  const previous =
+    resume && report.conversas.find((entry) => entry.cenario === current.id);
+  if (previous) {
+    s.id = previous.id;
+    current.conversation_id = s.id;
+    await openEmployee(s);
+    record({
+      tipo: "retomada",
+      etapa: "conversa-existente",
+      conversation_id: s.id,
+    });
+    return;
+  }
   const conversation = await api(s, "/conversations", {});
   s.id = conversation.id;
   current.conversation_id = s.id;
@@ -194,6 +237,38 @@ async function fresh(s) {
 }
 async function send(s, content, stage) {
   const before = await history(s);
+  if (resume) {
+    const index = before.messages.findIndex(
+      (message) => message.role === "USER" && message.content === content,
+    );
+    if (index >= 0) {
+      const reply = before.messages
+        .slice(index + 1)
+        .find((message) => message.data.decision || message.data.error);
+      requireThat(
+        reply?.data.decision?.mode === "live",
+        "A mensagem anterior ainda não tem uma decisão persistida; não será reenviada automaticamente.",
+      );
+      if (!report.eventos.some((event) => event.message_id === reply.id))
+        record({
+          tipo: "interacao_ia",
+          etapa: stage,
+          conversation_id: s.id,
+          entrada: content,
+          resposta: reply.content,
+          estado: before.state,
+          message_id: reply.id,
+          decisao: reply.data.decision,
+          duracao_agente_ms: reply.data.decision.duration_ms,
+          duracao_ms: null,
+          erro: null,
+          coleta: "historico_persistido",
+          rascunho: pending(before),
+        });
+      check(`Decisão real recuperada sem repetição: ${stage}`, true);
+      return before;
+    }
+  }
   const active = before.state === "AGENT_ACTIVE";
   if (active) {
     requireThat(
@@ -217,33 +292,24 @@ async function send(s, content, stage) {
     .getByRole("button", { name: "Enviar mensagem", exact: true })
     .click();
   const response = await responsePromise;
-  const raw = await response.text();
-  let events = [],
-    json;
-  if (response.headers()["content-type"]?.includes("text/event-stream"))
-    events = raw
-      .split("\n")
-      .filter((line) => line.startsWith("data: "))
-      .map((line) => JSON.parse(line.slice(6)));
-  else {
-    try {
-      json = JSON.parse(raw);
-    } catch {
-      json = {};
-    }
-  }
+  // O CDP não disponibiliza de forma confiável o body de respostas SSE.
+  // Esperamos a UI consumir o stream e conferimos a mensagem gravada pela API.
+  const json = response.headers()["content-type"]?.includes("text/event-stream")
+    ? null
+    : await response.json();
   await expect(s.page.locator(".streaming")).toHaveCount(0, { timeout: 65000 });
   const h = await history(s);
-  const decision = events.findLast((event) => event.type === "decision")?.data;
-  const error = events.findLast((event) => event.type === "error")?.data;
-  const reply =
-    events.findLast((event) => event.type === "done")?.data?.content ||
-    error?.content ||
-    h.messages.at(-1)?.content;
+  const persisted = h.messages
+    .slice(before.messages.length)
+    .findLast((message) => message.data.decision || message.data.error);
+  const decision = persisted?.data.decision;
+  const error = persisted?.data.error ? persisted.data : null;
+  const reply = persisted?.content || h.messages.at(-1)?.content;
   record({
     tipo: active ? "interacao_ia" : "mensagem_com_ia_pausada",
     etapa: stage,
     conversation_id: s.id,
+    message_id: persisted?.id,
     entrada: content,
     resposta: reply,
     estado: h.state,
@@ -308,6 +374,8 @@ async function confirm(s, d, duplicate = false) {
   requireThat(response.ok(), `Confirmação recusada: ${result.detail}`);
   await expect(s.page.locator(".draft-card")).toHaveCount(0);
   if (d.operation === "CREATE") createdTickets.add(result.ticket.id);
+  report.protocolos_criados = [...createdTickets];
+  save();
   if (duplicate) {
     const replay = await api(s, `/drafts/${d.id}/confirm`, {
       revision: d.revision,
@@ -525,6 +593,7 @@ async function finish(
 }
 
 async function runScenario(row, fn) {
+  if (resume && report.final[row[0]]?.resultado === "PASSOU") return;
   current = {
     id: row[0],
     titulo: row[2],
@@ -614,10 +683,11 @@ async function main() {
     "A rodada exige o modelo real, sem fallback.",
   );
   for (const key of ["ana", "carla", "bruno"])
-    report.baseline[key] = {
-      tickets: await api(sessions[key], "/tickets"),
-      conversas: await api(sessions[key], "/conversations"),
-    };
+    if (!report.baseline[key])
+      report.baseline[key] = {
+        tickets: await api(sessions[key], "/tickets"),
+        conversas: await api(sessions[key], "/conversations"),
+      };
   save();
 
   await runScenario(plan[0], async (s) => {
@@ -735,6 +805,23 @@ async function main() {
     shared.fluxSnapshot = await api(s, `/tickets/${shared.flux.id}`);
   });
   await runScenario(plan[3], async (s) => {
+    const previousDraft = pending(await history(s));
+    if (
+      resume &&
+      previousDraft &&
+      shared.flux &&
+      !previousDraft.payload.duplicate_review?.candidates.some(
+        (candidate) => candidate.id === shared.flux.id,
+      )
+    ) {
+      await cancel(s, previousDraft);
+      record({
+        tipo: "automacao",
+        etapa: "revisao-apos-preparacao-do-candidato",
+        motivo:
+          "O rascunho anterior à retomada foi produzido antes da confirmação do FluxogramaQA; os candidatos serão reavaliados nesta mesma conversa.",
+      });
+    }
     const { d } = await draft(
       s,
       "Agora preciso instalar o QGIS para elaborar mapas geológicos do laboratório. Não quero FluxogramaQA: é outro programa e outra finalidade. Não está no portal. Só eu preciso, consigo trabalhar por enquanto, sem compromisso em risco hoje e sem alternativa provisória.",
