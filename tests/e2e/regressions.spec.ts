@@ -52,8 +52,7 @@ test("duplicidade incerta pergunta ao funcionário e mostra o protocolo antes da
   await expect(page.locator(".message-text").last()).toContainText(ticket.code);
   await page
     .getByRole("button", {
-      name: `É o mesmo chamado ${ticket.code}`,
-      exact: true,
+      name: new RegExp(`É o mesmo chamado ${ticket.code}$`),
     })
     .click();
   await expect(page.locator(".draft-card")).toContainText(ticket.code);
