@@ -154,7 +154,9 @@ export function TicketHistory({ ticket }: { ticket: Ticket }) {
                       ? "Reabertura"
                       : update.type === "transfer"
                         ? "Encaminhamento ao suporte"
-                        : "Atualização"}
+                        : update.type === "analyst_transfer"
+                          ? "Encaminhamento entre analistas"
+                          : "Atualização"}
                 </strong>
                 <small>
                   {update.author ?? "Service desk"} · {date(update.at)}

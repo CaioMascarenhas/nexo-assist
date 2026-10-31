@@ -5,6 +5,7 @@ export interface User {
   role: "EMPLOYEE" | "ANALYST";
   department: string;
 }
+export type Analyst = Pick<User, "id" | "name" | "department">;
 export interface Ticket {
   id: string;
   code: string;
@@ -102,6 +103,7 @@ export interface Conversation {
   user_id: string;
   state: string;
   analyst_id: string | null;
+  assigned_analyst?: Analyst | null;
   turns: number;
   epoch: number;
   summary: string;

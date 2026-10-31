@@ -21,6 +21,7 @@ import {
   initials,
   labels,
   post,
+  type Analyst,
   type Conversation,
   type Message,
   type Ticket,
@@ -68,6 +69,13 @@ export function Workspace({
   const [resolutionTicket, setResolutionTicket] = useState<Ticket | null>(null);
   const [resolution, setResolution] = useState("");
   const [resolving, setResolving] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [colleagues, setColleagues] = useState<Analyst[]>([]);
+  const [targetAnalyst, setTargetAnalyst] = useState("");
+  const [transferReason, setTransferReason] = useState("");
+  const [loadingColleagues, setLoadingColleagues] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const colleagueRequest = useRef(0);
   const pendingRequests = useRef(new Set<string>());
   const [pending, setPending] = useState<string[]>([]);
   const [streams, setStreams] = useState<
@@ -147,6 +155,11 @@ export function Workspace({
     setError("");
     setResolutionTicket(null);
     setResolution("");
+    setTransferOpen(false);
+    setTargetAnalyst("");
+    setTransferReason("");
+    setLoadingColleagues(false);
+    colleagueRequest.current += 1;
     setConversation(null);
     setTickets([]);
     if (!selected) return;
@@ -297,7 +310,7 @@ export function Workspace({
     }
   }
   async function transition(action: string) {
-    if (!conversation) return;
+    if (!conversation || transferring) return;
     try {
       await post(`/analyst/conversations/${selected}/${action}`, {
         epoch: conversation.epoch,
@@ -307,8 +320,74 @@ export function Workspace({
       setError((e as Error).message);
     }
   }
+  async function openTransfer() {
+    if (!conversation || transferring) return;
+    const conversationId = selected;
+    const request = ++colleagueRequest.current;
+    setTransferOpen(true);
+    setResolutionTicket(null);
+    setTransferReason("");
+    setTargetAnalyst("");
+    setColleagues([]);
+    setLoadingColleagues(true);
+    setError("");
+    try {
+      const results = await api<Analyst[]>("/analyst/colleagues");
+      if (
+        selectedRef.current === conversationId &&
+        request === colleagueRequest.current
+      ) {
+        setColleagues(results);
+        if (results.length === 1) setTargetAnalyst(results[0].id);
+      }
+    } catch (e) {
+      if (
+        selectedRef.current === conversationId &&
+        request === colleagueRequest.current
+      )
+        setError((e as Error).message);
+    } finally {
+      if (request === colleagueRequest.current) setLoadingColleagues(false);
+    }
+  }
+  async function transferAnalyst() {
+    if (
+      !conversation ||
+      !targetAnalyst ||
+      transferring ||
+      transferReason.trim().length < 5
+    )
+      return;
+    const conversationId = selected;
+    setTransferring(true);
+    setError("");
+    try {
+      const updated = await post<Conversation>(
+        `/analyst/conversations/${conversationId}/transfer`,
+        {
+          epoch: conversation.epoch,
+          target_analyst_id: targetAnalyst,
+          reason: transferReason.trim(),
+        },
+      );
+      if (selectedRef.current === conversationId) {
+        setTransferOpen(false);
+        setTargetAnalyst("");
+        setTransferReason("");
+        setConversation((current) =>
+          current?.id === conversationId ? { ...current, ...updated } : current,
+        );
+        await refresh();
+      }
+    } catch (e) {
+      if (selectedRef.current === conversationId)
+        setError((e as Error).message);
+    } finally {
+      setTransferring(false);
+    }
+  }
   async function resolveTicket() {
-    if (!conversation || !resolutionTicket || resolving) return;
+    if (!conversation || !resolutionTicket || resolving || transferring) return;
     const conversationId = selected;
     setResolving(true);
     setError("");
@@ -342,6 +421,7 @@ export function Workspace({
     (!linkedTicket || !["RESOLVED", "CLOSED"].includes(linkedTicket.status));
   const canSend =
     !!conversation &&
+    !transferring &&
     (analyst
       ? human && conversation?.analyst_id === user.id
       : state !== "CLOSED" && (!active || (conversation?.turns ?? 0) < 30));
@@ -488,6 +568,94 @@ export function Workspace({
   function composer() {
     return (
       <div className="composer-area">
+        {human && conversation?.assigned_analyst && (
+          <div className="handoff-banner assigned-banner">
+            <Headphones size={17} />
+            <div>
+              <strong>
+                Atendimento com {conversation.assigned_analyst.name}
+              </strong>
+              <span>
+                {conversation.assigned_analyst.department} · Assistente pausado
+              </span>
+            </div>
+          </div>
+        )}
+        {transferOpen && human && conversation?.analyst_id === user.id && (
+          <form
+            className="resolution-form transfer-form"
+            aria-label="Encaminhar atendimento"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void transferAnalyst();
+            }}
+          >
+            <strong>Encaminhar atendimento</strong>
+            <p className="muted small">
+              O analista escolhido receberá este atendimento em Minhas, com todo
+              o histórico. O assistente continuará pausado.
+            </p>
+            <label>
+              Analista de destino
+              <select
+                value={targetAnalyst}
+                onChange={(event) => setTargetAnalyst(event.target.value)}
+                disabled={loadingColleagues || transferring}
+                required
+              >
+                <option value="">
+                  {loadingColleagues
+                    ? "Carregando analistas…"
+                    : "Selecione um analista"}
+                </option>
+                {colleagues.map((colleague) => (
+                  <option key={colleague.id} value={colleague.id}>
+                    {colleague.name} · {colleague.department}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {!loadingColleagues && !colleagues.length && (
+              <p className="muted small">
+                Nenhum outro analista está cadastrado para receber o
+                atendimento.
+              </p>
+            )}
+            <label>
+              Motivo do encaminhamento
+              <textarea
+                value={transferReason}
+                onChange={(event) => setTransferReason(event.target.value)}
+                minLength={5}
+                maxLength={1200}
+                rows={2}
+                required
+                disabled={transferring}
+              />
+            </label>
+            <div className="resolution-actions">
+              <button
+                type="button"
+                onClick={() => setTransferOpen(false)}
+                disabled={transferring}
+              >
+                Cancelar
+              </button>
+              <button
+                className="primary"
+                type="submit"
+                disabled={
+                  transferring ||
+                  loadingColleagues ||
+                  !targetAnalyst ||
+                  transferReason.trim().length < 5
+                }
+              >
+                {transferring ? "Encaminhando…" : "Confirmar encaminhamento"}
+              </button>
+            </div>
+          </form>
+        )}
         {resolutionTicket && human && conversation?.analyst_id === user.id && (
           <form
             className="resolution-form"
@@ -567,7 +735,9 @@ export function Workspace({
               state === "CLOSED"
                 ? "Atendimento encerrado"
                 : analyst && !canSend
-                  ? "Assuma o atendimento para responder"
+                  ? human
+                    ? `Atendimento com ${conversation?.assigned_analyst?.name ?? "outro analista"}`
+                    : "Assuma o atendimento para responder"
                   : "Escreva para o Nexo…"
             }
             value={text}
@@ -797,7 +967,9 @@ export function Workspace({
                   >
                     {c.state === "HUMAN_ACTIVE" && c.analyst_id === user.id
                       ? "Você está atendendo"
-                      : labels[c.state]}
+                      : c.state === "HUMAN_ACTIVE" && c.assigned_analyst
+                        ? `Com ${c.assigned_analyst.name}`
+                        : labels[c.state]}
                   </span>
                 </div>
               </button>
@@ -845,12 +1017,21 @@ export function Workspace({
               <div className="header-actions">
                 {human && conversation?.analyst_id === user.id ? (
                   <>
-                    <button onClick={() => transition("release")}>
+                    <button
+                      onClick={() => void openTransfer()}
+                      disabled={transferring || resolving}
+                    >
+                      Encaminhar atendimento
+                    </button>
+                    <button
+                      onClick={() => transition("release")}
+                      disabled={transferring || resolving}
+                    >
                       Devolver ao assistente
                     </button>
                     <button
                       className="danger-button"
-                      disabled={closeBlocked}
+                      disabled={closeBlocked || transferring || resolving}
                       title={
                         closeBlocked
                           ? "Resolva o chamado vinculado antes de encerrar o atendimento."
@@ -1012,6 +1193,7 @@ export function Workspace({
                       className="primary resolve-ticket-button"
                       disabled={resolving}
                       onClick={() => {
+                        setTransferOpen(false);
                         setResolutionTicket(t);
                         setResolution("");
                         setTicketsOpen(false);
