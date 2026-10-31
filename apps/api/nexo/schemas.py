@@ -29,6 +29,12 @@ class TransitionBody(BaseModel):
     epoch: int = Field(ge=0)
 
 
+class TransferAnalystBody(TransitionBody):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    target_analyst_id: str = Field(min_length=1, max_length=36)
+    reason: str = Field(min_length=5, max_length=1200)
+
+
 class ResolveTicketBody(TransitionBody):
     model_config = ConfigDict(str_strip_whitespace=True)
     ticket_id: str = Field(min_length=1, max_length=36)

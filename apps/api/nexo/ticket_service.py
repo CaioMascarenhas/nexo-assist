@@ -211,6 +211,30 @@ class TicketService:
             ]
         return ticket
 
+    def record_analyst_transfer(self, ticket_id: str, owner_id: str, target: User, reason: str) -> Ticket:
+        if self.actor.role != "ANALYST" or target.role != "ANALYST":
+            raise HTTPException(403, "Encaminhamento exclusivo entre analistas.")
+        ticket = self.get(ticket_id, lock=True)
+        if ticket.user_id != owner_id:
+            raise HTTPException(404, "Chamado não encontrado neste atendimento.")
+        if ticket.status not in {"RESOLVED", "CLOSED"}:
+            ticket.status = "IN_PROGRESS"
+        ticket.version += 1
+        ticket.updates = [
+            *ticket.updates,
+            {
+                "type": "analyst_transfer",
+                "author": self.actor.name,
+                "from_analyst_id": self.actor.id,
+                "to_analyst_id": target.id,
+                "content": reason,
+                "summary": f"{self.actor.name} encaminhou para {target.name} ({target.department}). Motivo: {reason}",
+                "at": now().isoformat(),
+            },
+        ]
+        # Trocar o responsável não constitui uma resposta ao funcionário e não renova o SLA.
+        return ticket
+
     def resolve(self, ticket_id: str, owner_id: str, version: int, resolution: str) -> Ticket:
         if self.actor.role != "ANALYST":
             raise HTTPException(403, "Acesso exclusivo do suporte.")

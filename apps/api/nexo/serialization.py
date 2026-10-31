@@ -27,11 +27,16 @@ def message_json(message: Message) -> dict[str, Any]:
 
 
 def conversation_json(conv: Conversation) -> dict[str, Any]:
+    session = object_session(conv)
+    analyst = session.get(User, conv.analyst_id) if session and conv.analyst_id else None
     return {
         "id": conv.id,
         "user_id": conv.user_id,
         "state": conv.state,
         "analyst_id": conv.analyst_id,
+        "assigned_analyst": {"id": analyst.id, "name": analyst.name, "department": analyst.department}
+        if analyst
+        else None,
         "turns": conv.turns,
         "epoch": conv.epoch,
         "summary": conv.summary,
