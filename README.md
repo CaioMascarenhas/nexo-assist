@@ -74,9 +74,21 @@ O Nginx e o domínio fazem parte do deploy público. Localmente, o navegador ace
 | **Mastra / Zod / TypeScript** — `apps/agent` | Mastra estrutura o agente, as ferramentas e a geração de decisões. Zod define o contrato recebido pela API. Mantive esse serviço separado para isolar chave, dependências, execução e limites do modelo. Mastra é a biblioteca de orquestração, não o executor dos testes. |
 | **PostgreSQL / SQLAlchemy / Alembic** | Escolhi PostgreSQL pela familiaridade, praticidade e eficiência em dados relacionais. Transações, restrições e locks ajudam a manter confirmação, chamado e encaminhamento consistentes. SQLAlchemy organiza a persistência; Alembic versiona o schema. |
 | **Docker Compose** | Gerencia os serviços, redes, healthchecks e ordem de inicialização. O mesmo projeto pode ser reproduzido localmente e executado na VM com imagens prontas. Para o tamanho desta entrega, evita a complexidade de um orquestrador maior. |
-| **Gemini configurável** | O objetivo foi equilibrar latência, uso de tokens e suporte a ferramentas/saída estruturada. A escolha pode ser revista a partir de avaliações; o domínio não depende de um modelo específico. |
+| **Gemini configurável** | Já tinha créditos disponíveis no Google e aproveitei esse saldo para executar o desafio e as conversas reais. Dentro dessa opção, escolhi a linha Flash para buscar equilíbrio entre latência, uso de tokens e suporte a ferramentas/saída estruturada. A escolha pode ser revista a partir de avaliações; o domínio não depende de um modelo específico. |
 
 O Next.js funciona como **BFF** (Backend for Frontend), encaminhando chamadas para o FastAPI. As regras não ficam duplicadas nas rotas do frontend. A interface usa CSS próprio, `lucide-react` e fontes locais com licença OFL.
+
+### Por que esse modelo e como avaliaria o custo
+
+O motivo inicial para usar Gemini foi prático: eu já tinha créditos lá. Isso viabilizou testar o agente de verdade durante o desenvolvimento, sem contratar outro provedor para o desafio. O saldo disponível reduz meu desembolso imediato, mas não torna a inferência gratuita nem demonstra que Gemini é a alternativa mais barata.
+
+O modelo configurado nesta entrega é `google/gemini-3.8-flash`. A linha Flash foi a opção para uma tarefa de triagem com respostas curtas, extração de fatos e uso de ferramentas, buscando uma conversa ágil sem recorrer a um modelo maior em todas as mensagens. Os limites de passos, contexto e saída também controlam o consumo. A mediana de 5,39 s na rodada real é a evidência local de latência; não fiz um benchmark entre provedores.
+
+Se eu começasse um projeto com liberdade de escolha de provedor, minha preferência inicial seria **OpenAI com um modelo mini recente**. Um candidato para avaliação é o [GPT-5.4 mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini), que oferece function calling, saídas estruturadas e controle do esforço de raciocínio. Esses recursos permitem testar contratos mais restritos e ajustar o equilíbrio entre tempo de resposta e análise. Continuaria validando o resultado e aplicando as regras na API: aderir a um schema não garante que a associação entre dois chamados esteja correta.
+
+O ganho que eu buscaria seria **menor custo por atendimento concluído com qualidade**, boa previsibilidade dos contratos e menos tentativas ou esclarecimentos desnecessários. São objetivos a medir, não melhorias já comprovadas sobre Gemini. Compararia os mesmos roteiros de duplicidade, criticidade, reabertura e N1/N2, observando acerto semântico, falhas de contrato, latência e tokens por conversa. Casos difíceis poderiam justificar um modelo maior, em vez de pagar esse custo em toda interação.
+
+Para estimar gasto, separaria tokens de entrada, entrada em cache e saída pelas tarifas vigentes de cada provedor, incluindo eventuais tokens de raciocínio faturáveis. Créditos promocionais e descontos entrariam depois dessa conta. O projeto registra uso quando o provedor informa, mas não apresenta uma cobrança monetária estimada com preços fixos no código. A troca para OpenAI exigiria configurar chave, adaptador/opções do provedor e repetir as avaliações; não basta supor equivalência ao alterar o nome do modelo.
 
 ## Como o agente decide o que fazer
 
