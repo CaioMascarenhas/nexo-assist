@@ -10,7 +10,7 @@ from conftest import login
 from nexo import chat_routes
 from nexo.analyst_routes import transfer_analyst
 from nexo.config import settings
-from nexo.models import Conversation, Message, User
+from nexo.models import Conversation, Message, Ticket, User, now
 from nexo.schemas import TransferAnalystBody
 from nexo.ticket_service import ticket_json
 from test_ticket_resolution import claimed
@@ -188,3 +188,62 @@ def test_simultaneous_transfer_has_one_winner_and_one_history_record(client, dat
     assert sorted(results) == [200, 409]
     database.refresh(ticket)
     assert len([update for update in ticket.updates if update.get("type") == "analyst_transfer"]) == 1
+
+
+@pytest.mark.parametrize("state", ["AGENT_ACTIVE", "WAITING_ANALYST", "CLOSED"])
+def test_transfer_requires_an_active_human_assignment(client, database, state):
+    conv_id, ticket, resolution = claimed(client, database)
+    conv = database.get(Conversation, conv_id)
+    conv.state, conv.analyst_id = state, None
+    database.commit()
+    response = client.post(f"/analyst/conversations/{conv_id}/transfer", json=body(conv.epoch))
+    assert response.status_code == 409
+    database.refresh(conv)
+    assert conv.state == state
+    assert conv.analyst_id is None
+
+
+def test_resolved_protocol_remains_resolved_and_recipient_can_close_contact(client, database):
+    conv_id, ticket, resolution = claimed(client, database)
+    assert client.post(f"/analyst/conversations/{conv_id}/resolve-ticket", json=resolution).status_code == 200
+    database.refresh(ticket)
+    before = ticket_json(ticket)
+    result = client.post(f"/analyst/conversations/{conv_id}/transfer", json=body(resolution["epoch"]))
+    assert result.status_code == 200
+    database.refresh(ticket)
+    for key in ("status", "resolved_at", "due_at", "support_updated_at"):
+        assert ticket_json(ticket)[key] == before[key]
+    assert ticket.updates[-2]["type"] == "resolution"
+    login(client, "support2")
+    assert (
+        client.post(
+            f"/analyst/conversations/{conv_id}/close", json={"epoch": result.json()["epoch"]}
+        ).status_code
+        == 200
+    )
+
+
+def test_wrong_ticket_owner_rolls_back_transfer_instead_of_mixing_records(client, database):
+    conv_id, ticket, resolution = claimed(client, database)
+    private = Ticket(
+        code="INC-BOB",
+        user_id="bob",
+        title="Outro funcionário",
+        description="Privado",
+        kind="INC",
+        category="Hardware",
+        priority="LOW",
+        due_at=now(),
+    )
+    database.add(private)
+    database.flush()
+    conv = database.get(Conversation, conv_id)
+    conv.selected_ticket_id = private.id
+    database.commit()
+    result = client.post(f"/analyst/conversations/{conv_id}/transfer", json=body(resolution["epoch"]))
+    assert result.status_code == 404
+    database.refresh(conv)
+    database.refresh(private)
+    assert conv.analyst_id == "support"
+    assert conv.epoch == resolution["epoch"]
+    assert private.updates == []
