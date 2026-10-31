@@ -258,7 +258,14 @@ def apply_proposal(
             key: value
             for key, value in facts.items()
             if key
-            not in {"_pending_update", "_update_text", "_awaiting_update_blocked", "_priority_review_pending"}
+            not in {
+                "_pending_update",
+                "_update_text",
+                "_awaiting_update_blocked",
+                "_priority_review_pending",
+                "_duplicate_question",
+                "_duplicate_choice",
+            }
         }
     critical = (
         intent != "consult"

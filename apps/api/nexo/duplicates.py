@@ -54,7 +54,11 @@ def duplicate_answer(conv, content: str) -> dict | None:
         "result": "same" if chosen else "different",
         "ticket_id": chosen["id"] if chosen else None,
     }
-    conv.facts = {key: value for key, value in conv.facts.items() if key != "_duplicate_question"}
+    conv.facts = {
+        key: value
+        for key, value in conv.facts.items()
+        if key not in {"_duplicate_question", "_duplicate_choice"}
+    }
     conv.facts = {**conv.facts, "_duplicate_choice": choice}
     return choice
 
@@ -174,7 +178,11 @@ def assess_duplicate(service, conv, payload, proposal, snapshots, data) -> Dupli
         question = "Preciso confirmar o assunto antes de vincular um protocolo.\n" + listing
         question += "\nÉ o mesmo assunto de algum desses chamados ou é um novo pedido?"
         return DuplicateDecision(question=question)
-    conv.facts = {key: value for key, value in conv.facts.items() if key != "_duplicate_question"}
+    conv.facts = {
+        key: value
+        for key, value in conv.facts.items()
+        if key not in {"_duplicate_question", "_duplicate_choice"}
+    }
     return DuplicateDecision(
         target=target,
         review={

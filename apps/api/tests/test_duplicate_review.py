@@ -130,7 +130,7 @@ def test_different_subject_creates_separate_ticket_even_with_equal_title(client,
 
 
 @pytest.mark.parametrize(
-    "invalid", ["missing", "uncertain", "invented", "generic", "foreign", "conflicting_identity"]
+    "invalid", ["missing", "uncertain", "invented", "generic", "foreign", "conflicting_identity", "repeated"]
 )
 def test_unproven_match_asks_employee_and_never_mutates_ticket(database, invalid):
     ticket, conv, user, service = setup(database)
@@ -143,6 +143,8 @@ def test_unproven_match_asks_employee_and_never_mutates_ticket(database, invalid
         item.evidence[0].request_quote = item.evidence[0].ticket_quote = "instalar"
     if invalid == "foreign":
         item.ticket_id = "protocolo-de-outro-funcionario"
+    if invalid == "repeated":
+        item.evidence[1].request_quote = item.evidence[1].ticket_quote = "QGIS"
     if invalid == "conflicting_identity":
         ticket.title = "Instalação do software FluxogramaQA"
         ticket.description = "Instalar FluxogramaQA para mapas geológicos."
@@ -182,6 +184,7 @@ def test_employee_resolves_uncertainty_without_model_overriding_the_choice(clien
     )
     assert data["draft"]["operation"] == ("UPDATE" if same else "CREATE")
     assert data["draft"]["payload"]["duplicate_review"]["source"] == "user"
+    assert "_duplicate_choice" not in conv.facts
     database.commit()
     login(client)
     result = client.post(f"/drafts/{data['draft']['id']}/confirm", json={"revision": 1})
@@ -246,3 +249,31 @@ def test_candidates_exclude_other_owners_old_resolutions_categories_and_types(da
     database.flush()
     assert service.duplicate_candidates() == []
     assert private.user_id != user.id
+
+
+def test_chat_sends_authorized_candidates_in_the_existing_single_model_call(client, database, monkeypatch):
+    ticket, conv, user, service = setup(database)
+    private, _, _, _ = setup(database, owner="bob")
+    database.commit()
+    calls = []
+
+    async def fake(payload):
+        calls.append(payload)
+        candidates = payload["duplicate_candidates"]
+        assert [candidate["id"] for candidate in candidates] == [ticket.id]
+        assert candidates[0]["description"] == ticket.description
+        assert candidates[0]["version"] == ticket.version
+        assert private.id not in str(candidates)
+        return proposal([review(ticket)])
+
+    monkeypatch.setattr(chat_routes, "request_proposal", fake)
+    login(client)
+    response = client.post(
+        f"/conversations/{conv.id}/messages", json={"content": REQUEST, "client_id": "duplicate-once"}
+    )
+    assert response.status_code == 200
+    assert len(calls) == 1
+    draft = database.scalar(select(Draft).where(Draft.conversation_id == conv.id))
+    assert draft.operation == "UPDATE"
+    assert draft.target_id == ticket.id
+    assert conv.selected_ticket_id is None
