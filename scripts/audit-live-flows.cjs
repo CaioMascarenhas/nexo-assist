@@ -245,6 +245,20 @@ async function send(s, content, stage) {
       const reply = before.messages
         .slice(index + 1)
         .find((message) => message.data.decision || message.data.error);
+      if (!reply && before.state !== "AGENT_ACTIVE") {
+        record({
+          tipo: "mensagem_com_ia_pausada",
+          etapa: stage,
+          conversation_id: s.id,
+          entrada: content,
+          estado: before.state,
+          agent_paused: true,
+          coleta: "historico_persistido",
+          duracao_ms: null,
+        });
+        check(`Mensagem humana recuperada sem repetição: ${stage}`, true);
+        return before;
+      }
       requireThat(
         reply?.data.decision?.mode === "live",
         "A mensagem anterior ainda não tem uma decisão persistida; não será reenviada automaticamente.",
@@ -294,9 +308,10 @@ async function send(s, content, stage) {
   const response = await responsePromise;
   // O CDP não disponibiliza de forma confiável o body de respostas SSE.
   // Esperamos a UI consumir o stream e conferimos a mensagem gravada pela API.
-  const json = response.headers()["content-type"]?.includes("text/event-stream")
-    ? null
-    : await response.json();
+  const json = {
+    agent_paused: !active,
+    fonte: "estado_e_historico_persistidos",
+  };
   await expect(s.page.locator(".streaming")).toHaveCount(0, { timeout: 65000 });
   const h = await history(s);
   const persisted = h.messages
@@ -440,6 +455,15 @@ async function claim(s, analyst = sessions.n1) {
   return claimed;
 }
 async function analystMessage(s, analyst, content) {
+  if (
+    (await history(s)).messages.some(
+      (message) =>
+        message.role === "ANALYST" &&
+        message.author === analyst.user.name &&
+        message.content === content,
+    )
+  )
+    return;
   await api(analyst, `/analyst/conversations/${s.id}/messages`, {
     content,
     client_id: `auditoria-${runId}-${current.id}-${Date.now()}`,
@@ -551,6 +575,13 @@ async function finish(
   label = "Fluxo validado",
 ) {
   let h = await history(s);
+  if (h.state === "CLOSED") {
+    check(
+      "Contato já encerrado preserva o resolvido",
+      (await api(s, `/tickets/${ticket.id}`)).status === "RESOLVED",
+    );
+    return;
+  }
   if (h.state === "WAITING_ANALYST") h = await claim(s, analyst);
   requireThat(
     h.analyst_id === analyst.user.id,
@@ -774,28 +805,34 @@ async function main() {
     );
   });
   await runScenario(plan[2], async (s) => {
-    const { d } = await draft(
-      s,
-      "Preciso instalar o FluxogramaQA para desenhar diagramas de processos do laboratório. Não está no portal de softwares. Só eu preciso dele, consigo continuar trabalhando, não há compromisso hoje e não tenho solução provisória.",
-      "Instalação individual do FluxogramaQA para diagramas de processos, sem bloqueio do trabalho, sem compromisso hoje e sem alternativa provisória.",
-    );
-    requireThat(
-      d.operation === "CREATE",
-      "FluxogramaQA deve ter um protocolo novo nesta rodada.",
-    );
-    shared.flux = await confirm(s, d, true);
-    await claim(s);
-    await transfer(s, sessions.n1, sessions.n2, shared.flux);
-    await send(
-      s,
-      "Recebi a informação do encaminhamento; vou aguardar o N2.",
-      "funcionario-com-n2",
-    );
-    await analystMessage(
-      s,
-      sessions.n2,
-      "Recebi o histórico e vou concluir a validação da solicitação de software.",
-    );
+    if (!shared.flux) {
+      const { d } = await draft(
+        s,
+        "Preciso instalar o FluxogramaQA para desenhar diagramas de processos do laboratório. Não está no portal de softwares. Só eu preciso dele, consigo continuar trabalhando, não há compromisso hoje e não tenho solução provisória.",
+        "Instalação individual do FluxogramaQA para diagramas de processos, sem bloqueio do trabalho, sem compromisso hoje e sem alternativa provisória.",
+      );
+      requireThat(
+        d.operation === "CREATE",
+        "FluxogramaQA deve ter um protocolo novo nesta rodada.",
+      );
+      shared.flux = await confirm(s, d, true);
+    }
+    let h = await history(s);
+    if (h.state === "WAITING_ANALYST") h = await claim(s);
+    if (h.state === "HUMAN_ACTIVE" && h.analyst_id === sessions.n1.user.id)
+      await transfer(s, sessions.n1, sessions.n2, shared.flux);
+    if ((await history(s)).state !== "CLOSED") {
+      await send(
+        s,
+        "Recebi a informação do encaminhamento; vou aguardar o N2.",
+        "funcionario-com-n2",
+      );
+      await analystMessage(
+        s,
+        sessions.n2,
+        "Recebi o histórico e vou concluir a validação da solicitação de software.",
+      );
+    }
     await finish(
       s,
       shared.flux,
