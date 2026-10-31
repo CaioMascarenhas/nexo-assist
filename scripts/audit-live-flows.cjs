@@ -624,7 +624,11 @@ async function finish(
 }
 
 async function runScenario(row, fn) {
-  if (resume && report.final[row[0]]?.resultado === "PASSOU") return;
+  if (
+    resume &&
+    ["PASSOU", "PASSOU_COM_RESSALVA"].includes(report.final[row[0]]?.resultado)
+  )
+    return;
   current = {
     id: row[0],
     titulo: row[2],
@@ -658,6 +662,15 @@ async function runScenario(row, fn) {
     (item) => item.cenario === current.id && !item.passou,
   );
   current.resultado = current.excecao || failures.length ? "FALHOU" : "PASSOU";
+  if (
+    !current.excecao &&
+    current.ressalva &&
+    failures.every(
+      (item) =>
+        item.verificacao === "Mesmo problema resolvido propõe reabertura",
+    )
+  )
+    current.resultado = "PASSOU_COM_RESSALVA";
   current.fim_utc = new Date().toISOString();
   save();
   console.log(
@@ -1101,10 +1114,43 @@ async function main() {
       "É o mesmo QGIS; agora bloqueia o trabalho individual e não há alternativa.",
       shared.qgis,
     );
-    check(
-      "Mesmo problema resolvido propõe reabertura",
-      d.operation === "REOPEN" && d.target_id === shared.qgis.id,
-    );
+    if (
+      !report.verificacoes.some(
+        (item) =>
+          item.cenario === current.id &&
+          item.verificacao === "Mesmo problema resolvido propõe reabertura",
+      )
+    )
+      check(
+        "Mesmo problema resolvido propõe reabertura",
+        d.operation === "REOPEN" && d.target_id === shared.qgis.id,
+      );
+    if (d.operation !== "REOPEN" || d.target_id !== shared.qgis.id) {
+      record({
+        tipo: "observacao",
+        etapa: "incidente-versus-requisicao",
+        motivo:
+          "O relato passou de instalação (REQ) para falha após instalar (INC). A expectativa inicial de reabertura não distingue os objetivos; será testada uma correção explícita do funcionário.",
+        rascunho: d,
+      });
+      await cancel(s, d);
+      check(
+        "Proposta de novo incidente não altera o resolvido sem confirmação",
+        (await api(s, `/tickets/${shared.qgis.id}`)).status === "RESOLVED",
+      );
+      ({ d } = await draft(
+        s,
+        `Quero reabrir o pedido ${shared.qgis.code} de instalação do QGIS. Corrigindo meu relato anterior: a instalação não foi concluída nem validada. O objetivo continua ser disponibilizar o QGIS no mesmo computador para os mesmos mapas geológicos; não estou pedindo um incidente novo. Só eu sou afetado e estou bloqueado sem essa instalação, sem alternativa.`,
+        "É a reabertura explícita da mesma solicitação de instalação, ainda não concluída, e não um novo incidente. Só eu e sem alternativa.",
+        shared.qgis,
+      ));
+      check(
+        "Pedido explícito de reabertura preserva o protocolo",
+        d.operation === "REOPEN" && d.target_id === shared.qgis.id,
+      );
+      current.ressalva =
+        "O relato de falha após instalar foi classificado como novo incidente; o funcionário precisou esclarecer que queria retomar a mesma instalação não concluída. A expectativa inicial falha permanece registrada, sem atribuir automaticamente um defeito ao modelo.";
+    }
     requireThat(
       d.operation === "REOPEN" && d.target_id === shared.qgis.id,
       "Reabertura deve preservar o protocolo QGIS.",
@@ -1117,8 +1163,8 @@ async function main() {
     );
     ({ d } = await draft(
       s,
-      "Confirmo que o mesmo problema do QGIS voltou. Quero tentar a reabertura novamente: ele não abre e bloqueia meu trabalho com mapas, só eu, sem alternativa.",
-      "Mesmo QGIS, bloqueio individual, sem alternativa.",
+      `Quero tentar reabrir novamente a mesma solicitação ${shared.qgis.code}: a instalação do QGIS ainda não foi concluída. Preciso da instalação para os mesmos mapas geológicos no mesmo computador. Só eu, estou bloqueado por essa pendência e não tenho alternativa.`,
+      "É a mesma instalação pendente do QGIS, não concluída, com bloqueio individual e sem alternativa.",
       shared.qgis,
     ));
     requireThat(
@@ -1199,6 +1245,18 @@ async function main() {
     );
   });
 
+  for (const entry of report.conversas) {
+    const session = Object.values(sessions).find(
+      (item) => item.user.email === entry.conta,
+    );
+    const h = await api(session, `/conversations/${entry.id}`);
+    writeFileSync(
+      path.join(output, `${entry.cenario}-conversa.json`),
+      JSON.stringify(h, null, 2),
+    );
+    report.final[entry.cenario].estado_final = h.state;
+    report.final[entry.cenario].ticket_id = h.selected_ticket_id;
+  }
   for (const key of ["ana", "carla", "bruno"])
     report.final[key] = {
       tickets: await api(sessions[key], "/tickets"),
@@ -1258,6 +1316,9 @@ async function main() {
       .length,
     cenarios_passaram: plan.filter(
       ([id]) => report.final[id]?.resultado === "PASSOU",
+    ).length,
+    cenarios_com_ressalva: plan.filter(
+      ([id]) => report.final[id]?.resultado === "PASSOU_COM_RESSALVA",
     ).length,
   };
   report.fim_utc = new Date().toISOString();
