@@ -38,7 +38,7 @@ Depois execute `docker compose up -d --no-deps --force-recreate agent`. A chave 
 
 ### Contas de demonstração
 
-Use qualquer senha não vazia. Ela não é armazenada nem enviada ao modelo.
+Use qualquer senha não vazia. Ela não é armazenada nem enviada ao modelo, pode usar na página principal os shortcuts para preencher email.
 
 | E-mail | Perfil |
 | --- | --- |
@@ -80,11 +80,11 @@ O Next.js funciona como **BFF** (Backend for Frontend), encaminhando chamadas pa
 
 ### Por que esse modelo e como avaliaria o custo
 
-O motivo inicial para usar Gemini foi prático: eu já tinha créditos lá. Isso viabilizou testar o agente de verdade durante o desenvolvimento, sem contratar outro provedor para o desafio. O saldo disponível reduz meu desembolso imediato, mas não torna a inferência gratuita nem demonstra que Gemini é a alternativa mais barata.
+O motivo inicial para usar Gemini foi simples: eu já tinha créditos lá rs. Isso viabilizou testar o agente de verdade durante o desenvolvimento, sem contratar outro provedor para o desafio. O saldo disponível reduz meu desembolso imediato, mas não torna a inferência gratuita nem demonstra que Gemini é a alternativa mais barata.
 
 O modelo configurado nesta entrega é `google/gemini-3.8-flash`. A linha Flash foi a opção para uma tarefa de triagem com respostas curtas, extração de fatos e uso de ferramentas, buscando uma conversa ágil sem recorrer a um modelo maior em todas as mensagens. Os limites de passos, contexto e saída também controlam o consumo. A mediana de 5,39 s na rodada real é a evidência local de latência; não fiz um benchmark entre provedores.
 
-Se eu começasse um projeto com liberdade de escolha de provedor, minha preferência inicial seria **OpenAI com um modelo mini recente**. Um candidato para avaliação é o [GPT-5.4 mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini), que oferece function calling, saídas estruturadas e controle do esforço de raciocínio. Esses recursos permitem testar contratos mais restritos e ajustar o equilíbrio entre tempo de resposta e análise. Continuaria validando o resultado e aplicando as regras na API: aderir a um schema não garante que a associação entre dois chamados esteja correta.
+Se eu começasse um projeto com liberdade de escolha de provedor, minha preferência inicial seria **OpenAI com um modelo terra recente**. Um candidato para avaliação é o [GPT-6.0 luna](https://developers.openai.com/api/docs/models/gpt-6-luna), que oferece function calling, saídas estruturadas e controle do esforço de raciocínio com custo pequeno. Esses recursos permitem testar contratos mais restritos e ajustar o equilíbrio entre tempo de resposta e análise seria bom testes reais para confirmar que ele daria conta. Continuaria validando o resultado e aplicando as regras na API: aderir a um schema não garante que a associação entre dois chamados esteja correta.
 
 O ganho que eu buscaria seria **menor custo por atendimento concluído com qualidade**, boa previsibilidade dos contratos e menos tentativas ou esclarecimentos desnecessários. São objetivos a medir, não melhorias já comprovadas sobre Gemini. Compararia os mesmos roteiros de duplicidade, criticidade, reabertura e N1/N2, observando acerto semântico, falhas de contrato, latência e tokens por conversa. Casos difíceis poderiam justificar um modelo maior, em vez de pagar esse custo em toda interação.
 
