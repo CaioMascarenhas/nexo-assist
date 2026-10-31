@@ -29,6 +29,12 @@ class TransitionBody(BaseModel):
     epoch: int = Field(ge=0)
 
 
+class TransferAnalystBody(TransitionBody):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    target_analyst_id: str = Field(min_length=1, max_length=36)
+    reason: str = Field(min_length=5, max_length=1200)
+
+
 class ResolveTicketBody(TransitionBody):
     model_config = ConfigDict(str_strip_whitespace=True)
     ticket_id: str = Field(min_length=1, max_length=36)
@@ -41,6 +47,19 @@ class FollowUp(BaseModel):
     question: str = Field(min_length=5, max_length=400)
 
 
+class DuplicateEvidence(BaseModel):
+    aspect: Literal["system", "equipment", "symptom", "objective"]
+    request_quote: str = Field(min_length=1, max_length=240)
+    ticket_quote: str = Field(min_length=1, max_length=240)
+
+
+class DuplicateReview(BaseModel):
+    ticket_id: str = Field(min_length=1, max_length=36)
+    result: Literal["same", "different", "uncertain"]
+    reason: str = Field(min_length=5, max_length=300)
+    evidence: list[DuplicateEvidence] = Field(default_factory=list, max_length=4)
+
+
 class Proposal(BaseModel):
     model_config = ConfigDict(extra="ignore")
     intent: Literal["help", "consult", "create", "update", "handoff", "out_of_scope", "clarify", "resolved"]
@@ -51,6 +70,7 @@ class Proposal(BaseModel):
     collect_update: bool = False
     update_summary: str = Field(default="", max_length=1200)
     follow_up: FollowUp | None = None
+    duplicate_reviews: list[DuplicateReview] = Field(default_factory=list, max_length=30)
     article_ids: list[str] = Field(default_factory=list, max_length=8)
     tool_events: list[dict[str, str]] = Field(default_factory=list, max_length=12)
     usage: dict[str, int | float | str | None] = Field(default_factory=dict)

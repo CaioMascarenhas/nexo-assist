@@ -1,0 +1,98 @@
+name: nexo-assist
+
+services:
+  db:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nexo
+      POSTGRES_USER: nexo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina a senha do PostgreSQL}
+    command: [postgres, -c, shared_buffers=64MB, -c, max_connections=30]
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    networks: [app]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U nexo -d nexo]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    image: ${IMAGE_REPOSITORY:-ghcr.io/caiomascarenhas/nexo-assist}-api:${IMAGE_TAG:-latest}
+    command: [sh, -c, alembic upgrade head && python -m nexo.seed]
+    environment: &api-env
+      DATABASE_URL: postgresql+psycopg://nexo:${POSTGRES_PASSWORD}@db:5432/nexo
+      AGENT_URL: http://agent:4111
+      INTERNAL_AGENT_SECRET: ${INTERNAL_AGENT_SECRET:?Gere o segredo interno}
+      ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?Defina a origem HTTPS pública}
+      SECURE_COOKIES: "true"
+      SERVICE_DESK_TIMEZONE: ${SERVICE_DESK_TIMEZONE:-America/Fortaleza}
+      TICKET_FAILURE_MODE: "off"
+    networks: [app]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    image: ${IMAGE_REPOSITORY:-ghcr.io/caiomascarenhas/nexo-assist}-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment: *api-env
+    networks: [app]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      agent:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  agent:
+    image: ${IMAGE_REPOSITORY:-ghcr.io/caiomascarenhas/nexo-assist}-agent:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: [node, --import, tsx, apps/agent/src/server.ts]
+    environment:
+      INTERNAL_AGENT_SECRET: ${INTERNAL_AGENT_SECRET}
+      LLM_MODE: ${LLM_MODE:-stub}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-google/gemini-3.8-flash}
+    networks: [app]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:4111/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  web:
+    image: ${IMAGE_REPOSITORY:-ghcr.io/caiomascarenhas/nexo-assist}-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: [node, node_modules/next/dist/bin/next, start, apps/web, --hostname, 0.0.0.0]
+    environment:
+      API_URL: http://api:8000
+      APP_ORIGIN: ${PUBLIC_ORIGIN}
+    expose: ["3000"]
+    networks:
+      app:
+      proxy:
+        aliases: [nexoassistweb]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:3000').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+networks:
+  app:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}
+
+volumes:
+  postgres-data:

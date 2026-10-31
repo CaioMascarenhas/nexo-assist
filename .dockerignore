@@ -9,6 +9,8 @@ node_modules
 **/__pycache__
 .venv
 tmp
+output
+la.txt
 test-results
 playwright-report
 docs

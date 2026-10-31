@@ -26,6 +26,59 @@ async function send(page: Page, text: string) {
   await expect(page.locator(".streaming")).toHaveCount(0);
 }
 
+test("duplicidade incerta pergunta ao funcionário e mostra o protocolo antes da confirmação", async ({
+  page,
+}) => {
+  const first = await start(page, "ana.souza@nexo.com.br");
+  await send(page, "Instalar software.");
+  await send(page, "Só eu, tenho alternativa, sem urgência.");
+  await expect(page.locator(".draft-card")).toBeVisible();
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  const previous = await (
+    await page.request.get(`/api/conversations/${first}`)
+  ).json();
+  const ticket = await (
+    await page.request.get(`/api/tickets/${previous.selected_ticket_id}`)
+  ).json();
+
+  await start(page, "ana.souza@nexo.com.br");
+  await send(page, "Instalar software.");
+  await send(page, "Só eu, tenho alternativa, sem urgência.");
+  await expect(page.locator(".message-text").last()).toContainText(
+    "É o mesmo assunto",
+  );
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  await expect(page.locator(".message-text").last()).toContainText(ticket.code);
+  await page
+    .getByRole("button", {
+      name: new RegExp(`É o mesmo chamado ${ticket.code}$`),
+    })
+    .click();
+  await expect(page.locator(".draft-card")).toContainText(ticket.code);
+  await expect(page.getByLabel("Verificação de duplicidade")).toContainText(
+    "O funcionário confirmou que é o mesmo assunto.",
+  );
+  await expect(page.getByLabel("Verificação de duplicidade")).toContainText(
+    "Confira se é o mesmo assunto",
+  );
+  const unchanged = await (
+    await page.request.get(`/api/tickets/${ticket.id}`)
+  ).json();
+  expect(unchanged.version).toBe(ticket.version);
+  await page.screenshot({
+    path: "tmp/screenshots/regressao-duplicidade-confirmada.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.locator(".draft-card")).toHaveCount(0);
+  const updated = await (
+    await page.request.get(`/api/tickets/${ticket.id}`)
+  ).json();
+  expect(updated.version).toBeGreaterThan(ticket.version);
+  expect(updated.description).toContain("Complemento confirmado");
+});
+
 test("resolução após orientação não repete o artigo nem abre chamado", async ({
   page,
 }) => {
@@ -143,6 +196,25 @@ test("analista registra solução, resolve o chamado e encerra a conversa separa
   expect(
     (await (await page.request.get(`/api/conversations/${id}`)).json()).state,
   ).toBe("HUMAN_ACTIVE");
+  const sideTicket = consolePage
+    .locator(".side-ticket")
+    .filter({ hasText: ticket.code });
+  await expect(
+    sideTicket.getByRole("region", { name: "Solução registrada" }),
+  ).toContainText(
+    "Fonte substituída e funcionamento validado com o funcionário.",
+  );
+  await expect(sideTicket.locator(".ticket-solution")).toContainText(
+    "Luiza Costa",
+  );
+  await expect(sideTicket.locator(".deadline")).toContainText("Resolvido em");
+  await expect(sideTicket.locator(".deadline")).not.toContainText(
+    "Prazo de resposta",
+  );
+  await sideTicket.getByText(/^Histórico do chamado/).click();
+  await expect(sideTicket.locator(".ticket-updates")).toContainText(
+    "Solução registrada",
+  );
   await consolePage
     .getByRole("button", { name: "Encerrar atendimento", exact: true })
     .click();
@@ -154,6 +226,22 @@ test("analista registra solução, resolve o chamado e encerra a conversa separa
   ).toBeDisabled();
   await consolePage.screenshot({
     path: "tmp/screenshots/regressao-chamado-resolvido.png",
+    fullPage: true,
+  });
+  await consolePage.reload();
+  await consolePage.setViewportSize({ width: 390, height: 844 });
+  await consolePage
+    .getByRole("button", { name: "Mostrar chamados", exact: true })
+    .click();
+  await expect(sideTicket.locator(".ticket-solution")).toBeVisible();
+  await expect(sideTicket.locator(".deadline")).toContainText("Resolvido em");
+  expect(
+    await consolePage.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy();
+  await consolePage.screenshot({
+    path: "tmp/screenshots/regressao-solucao-painel-mobile.png",
     fullPage: true,
   });
   await employee.close();

@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from difflib import SequenceMatcher
 import re
 import unicodedata
 from typing import Any
@@ -49,7 +50,12 @@ class TicketService:
         self.available()
         owner = owner_id if self.actor.role == "ANALYST" and owner_id else self.actor.id
         return list(
-            self.db.scalars(select(Ticket).where(Ticket.user_id == owner).order_by(Ticket.created_at.desc()))
+            self.db.scalars(
+                select(Ticket)
+                .where(Ticket.user_id == owner)
+                .order_by(Ticket.created_at.desc())
+                .execution_options(populate_existing=True)
+            )
         )
 
     def get(self, ticket_id: str, lock: bool = False) -> Ticket:
@@ -84,31 +90,77 @@ class TicketService:
                 "somente",
                 "software",
                 "programa",
+                "instalacao",
+                "instalar",
+                "pedido",
+                "solicitacao",
+                "aplicativo",
+                "o",
+                "a",
+                "os",
+                "as",
+                "um",
+                "uns",
+                "umas",
+                "de",
+                "do",
+                "da",
+                "dos",
+                "das",
+                "no",
+                "na",
+                "nos",
+                "nas",
+                "em",
+                "e",
+                "ou",
+                "eu",
+                "me",
+                "ao",
+                "aos",
+                "so",
             }
-            return {
-                word
-                for word in re.findall(r"[a-z0-9]+", normalized(value))
-                if len(word) >= 3 and word not in stopwords
-            }
+            return {word for word in re.findall(r"[a-z0-9]+", normalized(value)) if word not in stopwords}
 
-        # Categoria sozinha e uma palavra genérica nunca identificam o mesmo problema.
+        # Semelhança textual não comprova identidade: QGIS e FluxogramaQA podem
+        # compartilhar todo o restante do título. Só vinculamos automaticamente
+        # quando os termos significativos coincidem, sem descartar produto/versão.
         candidates = []
         requested_words = words(title)
+        if not requested_words:
+            return None
         for ticket in self.list():
             if ticket.category != category:
                 continue
             opened = ticket.status not in {"RESOLVED", "CLOSED"}
             if not opened and not can_reopen(ticket.resolved_at, now()):
                 continue
-            score = SequenceMatcher(None, normalized(title), normalized(ticket.title)).ratio()
             existing_words = words(ticket.title)
-            overlap = len(requested_words & existing_words)
-            containment = overlap / max(1, min(len(requested_words), len(existing_words)))
-            if score >= 0.65 or (overlap >= 2 and containment >= 0.8):
-                candidates.append((opened, max(score, containment if overlap >= 2 else 0), ticket))
-        return max(candidates, key=lambda candidate: candidate[:2])[2] if candidates else None
+            if requested_words == existing_words:
+                candidates.append((opened, ticket))
+        # Havendo mais de um alvo na mesma situação, o funcionário precisa
+        # selecionar o protocolo; não escolhemos por ordem ou similaridade.
+        preferred = [ticket for opened, ticket in candidates if opened]
+        preferred = preferred or [ticket for _, ticket in candidates]
+        return preferred[0] if len(preferred) == 1 else None
 
-    def prepare(self, conv: Conversation, payload: dict[str, Any], target: Ticket | None = None) -> Draft:
+    def duplicate_candidates(self, category: str | None = None, kind: str | None = None) -> list[Ticket]:
+        return [
+            ticket
+            for ticket in self.list()
+            if ticket.user_id == self.actor.id
+            and (category is None or ticket.category == category)
+            and (kind is None or ticket.kind == kind)
+            and (ticket.status not in {"RESOLVED", "CLOSED"} or can_reopen(ticket.resolved_at, now()))
+        ]
+
+    def prepare(
+        self,
+        conv: Conversation,
+        payload: dict[str, Any],
+        target: Ticket | None = None,
+        auto_related: bool = True,
+    ) -> Draft:
         self.available()
         if payload.get("category") not in CATEGORIES:
             raise HTTPException(422, "Categoria inválida.")
@@ -116,13 +168,14 @@ class TicketService:
             select(Draft).where(Draft.conversation_id == conv.id, Draft.status == "PENDING")
         ):
             old.status = "INVALIDATED"
-        if target is None:
+        if target is None and auto_related:
             target = self.related(payload["title"], payload["category"])
-        elif target.status in {"RESOLVED", "CLOSED"} and not can_reopen(target.resolved_at, now()):
+        elif target and target.status in {"RESOLVED", "CLOSED"} and not can_reopen(target.resolved_at, now()):
             target = self.related(payload["title"], payload["category"])
         operation = "CREATE"
         if target:
             operation = "REOPEN" if target.status in {"RESOLVED", "CLOSED"} else "UPDATE"
+            payload = {**payload, "title": target.title}
         preview_due = due_at(now(), payload["priority"])
         if target and operation == "UPDATE":
             priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
@@ -156,6 +209,30 @@ class TicketService:
                 *ticket.updates,
                 {"type": "transfer", "reason": reason, "at": now().isoformat()},
             ]
+        return ticket
+
+    def record_analyst_transfer(self, ticket_id: str, owner_id: str, target: User, reason: str) -> Ticket:
+        if self.actor.role != "ANALYST" or target.role != "ANALYST":
+            raise HTTPException(403, "Encaminhamento exclusivo entre analistas.")
+        ticket = self.get(ticket_id, lock=True)
+        if ticket.user_id != owner_id:
+            raise HTTPException(404, "Chamado não encontrado neste atendimento.")
+        if ticket.status not in {"RESOLVED", "CLOSED"}:
+            ticket.status = "IN_PROGRESS"
+        ticket.version += 1
+        ticket.updates = [
+            *ticket.updates,
+            {
+                "type": "analyst_transfer",
+                "author": self.actor.name,
+                "from_analyst_id": self.actor.id,
+                "to_analyst_id": target.id,
+                "content": reason,
+                "summary": f"{self.actor.name} encaminhou para {target.name} ({target.department}). Motivo: {reason}",
+                "at": now().isoformat(),
+            },
+        ]
+        # Trocar o responsável não constitui uma resposta ao funcionário e não renova o SLA.
         return ticket
 
     def resolve(self, ticket_id: str, owner_id: str, version: int, resolution: str) -> Ticket:
@@ -195,6 +272,17 @@ class TicketService:
         if draft.status != "PENDING" or aware(draft.expires_at) <= now():
             raise HTTPException(409, "Rascunho cancelado, expirado ou já substituído.")
         p = draft.payload
+        review = p.get("duplicate_review")
+        if review:
+            current = {
+                ticket.id: ticket.version for ticket in self.duplicate_candidates(p["category"], p["kind"])
+            }
+            reviewed = {candidate["id"]: candidate["version"] for candidate in review["candidates"]}
+            if current != reviewed:
+                raise HTTPException(
+                    409,
+                    "Os chamados candidatos mudaram. Peça uma nova revisão de duplicidade antes de confirmar.",
+                )
         if draft.target_id:
             ticket = self.get(draft.target_id, lock=True)
             if ticket.version != draft.target_version:
@@ -234,7 +322,7 @@ class TicketService:
             ticket.version += 1
             # A user's complement must not clear a previously overdue support SLA.
         else:
-            if self.related(p["title"], p["category"]):
+            if not review and self.related(p["title"], p["category"]):
                 raise HTTPException(
                     409, "Encontramos um chamado equivalente. Gere um rascunho de atualização."
                 )

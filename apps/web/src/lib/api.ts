@@ -5,6 +5,7 @@ export interface User {
   role: "EMPLOYEE" | "ANALYST";
   department: string;
 }
+export type Analyst = Pick<User, "id" | "name" | "department">;
 export interface Ticket {
   id: string;
   code: string;
@@ -21,6 +22,13 @@ export interface Ticket {
   created_at: string;
   resolved_at?: string | null;
   overdue: boolean;
+  updates?: {
+    type?: string;
+    author?: string;
+    content?: string;
+    summary?: string;
+    at: string;
+  }[];
 }
 export interface Decision {
   intent: string;
@@ -59,6 +67,13 @@ export interface Draft {
     affected_scope: string;
     due_at?: string;
     handoff_reason?: string;
+    duplicate_review?: {
+      source: "agent" | "user";
+      result: "same" | "different";
+      reason: string;
+      requested_title: string;
+      candidates: { id: string; version: number }[];
+    };
     priority_review?: {
       previous: string;
       proposed: string;
@@ -88,6 +103,7 @@ export interface Conversation {
   user_id: string;
   state: string;
   analyst_id: string | null;
+  assigned_analyst?: Analyst | null;
   turns: number;
   epoch: number;
   summary: string;

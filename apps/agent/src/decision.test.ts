@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { stubDecision, type Input } from "./decision.ts";
+import { outputSchema, stubDecision, type Input } from "./decision.ts";
 const base: Input = {
   content: "",
   facts: {},
@@ -8,6 +8,67 @@ const base: Input = {
   tickets: [],
   articles: [],
 };
+
+test("duplicidade diferencia QGIS de FluxogramaQA no modo de testes", () => {
+  const result = stubDecision({
+    ...base,
+    content: "Quero instalar o software QGIS. Só eu, sem urgência.",
+    duplicate_candidates: [
+      {
+        id: "fluxograma",
+        code: "REQ-FLUXO",
+        title: "Instalação do software FluxogramaQA",
+        description: "Diagramas de processos",
+        category: "Software",
+        kind: "REQ",
+        version: 1,
+        status: "OPEN",
+      },
+    ],
+  });
+  assert.equal(result.duplicate_reviews[0].result, "different");
+  assert.equal(
+    outputSchema.parse(result).duplicate_reviews[0].ticket_id,
+    "fluxograma",
+  );
+});
+
+test("contrato de duplicidade rejeita decisão desconhecida e evidência sem origem", () => {
+  const result = stubDecision(base);
+  assert.equal(
+    outputSchema.safeParse({
+      ...result,
+      duplicate_reviews: [
+        {
+          ticket_id: "exemplo",
+          result: "probably",
+          reason: "Títulos próximos",
+          evidence: [],
+        },
+      ],
+    }).success,
+    false,
+  );
+  assert.equal(
+    outputSchema.safeParse({
+      ...result,
+      duplicate_reviews: [
+        {
+          ticket_id: "exemplo",
+          result: "same",
+          reason: "Mesmo sistema e sintoma",
+          evidence: [
+            {
+              aspect: "system",
+              request_quote: "QGIS",
+            },
+          ],
+        },
+      ],
+    }).success,
+    false,
+  );
+});
 test("offline mode distinguishes explicit human request and out-of-scope", () => {
   assert.equal(
     stubDecision({ ...base, content: "Quero falar com um analista" }).intent,

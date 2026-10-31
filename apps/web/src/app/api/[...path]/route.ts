@@ -9,7 +9,9 @@ async function proxy(
   const { path } = await context.params;
   const origin = request.headers.get("origin");
   // In Docker Next binds 0.0.0.0; the browser-facing host is the Host header.
-  const expectedOrigin = `${new URL(request.url).protocol}//${request.headers.get("host")}`;
+  const expectedOrigin = process.env.APP_ORIGIN
+    ? new URL(process.env.APP_ORIGIN).origin
+    : `${new URL(request.url).protocol}//${request.headers.get("host")}`;
   if (
     !["GET", "HEAD"].includes(request.method) &&
     origin &&
@@ -42,6 +44,8 @@ async function proxy(
     });
     for (const cookie of response.headers.getSetCookie())
       outgoing.append("Set-Cookie", cookie);
+    if (response.headers.get("x-accel-buffering") === "no")
+      outgoing.set("X-Accel-Buffering", "no");
     return new Response(response.body, {
       status: response.status,
       headers: outgoing,

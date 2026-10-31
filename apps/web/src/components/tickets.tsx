@@ -53,10 +53,15 @@ export function DecisionDetail({ decision }: { decision: Decision }) {
             <dd>
               {intentLabels[decision.intent] ?? "Intenção não identificada"}
             </dd>
-            <dt>Segurança estimada</dt>
+            <dt>
+              {decision.confidence_source === "user_choice"
+                ? "Origem da decisão"
+                : "Segurança estimada"}
+            </dt>
             <dd>
-              {Math.round(decision.confidence * 100)}% · estimativa não
-              calibrada
+              {decision.confidence_source === "user_choice"
+                ? "Escolha explícita do funcionário"
+                : `${Math.round(decision.confidence * 100)}% · estimativa não calibrada`}
             </dd>
           </dl>
           <p>{decision.rationale}</p>
@@ -92,6 +97,79 @@ export function DecisionDetail({ decision }: { decision: Decision }) {
         </div>
       </details>
     </div>
+  );
+}
+
+export function TicketDeadline({ ticket }: { ticket: Ticket }) {
+  const finished = ["RESOLVED", "CLOSED"].includes(ticket.status);
+  return (
+    <div className={`deadline ${ticket.overdue && !finished ? "late" : ""}`}>
+      {finished ? (
+        <>
+          {ticket.status === "CLOSED" ? "Encerrado" : "Resolvido"}
+          {ticket.resolved_at
+            ? ` em ${date(ticket.resolved_at)}`
+            : " pelo suporte"}
+        </>
+      ) : (
+        <>
+          {ticket.overdue ? <CircleAlert size={14} /> : <Clock3 size={14} />}{" "}
+          {ticket.overdue ? "Prazo vencido" : "Prazo de resposta"} ·{" "}
+          {date(ticket.due_at)}
+        </>
+      )}
+    </div>
+  );
+}
+
+export function TicketHistory({ ticket }: { ticket: Ticket }) {
+  const updates = ticket.updates ?? [];
+  const lastReopen = updates.findLastIndex(
+    (update) => update.type === "reopen",
+  );
+  const resolution = updates.findLast(
+    (update, index) => update.type === "resolution" && index > lastReopen,
+  );
+  return (
+    <>
+      {resolution && (
+        <section className="ticket-solution" aria-label="Solução registrada">
+          <strong>Solução registrada</strong>
+          <p>{resolution.content}</p>
+          <small>
+            {resolution.author ?? "Suporte"} · {date(resolution.at)}
+          </small>
+        </section>
+      )}
+      {updates.length > 0 && (
+        <details className="ticket-updates">
+          <summary>Histórico do chamado ({updates.length})</summary>
+          <ol>
+            {[...updates].reverse().map((update, index) => (
+              <li key={`${update.at}-${index}`}>
+                <strong>
+                  {update.type === "resolution"
+                    ? "Solução registrada"
+                    : update.type === "reopen"
+                      ? "Reabertura"
+                      : update.type === "transfer"
+                        ? "Encaminhamento ao suporte"
+                        : update.type === "analyst_transfer"
+                          ? "Encaminhamento entre analistas"
+                          : "Atualização"}
+                </strong>
+                <small>
+                  {update.author ?? "Service desk"} · {date(update.at)}
+                </small>
+                {(update.summary || update.content) && (
+                  <p>{update.summary || update.content}</p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+    </>
   );
 }
 
@@ -152,22 +230,8 @@ export function TicketCard({
           <strong>{date(ticket.support_updated_at)}</strong>
         </div>
       </div>
-      <div className={`deadline ${ticket.overdue ? "late" : ""}`}>
-        {ticket.status === "RESOLVED" || ticket.status === "CLOSED" ? (
-          <>
-            Resolvido{" "}
-            {ticket.resolved_at
-              ? `em ${date(ticket.resolved_at)}`
-              : "pelo suporte"}
-          </>
-        ) : (
-          <>
-            {ticket.overdue ? <CircleAlert size={14} /> : <Clock3 size={14} />}{" "}
-            {ticket.overdue ? "Prazo vencido" : "Prazo de resposta"} ·{" "}
-            {date(ticket.due_at)}
-          </>
-        )}
-      </div>
+      <TicketDeadline ticket={ticket} />
+      <TicketHistory ticket={ticket} />
     </article>
   );
 }
@@ -180,7 +244,7 @@ export function DraftCard({
 }: {
   draft: Draft;
   canConfirm?: boolean;
-  onChanged: () => void;
+  onChanged: () => void | Promise<void>;
   onError: (e: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -203,7 +267,7 @@ export function DraftCard({
       else
         await post(`/drafts/${draft.id}/${kind}`, { revision: draft.revision });
       setEditing(false);
-      onChanged();
+      await onChanged();
     } catch (e) {
       onError((e as Error).message);
     } finally {
@@ -275,6 +339,22 @@ export function DraftCard({
         <p className="notice" aria-label="Reavaliação da prioridade">
           {draft.payload.priority_review.reason}
         </p>
+      )}
+      {!!draft.payload.duplicate_review?.candidates.length && (
+        <div className="notice" aria-label="Verificação de duplicidade">
+          <p>
+            {draft.payload.duplicate_review.result === "same"
+              ? `Este pedido será vinculado ao chamado ${draft.target_code}: ${draft.payload.title}. Confira se é o mesmo assunto antes de confirmar.`
+              : "Este pedido será registrado em um novo protocolo após sua confirmação."}
+          </p>
+          <p>{draft.payload.duplicate_review.reason}</p>
+          {draft.payload.duplicate_review.requested_title !==
+            draft.payload.title && (
+            <p>
+              Pedido relatado: {draft.payload.duplicate_review.requested_title}
+            </p>
+          )}
+        </div>
       )}
       <div className="ticket-grid">
         <div>

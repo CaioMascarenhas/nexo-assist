@@ -34,9 +34,17 @@ def test_no_ticket_mutation_until_confirmation_then_handoff(client, database, st
         own.append(ticket)
     database.add(conv)
     database.flush()
+    if own:
+        conv.selected_ticket_id = own[0].id
     before = ticket_json(own[0]) if own else None
     reply, data = chat_routes.apply_proposal(
-        database, user, conv, proposal(), TicketService(database, user), own, "VPN não funciona"
+        database,
+        user,
+        conv,
+        proposal().model_copy(update={"intent": "update" if status else "create"}),
+        TicketService(database, user),
+        own,
+        "VPN não funciona",
     )
     database.commit()
     assert "confirmação" in reply
@@ -105,12 +113,14 @@ def test_critical_handoff_is_immediate_but_protocol_requires_confirmation(client
         own.append(ticket)
     database.flush()
     before = ticket_json(own[0]) if own else None
+    if existing:
+        conv.selected_ticket_id = own[0].id
     _, data = chat_routes.apply_proposal(
         database,
         user,
         conv,
         Proposal(
-            intent="create",
+            intent="update" if existing else "create",
             reply="",
             rationale="Equipe impedida",
             confidence=0.95,
